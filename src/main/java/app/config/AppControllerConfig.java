@@ -1,13 +1,11 @@
 
 package app.config;
 
+import app.controllers.SummaryController;
 import org.javalite.activeweb.AbstractControllerConfig;
 import org.javalite.activeweb.AppContext;
 import org.javalite.activeweb.controller_filters.DBConnectionFilter;
-import org.javalite.activeweb.controller_filters.TimingFilter;
 
-import app.controllers.TasksController;
-import app.controllers.UsersController;
 import app.filter.RestExceptionFilter;
 
 /**
@@ -25,10 +23,8 @@ public class AppControllerConfig
 	@Override
 	public void init(AppContext context) {
 		// RestException handling
-		addGlobalFilters(new RestExceptionFilter());
-		addGlobalFilters(new TimingFilter());
+		add(new RestExceptionFilter());
 		// DB connection
-		add(new DBConnectionFilter()).to(UsersController.class);
-		add(new DBConnectionFilter()).to(TasksController.class);
+		add(new DBConnectionFilter()).to(SummaryController.class);
 	}
 }

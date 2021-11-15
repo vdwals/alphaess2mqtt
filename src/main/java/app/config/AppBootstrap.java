@@ -1,10 +1,10 @@
 
 package app.config;
 
+import app.services.SummaryModule;
+import com.google.inject.Injector;
 import org.javalite.activeweb.AppContext;
 import org.javalite.activeweb.Bootstrap;
-
-import app.services.UserModule;
 
 import com.google.inject.Guice;
 
@@ -21,7 +21,9 @@ public class AppBootstrap
 	 * @see org.javalite.activeweb.Bootstrap#init(org.javalite.activeweb.AppContext)
 	 */
 	@Override
-	public void init(AppContext context) {
-		setInjector(Guice.createInjector(new UserModule()));
+	public void init(AppContext context) {}
+
+	public Injector getInjector(){
+		return Guice.createInjector(new SummaryModule());
 	}
 }

@@ -6,12 +6,12 @@ import com.google.inject.AbstractModule;
 /**
  * @author Stefano Crespi
  */
-public class UserModule
+public class SummaryModule
 	extends AbstractModule
 {
 
 	@Override
 	protected void configure() {
-		bind(UserService.class).to(UserServiceImpl.class).asEagerSingleton();
+		bind(ISummaryService.class).to(SummaryService.class).asEagerSingleton();
 	}
 }
