@@ -19,8 +19,7 @@ import static app.utils.Tokens.APPLICATION_JSON;
 public class SummaryService implements ISummaryService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     
-    @Inject
-    private TokenService tokenService;
+    private final TokenService tokenService = new TokenService();
     
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     
@@ -31,38 +30,38 @@ public class SummaryService implements ISummaryService {
     public SummaryDto getSummary() {
         LocalDateTime now = LocalDateTime.now();
     
-        if (latestResponse != null && nextRefresh != null && now.isBefore(nextRefresh)) {
-            return latestResponse;
-        }
+        if (latestResponse == null || nextRefresh == null || now.isAfter(nextRefresh)) {
     
-        AlphaEssLoadJob summaryJob = AlphaEssLoadJob.getSummaryJob();
-        String token = tokenService.getToken();
+            AlphaEssLoadJob summaryJob = AlphaEssLoadJob.getSummaryJob();
+            String token = tokenService.getToken();
     
-        SummaryRequestDto requestDto = SummaryRequestDto
-                .builder()
-                .showLoading(true)
-                .tday(now.format(formatter))
-                .build();
+            SummaryRequestDto requestDto = SummaryRequestDto
+                    .builder()
+                    .showLoading(true)
+                    .tday(now.format(formatter))
+                    .build();
+    
+            Post summaryPost = Http
+                    .post(
+                            summaryJob.getUrl(),
+                            JsonHelper.toJsonString(requestDto))
+                    .header("Accept", APPLICATION_JSON)
+                    .header("Content-Type", APPLICATION_JSON)
+                    .header("authorization", "Bearer " + token);
+    
+            String summaryResponse = summaryPost.text();
+            try {
+                SummaryResponseDto summaryResponseDto = objectMapper.readValue(summaryResponse, SummaryResponseDto.class);
         
-        Post summaryPost = Http
-                .post(
-                        summaryJob.getUrl(),
-                        JsonHelper.toJsonString(requestDto))
-                .header("Accept", APPLICATION_JSON)
-                .header("Content-Type", APPLICATION_JSON)
-                .header("authorization", "Bearer " + token);
-    
-        String summaryResponse = summaryPost.text();
-        try {
-            SummaryResponseDto summaryResponseDto = objectMapper.readValue(summaryResponse, SummaryResponseDto.class);
-            
-            nextRefresh = now.plusSeconds(summaryJob.getIntervalInSeconds());
-            
-            return summaryResponseDto.getData();
-        } catch (IOException e) {
-            e.printStackTrace();
+                nextRefresh = now.plusSeconds(summaryJob.getIntervalInSeconds());
+        
+                latestResponse = summaryResponseDto.getData();
+        
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         
-        return null;
+        return latestResponse;
     }
 }

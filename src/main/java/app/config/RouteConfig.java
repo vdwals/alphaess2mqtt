@@ -1,6 +1,7 @@
 
 package app.config;
 
+import app.controllers.SummaryController;
 import org.javalite.activeweb.AbstractRouteConfig;
 import org.javalite.activeweb.AppContext;
 
@@ -18,5 +19,6 @@ public class RouteConfig
 	 */
 	@Override
 	public void init(AppContext appContext) {
+		route("/test").to(SummaryController.class);
 	}
 }

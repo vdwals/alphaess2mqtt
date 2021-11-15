@@ -17,6 +17,6 @@ public class DbConfig
      */
     @Override
     public void init(AppContext context) {
-        environment("development").jdbc("com.mysql.jdbc.Driver", "jdbc:mariadb://192.168.11.50:3308/kettle", "kettle", "ONMW2yYgTJOVopWKnPKj");
+        configFile("/database.properties");
     }
 }
