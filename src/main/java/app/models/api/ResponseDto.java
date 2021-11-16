@@ -1,9 +1,8 @@
 package app.models.api;
 
-import lombok.Value;
+import lombok.experimental.SuperBuilder;
 
-import java.util.Map;
-
+@SuperBuilder
 public abstract class ResponseDto {
     int code;
     String info;

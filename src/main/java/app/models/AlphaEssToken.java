@@ -1,7 +1,6 @@
 package app.models;
 
 import org.javalite.activejdbc.Model;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 
@@ -17,7 +16,7 @@ public class AlphaEssToken extends Model {
     }
     
     public static AlphaEssToken findCurrentToken() {
-        return findFirst("? > ?", COLUMN_EXPIRATION_TIME, LocalDateTime.now());
+        return findFirst(String.format("%s > ?", COLUMN_EXPIRATION_TIME), LocalDateTime.now());
     }
 
     public String getToken() {
