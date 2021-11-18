@@ -8,6 +8,7 @@ public class AlphaEssLoadJob extends Model {
     public static final String LOGIN   = "login";
     public static final String SUMMERY = "summery";
     public static final String DAY     = "day";
+    public static final String SECOND     = "second";
     public static final String COLUMN_INTERVAL_S = "interval_s";
     
     public static AlphaEssLoadJob getLoginJob() {
@@ -20,6 +21,10 @@ public class AlphaEssLoadJob extends Model {
 
     public static AlphaEssLoadJob getTicsJob() {
         return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), DAY);
+    }
+    
+    public static AlphaEssLoadJob getSecondDataJob() {
+        return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), SECOND);
     }
     
     public String getUrl() {
