@@ -36,6 +36,16 @@ public class RunningDataController extends APIController {
         respondWithJson(runningData.getPpv4());
     }
     
+    public void ppvSum() {
+        RunningDataDto runningData = runningDataService.getRunningData();
+        respondWithJson(getPpvSum(runningData));
+    }
+    
+    private double getPpvSum(RunningDataDto runningData) {
+        return runningData.getPpv1() + runningData.getPpv2() + runningData.getPpv3() +
+               runningData.getPpv4();
+    }
+    
     public void pMeter1() {
         RunningDataDto runningData = runningDataService.getRunningData();
         respondWithJson(runningData.getPmeter_l1());
@@ -53,8 +63,11 @@ public class RunningDataController extends APIController {
     
     public void pMeterSum() {
         RunningDataDto runningData = runningDataService.getRunningData();
-        respondWithJson(runningData.getPmeter_l1() + runningData.getPmeter_l2() +
-                        runningData.getPmeter_l3());
+        respondWithJson(getGridPower(runningData));
+    }
+    
+    private double getGridPower(RunningDataDto runningData) {
+        return runningData.getPmeter_l1() + runningData.getPmeter_l2() + runningData.getPmeter_l3();
     }
     
     public void pMeterDc() {
@@ -101,5 +114,20 @@ public class RunningDataController extends APIController {
         RunningDataDto runningData = runningDataService.getRunningData();
         respondWithJson(
                 runningData.getPreal_l1() + runningData.getPreal_l2() + runningData.getPreal_l3());
+    }
+    
+    public void pvTotalPower() {
+        RunningDataDto runningData = runningDataService.getRunningData();
+        respondWithJson(getPvTotalPower(runningData));
+    }
+    
+    private double getPvTotalPower(RunningDataDto runningData) {
+        return getPpvSum(runningData) + runningData.getPmeter_dc();
+    }
+    
+    public void totalPowerConsumption() {
+        RunningDataDto runningData = runningDataService.getRunningData();
+        respondWithJson(
+                getPvTotalPower(runningData) + getGridPower(runningData) + runningData.getPbat());
     }
 }
