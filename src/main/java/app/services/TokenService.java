@@ -7,6 +7,7 @@ import app.models.api.LoginResponseDto;
 import app.models.api.TokenDto;
 import app.services.injections.ITokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Http;
 import org.javalite.http.Post;
@@ -19,8 +20,12 @@ import java.util.Map;
 import static app.util.Tokens.APPLICATION_JSON;
 
 public class TokenService implements ITokenService {
-    private final ObjectMapper      objectMapper = new ObjectMapper();
-    private final DateTimeFormatter formatter    = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    @Inject private final ObjectMapper objectMapper;
+    
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    
+    @Inject
+    public TokenService(ObjectMapper objectMapper) {this.objectMapper = objectMapper;}
     
     public String getToken() {
         AlphaEssToken currentToken = AlphaEssToken.findCurrentToken();
@@ -39,7 +44,7 @@ public class TokenService implements ITokenService {
             try {
                 LoginResponseDto loginResponseDto = objectMapper.readValue(loginResponse,
                                                                            LoginResponseDto.class);
-                TokenDto         tokenDto         = loginResponseDto.getData();
+                TokenDto tokenDto = loginResponseDto.getData();
                 
                 LocalDateTime expirationTime = LocalDateTime.parse(tokenDto.getTokenCreateTime(),
                                                                    formatter)

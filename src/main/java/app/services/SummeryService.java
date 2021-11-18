@@ -1,9 +1,9 @@
 package app.services;
 
 import app.models.AlphaEssLoadJob;
-import app.models.api.SummeryDto;
 import app.models.api.SummaryRequestDto;
 import app.models.api.SummaryResponseDto;
+import app.models.api.SummeryDto;
 import app.services.injections.ISummeryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -17,55 +17,49 @@ import java.time.format.DateTimeFormatter;
 
 import static app.util.Tokens.APPLICATION_JSON;
 
-public class SummeryService implements ISummeryService {
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    
-    @Inject
-    private final TokenService tokenService;
-    
+public class SummeryService extends AlphaService<SummeryDto> implements ISummeryService {
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     
-    private SummeryDto latestResponse;
-    
-    private LocalDateTime nextRefresh;
-    
     @Inject
-    public SummeryService(TokenService tokenService) {
-        this.tokenService = tokenService;
+    public SummeryService(ObjectMapper objectMapper, TokenService tokenService) {
+        super(objectMapper, tokenService);
     }
     
     public SummeryDto getSummary() {
-        LocalDateTime now = LocalDateTime.now();
+        return getData();
+    }
+    
+    @Override
+    public SummeryDto requestNewData(String token, LocalDateTime now) {
+        AlphaEssLoadJob summaryJob = AlphaEssLoadJob.getSummeryJob();
         
-        if (latestResponse == null || nextRefresh == null || now.isAfter(nextRefresh)) {
+        SummaryRequestDto requestDto = SummaryRequestDto.builder()
+                                                        .showLoading(true)
+                                                        .tday(now.format(formatter))
+                                                        .build();
+        
+        Post summaryPost = Http.post(summaryJob.getUrl(), JsonHelper.toJsonString(requestDto))
+                               .header("Accept", APPLICATION_JSON)
+                               .header("Content-Type", APPLICATION_JSON)
+                               .header("authorization", "Bearer " + token);
+        
+        String summaryResponse = summaryPost.text();
+        try {
+            SummaryResponseDto summaryResponseDto = getObjectMapper().readValue(summaryResponse,
+                                                                                SummaryResponseDto.class);
             
-            AlphaEssLoadJob summaryJob = AlphaEssLoadJob.getSummeryJob();
-            String          token      = tokenService.getToken();
+            return summaryResponseDto.getData();
             
-            SummaryRequestDto requestDto = SummaryRequestDto.builder()
-                                                            .showLoading(true)
-                                                            .tday(now.format(formatter))
-                                                            .build();
-            
-            Post summaryPost = Http.post(summaryJob.getUrl(), JsonHelper.toJsonString(requestDto))
-                                   .header("Accept", APPLICATION_JSON)
-                                   .header("Content-Type", APPLICATION_JSON)
-                                   .header("authorization", "Bearer " + token);
-            
-            String summaryResponse = summaryPost.text();
-            try {
-                SummaryResponseDto summaryResponseDto = objectMapper.readValue(summaryResponse,
-                                                                               SummaryResponseDto.class);
-                
-                nextRefresh = now.plusSeconds(summaryJob.getIntervalInSeconds());
-                
-                latestResponse = summaryResponseDto.getData();
-                
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        return null;
+    }
+    
+    @Override
+    public LocalDateTime calculateNextRefresh(SummeryDto responseData, LocalDateTime now) {
+        AlphaEssLoadJob summaryJob = AlphaEssLoadJob.getSummeryJob();
         
-        return latestResponse;
+        return now.plusSeconds(summaryJob.getIntervalInSeconds());
     }
 }
