@@ -1,11 +1,9 @@
 package app.models;
 
 import org.javalite.activejdbc.Model;
-import org.javalite.activejdbc.annotations.Cached;
 
 import java.time.LocalDateTime;
 
-@Cached
 public class AlphaEssToken extends Model {
     private static final String COLUMN_TOKEN = "token";
     
