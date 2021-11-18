@@ -3,9 +3,10 @@ package app.services;
 import app.models.AlphaEssLoadJob;
 import app.models.AlphaEssSetting;
 import app.models.AlphaEssToken;
-import app.models.api.LoginResponseDto;
+import app.models.api.ResponseDto;
 import app.models.api.TokenDto;
 import app.services.injections.ITokenService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import org.javalite.common.JsonHelper;
@@ -42,17 +43,17 @@ public class TokenService implements ITokenService {
             String loginResponse = loginPost.text();
             
             try {
-                LoginResponseDto loginResponseDto = objectMapper.readValue(loginResponse,
-                                                                           LoginResponseDto.class);
+                ResponseDto<TokenDto> loginResponseDto = objectMapper.readValue(loginResponse,
+                                                                                new TypeReference<ResponseDto<TokenDto>>() {});
                 TokenDto tokenDto = loginResponseDto.getData();
-                
+    
                 LocalDateTime expirationTime = LocalDateTime.parse(tokenDto.getTokenCreateTime(),
                                                                    formatter)
                                                             .plusSeconds(tokenDto.getExpiresIn());
-                
+    
                 // Delete all tokens as they are expired.
                 AlphaEssToken.deleteAll();
-                
+    
                 // Save new token.
                 currentToken = AlphaEssToken.create(tokenDto.getAccessToken(),
                                                     expirationTime,

@@ -1,9 +1,11 @@
 package app.models.api;
 
-import lombok.experimental.SuperBuilder;
+import lombok.Value;
 
-@SuperBuilder
-public abstract class ResponseDto {
-    int code;
+@Value
+public class ResponseDto<P> {
+    int    code;
     String info;
+    
+    P data;
 }

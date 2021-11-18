@@ -2,9 +2,10 @@ package app.services;
 
 import app.models.AlphaEssBattery;
 import app.models.AlphaEssLoadJob;
+import app.models.api.ResponseDto;
 import app.models.api.RunningDataDto;
-import app.models.api.RunningDataResponseDto;
 import app.services.injections.IRunningDataService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import org.javalite.http.Get;
@@ -39,11 +40,12 @@ public class RunningDataService extends AlphaService<RunningDataDto>
         String dataResponse = dataGet.text();
         
         try {
-            RunningDataResponseDto runningDataResponseDto = getObjectMapper().readValue(dataResponse,
-                                                                                        RunningDataResponseDto.class);
-            
+            ResponseDto<RunningDataDto> runningDataResponseDto = getObjectMapper().readValue(
+                    dataResponse,
+                    new TypeReference<ResponseDto<RunningDataDto>>() {});
+    
             return runningDataResponseDto.getData();
-            
+    
         } catch (IOException e) {
             e.printStackTrace();
         }

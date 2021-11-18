@@ -1,10 +1,11 @@
 package app.services;
 
 import app.models.AlphaEssLoadJob;
+import app.models.api.ResponseDto;
 import app.models.api.SummaryRequestDto;
-import app.models.api.SummaryResponseDto;
 import app.models.api.SummeryDto;
 import app.services.injections.ISummeryService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import org.javalite.common.JsonHelper;
@@ -45,11 +46,11 @@ public class SummeryService extends AlphaService<SummeryDto> implements ISummery
         
         String summaryResponse = summaryPost.text();
         try {
-            SummaryResponseDto summaryResponseDto = getObjectMapper().readValue(summaryResponse,
-                                                                                SummaryResponseDto.class);
-            
+            ResponseDto<SummeryDto> summaryResponseDto = getObjectMapper().readValue(summaryResponse,
+                                                                                     new TypeReference<ResponseDto<SummeryDto>>() {});
+    
             return summaryResponseDto.getData();
-            
+    
         } catch (IOException e) {
             e.printStackTrace();
         }
