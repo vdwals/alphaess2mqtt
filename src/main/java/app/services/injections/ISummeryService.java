@@ -1,4 +1,4 @@
-package app.services;
+package app.services.injections;
 
 import app.models.api.SummeryDto;
 

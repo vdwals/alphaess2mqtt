@@ -1,6 +1,7 @@
 
-package app.services;
+package app.services.injections;
 
+import app.services.SummeryService;
 import com.google.inject.AbstractModule;
 
 /**

@@ -5,6 +5,7 @@ import app.models.AlphaEssSetting;
 import app.models.AlphaEssToken;
 import app.models.api.LoginResponseDto;
 import app.models.api.TokenDto;
+import app.services.injections.ITokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Http;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 import static app.util.Tokens.APPLICATION_JSON;
 
-public class TokenService {
+public class TokenService implements ITokenService {
     private final ObjectMapper      objectMapper = new ObjectMapper();
     private final DateTimeFormatter formatter    = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
