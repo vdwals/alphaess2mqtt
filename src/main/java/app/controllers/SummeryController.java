@@ -3,6 +3,7 @@ package app.controllers;
 
 import app.models.api.SummeryDto;
 import app.services.SummeryService;
+import app.services.injections.ISummeryService;
 import com.google.inject.Inject;
 import org.javalite.common.JsonHelper;
 import org.springframework.http.HttpStatus;
@@ -15,28 +16,24 @@ public class SummeryController
 {
 
 	@Inject
-	private SummeryService summeryService;
+	private ISummeryService summeryService;
 
 	public void index() {
 		SummeryDto summery = summeryService.getSummary();
-		respondWithJson(JsonHelper.toJsonString(summery));
+		respondWithJson(summery);
 	}
 	
 	public void carbon() {
 		SummeryDto summery = summeryService.getSummary();
-		respondWithJson(JsonHelper.toJsonString(summery.getCarbonNum()));
+		respondWithJson(summery.getCarbonNum());
 	}
 	
 	public void pvToday() {
 		SummeryDto summery = summeryService.getSummary();
-		respondWithJson(JsonHelper.toJsonString(summery.getEpvtoday()));
+		respondWithJson(summery.getEpvtoday());
 	}
 	public void treeNum() {
 		SummeryDto summery = summeryService.getSummary();
-		respondWithJson(JsonHelper.toJsonString(summery.getTreeNum()));
-	}
-	
-	private void respondWithJson(String s) {
-		respond(s).contentType(getContentType()).status(HttpStatus.OK.value());
+		respondWithJson(summery.getTreeNum());
 	}
 }

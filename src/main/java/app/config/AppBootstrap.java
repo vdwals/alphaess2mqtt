@@ -1,5 +1,6 @@
 package app.config;
 
+import app.services.injections.RunningDataModule;
 import app.services.injections.SummeryModule;
 import app.services.injections.TokenModule;
 import com.google.inject.Injector;
@@ -12,6 +13,6 @@ public class AppBootstrap extends Bootstrap {
     }
     
     public Injector getInjector(){
-        return Guice.createInjector(new SummeryModule(), new TokenModule());
+        return Guice.createInjector(new SummeryModule(), new TokenModule(), new RunningDataModule());
     }
 }
