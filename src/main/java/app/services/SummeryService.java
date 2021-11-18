@@ -35,19 +35,20 @@ public class SummeryService extends AlphaService<SummeryDto> implements ISummery
         AlphaEssLoadJob summaryJob = AlphaEssLoadJob.getSummeryJob();
         
         SummaryRequestDto requestDto = SummaryRequestDto.builder()
-                                                        .showLoading(true)
-                                                        .tday(now.format(formatter))
-                                                        .build();
-        
+                .showLoading(true)
+                .tday(now.format(formatter))
+                .build();
+    
         Post summaryPost = Http.post(summaryJob.getUrl(), JsonHelper.toJsonString(requestDto))
-                               .header("Accept", APPLICATION_JSON)
-                               .header("Content-Type", APPLICATION_JSON)
-                               .header("authorization", "Bearer " + token);
+                .header("Accept", APPLICATION_JSON)
+                .header("Content-Type", APPLICATION_JSON)
+                .header("authorization", "Bearer " + token);
         
         String summaryResponse = summaryPost.text();
         try {
             ResponseDto<SummeryDto> summaryResponseDto = getObjectMapper().readValue(summaryResponse,
-                                                                                     new TypeReference<ResponseDto<SummeryDto>>() {});
+                    new TypeReference<ResponseDto<SummeryDto>>() {
+                    });
     
             return summaryResponseDto.getData();
     

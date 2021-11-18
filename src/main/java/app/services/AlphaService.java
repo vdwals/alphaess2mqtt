@@ -11,7 +11,8 @@ public abstract class AlphaService<P> {
     @Inject
     private final ObjectMapper objectMapper;
     
-    @Inject private final TokenService tokenService;
+    @Inject
+    private final TokenService tokenService;
     
     protected P latestResponse;
     

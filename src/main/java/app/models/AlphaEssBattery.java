@@ -1,6 +1,5 @@
 package app.models;
 
-import org.apache.commons.lang3.StringUtils;
 import org.javalite.activejdbc.Model;
 
 public class AlphaEssBattery extends Model {

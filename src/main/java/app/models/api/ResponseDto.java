@@ -4,7 +4,7 @@ import lombok.Value;
 
 @Value
 public class ResponseDto<P> {
-    int    code;
+    int code;
     String info;
     
     P data;

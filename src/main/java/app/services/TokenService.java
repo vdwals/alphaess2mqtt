@@ -21,12 +21,15 @@ import java.util.Map;
 import static app.util.Tokens.APPLICATION_JSON;
 
 public class TokenService implements ITokenService {
-    @Inject private final ObjectMapper objectMapper;
+    @Inject
+    private final ObjectMapper objectMapper;
     
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     @Inject
-    public TokenService(ObjectMapper objectMapper) {this.objectMapper = objectMapper;}
+    public TokenService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
     
     public String getToken() {
         AlphaEssToken currentToken = AlphaEssToken.findCurrentToken();
@@ -35,34 +38,38 @@ public class TokenService implements ITokenService {
             AlphaEssLoadJob loginJob = AlphaEssLoadJob.getLoginJob();
             
             Map<String, String> settings = AlphaEssSetting.getSettings();
-            
+    
             Post loginPost = Http.post(loginJob.getUrl(), JsonHelper.toJsonString(settings))
-                                 .header("Accept", APPLICATION_JSON)
-                                 .header("Content-Type", APPLICATION_JSON);
+                    .header("Accept", APPLICATION_JSON)
+                    .header("Content-Type", APPLICATION_JSON);
             
             String loginResponse = loginPost.text();
             
             try {
                 ResponseDto<TokenDto> loginResponseDto = objectMapper.readValue(loginResponse,
-                                                                                new TypeReference<ResponseDto<TokenDto>>() {});
+                        new TypeReference<ResponseDto<TokenDto>>() {
+                        });
                 TokenDto tokenDto = loginResponseDto.getData();
     
                 LocalDateTime expirationTime = LocalDateTime.parse(tokenDto.getTokenCreateTime(),
-                                                                   formatter)
-                                                            .plusSeconds(tokenDto.getExpiresIn());
+                                formatter)
+                        .plusSeconds(tokenDto.getExpiresIn());
     
                 // Delete all tokens as they are expired.
                 AlphaEssToken.deleteAll();
     
                 // Save new token.
                 currentToken = AlphaEssToken.create(tokenDto.getAccessToken(),
-                                                    expirationTime,
-                                                    tokenDto.getRefreshTokenKey());
-                
+                        expirationTime,
+                        tokenDto.getRefreshTokenKey());
+    
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        
+        if (currentToken == null)
+            return null;
         
         return currentToken.getToken();
     }

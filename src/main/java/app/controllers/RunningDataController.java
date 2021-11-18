@@ -9,7 +9,8 @@ import com.google.inject.Inject;
  */
 public class RunningDataController extends APIController {
     
-    @Inject private IRunningDataService runningDataService;
+    @Inject
+    private IRunningDataService runningDataService;
     
     public void index() {
         RunningDataDto runningData = runningDataService.getRunningData();
@@ -43,7 +44,7 @@ public class RunningDataController extends APIController {
     
     private double getPpvSum(RunningDataDto runningData) {
         return runningData.getPpv1() + runningData.getPpv2() + runningData.getPpv3() +
-               runningData.getPpv4();
+                runningData.getPpv4();
     }
     
     public void pMeter1() {

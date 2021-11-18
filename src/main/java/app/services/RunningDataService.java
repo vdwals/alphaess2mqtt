@@ -34,15 +34,16 @@ public class RunningDataService extends AlphaService<RunningDataDto>
         String url = String.format(dataJob.getUrl(), battery.getSn());
         
         Get dataGet = Http.get(url)
-                          .header("Accept", APPLICATION_JSON)
-                          .header("authorization", "Bearer " + token);
+                .header("Accept", APPLICATION_JSON)
+                .header("authorization", "Bearer " + token);
         
         String dataResponse = dataGet.text();
         
         try {
             ResponseDto<RunningDataDto> runningDataResponseDto = getObjectMapper().readValue(
                     dataResponse,
-                    new TypeReference<ResponseDto<RunningDataDto>>() {});
+                    new TypeReference<ResponseDto<RunningDataDto>>() {
+                    });
     
             return runningDataResponseDto.getData();
     
@@ -57,7 +58,7 @@ public class RunningDataService extends AlphaService<RunningDataDto>
     public LocalDateTime calculateNextRefresh(RunningDataDto responseData, LocalDateTime now) {
         AlphaEssLoadJob dataJob = AlphaEssLoadJob.getSecondDataJob();
         return LocalDateTime.parse(latestResponse.getUploadtime(), formatter)
-                            .plusSeconds(dataJob.getIntervalInSeconds());
+                .plusSeconds(dataJob.getIntervalInSeconds());
     }
     
     @Override
