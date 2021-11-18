@@ -1,7 +1,9 @@
 package app.models;
 
 import org.javalite.activejdbc.Model;
+import org.javalite.activejdbc.annotations.Cached;
 
+@Cached
 public class AlphaEssLoadJob extends Model {
     public static final String LOWER_LIKE_CONCAT_LOWER = "LOWER(%s) LIKE CONCAT('%%', LOWER(?), '%%')";
     public static final String LOGIN = "login";

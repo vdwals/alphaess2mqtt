@@ -1,10 +1,12 @@
 package app.models;
 
 import org.javalite.activejdbc.Model;
+import org.javalite.activejdbc.annotations.Cached;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Cached
 public class AlphaEssSetting extends Model {
     
     public static final String NAME = "name";
