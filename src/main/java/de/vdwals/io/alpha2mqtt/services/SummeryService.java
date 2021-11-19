@@ -9,7 +9,6 @@ import de.vdwals.io.alpha2mqtt.models.api.SummaryRequestDto;
 import de.vdwals.io.alpha2mqtt.models.api.SummeryDto;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import javax.inject.Singleton;
 import org.javalite.activejdbc.Base;
@@ -30,14 +29,14 @@ public class SummeryService extends AlphaService<SummeryDto> {
 
   @Override
   public SummeryDto requestNewData(String token, LocalDateTime now) {
-    AlphaEssLoadJob summaryJob = AlphaEssLoadJob.getSummeryJob();
+    String url = Base.withDb(() -> AlphaEssLoadJob.getSummeryJob().getUrl());
 
     SummaryRequestDto requestDto = SummaryRequestDto.builder()
         .showLoading(true)
         .tday(now.format(formatter))
         .build();
 
-    Post summaryPost = Http.post(summaryJob.getUrl(), JsonHelper.toJsonString(requestDto))
+    Post summaryPost = Http.post(url, JsonHelper.toJsonString(requestDto))
         .header("Accept", Constants.APPLICATION_JSON)
         .header("Content-Type", Constants.APPLICATION_JSON)
         .header("authorization", "Bearer " + token);
@@ -64,14 +63,6 @@ public class SummeryService extends AlphaService<SummeryDto> {
     Integer seconds = Base.withDb(
         () -> AlphaEssLoadJob.getSummeryJob().getIntervalInSeconds());
 
-    long diff = Long.MAX_VALUE;
-    if (lastRequest != null) {
-
-      long now = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
-      long updateAvailable = lastRequest.atZone(ZoneId.systemDefault()).toEpochSecond();
-      diff = Math.abs(updateAvailable - now);
-    }
-
-    return Math.min(seconds, diff);
+    return seconds;
   }
 }

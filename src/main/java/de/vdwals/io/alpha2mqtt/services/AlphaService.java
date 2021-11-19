@@ -2,10 +2,12 @@ package de.vdwals.io.alpha2mqtt.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import javax.inject.Singleton;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
+@Singleton
 public abstract class AlphaService<P> {
 
     @Getter
