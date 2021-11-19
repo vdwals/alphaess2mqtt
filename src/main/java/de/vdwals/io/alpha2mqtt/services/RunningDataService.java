@@ -9,6 +9,7 @@ import de.vdwals.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdwals.io.alpha2mqtt.models.api.RunningDataDto;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import org.javalite.activejdbc.Base;
 import org.javalite.http.Get;
@@ -53,10 +54,21 @@ public class RunningDataService extends AlphaService<RunningDataDto> {
   }
 
   @Override
-  public LocalDateTime calculateNextRefresh(RunningDataDto responseData, LocalDateTime now) {
+  public long getNextRefreshInSeconds() {
     Integer seconds = Base.withDb(
         () -> AlphaEssLoadJob.getSecondDataJob().getIntervalInSeconds());
-    return LocalDateTime.parse(responseData.getUploadtime(), formatter)
-        .plusSeconds(seconds);
+
+    long diff = Long.MAX_VALUE;
+    if (latestResponse != null) {
+      LocalDateTime updateAvailableAt = LocalDateTime.parse(latestResponse.getUploadtime(),
+              formatter)
+          .plusSeconds(seconds);
+
+      long now = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
+      long updateAvailable = updateAvailableAt.atZone(ZoneId.systemDefault()).toEpochSecond();
+      diff = Math.abs(updateAvailable - now);
+    }
+
+    return Math.min(seconds, diff);
   }
 }

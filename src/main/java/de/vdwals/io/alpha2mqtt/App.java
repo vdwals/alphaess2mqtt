@@ -11,23 +11,24 @@ import de.vdwals.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdwals.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdwals.io.alpha2mqtt.services.RunningDataService;
 import eu.lestard.easydi.EasyDI;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.activejdbc.connection_config.DBConfiguration;
 
+@Slf4j
 public class App {
 
   public static void main(String[] args) {
+    log.info("Load DB Settings");
     DBConfiguration.loadConfiguration("/database.properties");
 
+    log.info("Connect to MQTT-Broker");
     Map<String, String> envs = System.getenv();
     Service mqttService = ServiceFactory.getMqttService(envs.get("MQTT_HOST"),
         envs.get("MQTT_PORT"),
@@ -40,40 +41,57 @@ public class App {
 
     mqttService.connect();
 
-    List<DeviceInformation> deviceInformations = Base.withDb(
+    log.info("Load and init batteries");
+    List<DeviceInformation> deviceInformationList = Base.withDb(
         () -> AlphaEssBattery.findAll().stream().map(battery -> (AlphaEssBattery) battery)
             .map(battery -> {
               return DeviceInformation.builder().manufacturer("Alpha ESS")
-                  .model("Smile5").name(battery.getSn()).build();
+                  .model("Smile5").name(battery.getSn()).identifiers(List.of(battery.getSn()))
+                  .build();
             }).collect(Collectors.toList()));
 
-    List<Device> devices = deviceInformations.stream().map(deviceInformation -> {
+    log.info("Create sensors");
+    List<Device> devices = deviceInformationList.stream().map(deviceInformation -> {
       String deviceId = getDeviceId(deviceInformation);
 
       Device battery = new Device(deviceId, deviceInformation);
 
-      String socId = getSocId(deviceId);
       Sensor batteryLoad = Sensor.builder().deviceClass(DeviceClass.battery)
           .device(deviceInformation)
-          .objectId(socId)
-          .uniqueId(socId)
-          .name(String.join(" ", deviceInformation.getManufacturer(), deviceInformation.getName(),
-              "SOC")).build();
+          .objectId("soc")
+          .uniqueId(getUniqueId(deviceId, "soc"))
+          .name(getName(deviceInformation, "SOC")).build();
       battery.addEntity(batteryLoad);
 
-      String pBatId = getPBat(deviceId);
       Sensor batteryEnergy = Sensor.builder().deviceClass(DeviceClass.energy)
           .device(deviceInformation)
-          .objectId(pBatId)
-          .uniqueId(pBatId)
-          .name(String.join(" ", deviceInformation.getManufacturer(), deviceInformation.getName(),
-              "Leistung"))
+          .objectId("pBat")
+          .uniqueId(getUniqueId(deviceId, "pBat"))
+          .name(getName(deviceInformation, "Leistung"))
           .unit_of_measurement("W").build();
       battery.addEntity(batteryEnergy);
+
+      Sensor pvPower = Sensor.builder().deviceClass(DeviceClass.energy).device(deviceInformation)
+          .objectId("ppvTotal").uniqueId(getUniqueId(deviceId, "ppvTotal"))
+          .name(getName(deviceInformation, "PV-Leistung")).unit_of_measurement("W").build();
+      battery.addEntity(pvPower);
+
+      Sensor gridPower = Sensor.builder().deviceClass(DeviceClass.energy).device(deviceInformation)
+          .objectId("gridPower").uniqueId(getUniqueId(deviceId, "gridPower"))
+          .name(getName(deviceInformation, "Netz-Leistung")).unit_of_measurement("W").build();
+      battery.addEntity(gridPower);
+
+      Sensor powerConsumption = Sensor.builder().deviceClass(DeviceClass.energy)
+          .device(deviceInformation)
+          .objectId("powerConsumption").uniqueId(getUniqueId(deviceId, "powerConsumption"))
+          .name(getName(deviceInformation, "Verbraucher Leistung")).unit_of_measurement("W")
+          .build();
+      battery.addEntity(powerConsumption);
 
       return battery;
     }).collect(Collectors.toList());
 
+    log.info("Publish configs");
     mqttService.addDevices(devices);
     mqttService.publishConfigs();
 
@@ -83,49 +101,51 @@ public class App {
 
     RunningDataService runningDataService = ed.getInstance(RunningDataService.class);
 
-    Timer dataTimer = new Timer("Data Timer");
+    ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
 
     devices.forEach(device -> {
-      TimerTask tt = new TimerTask() {
+      Runnable runningData = new Runnable() {
         @Override
         public void run() {
+          log.info("Update date");
           RunningDataDto data = runningDataService.getData();
-          LocalDateTime nextRefresh = runningDataService.getNextRefresh();
 
           String deviceId = getDeviceId(device.getDeviceInformation());
 
-          device.updateValue(getSocId(deviceId), String.valueOf(data.getSoc()));
-          device.updateValue(getPBat(deviceId), String.valueOf(data.getPbat()));
+          double totalPvPower = data.getPpv1() + data.getPpv2() + data.getPpv3() + data.getPpv4()
+              + data.getPmeter_dc();
+          double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
+
+          device.updateValue("soc", data.getSoc());
+          device.updateValue("pBat", data.getPbat());
+          device.updateValue("ppvTotal",
+              totalPvPower);
+          device.updateValue("gridPower",
+              totalGridPower);
+          device.updateValue("powerConsumption",
+              totalGridPower + totalPvPower + data.getPbat());
 
           mqttService.publishValues();
-          dataTimer.schedule(this,
-              convertToDateViaInstant(
-                  nextRefresh));
+
+          long delay = runningDataService.getNextRefreshInSeconds();
+          log.info("Next update at in {} seconds", delay);
+          ses.schedule(this, delay, TimeUnit.SECONDS);
         }
       };
 
-      LocalDateTime nextRefresh = runningDataService.getNextRefresh();
-      if (nextRefresh == null || nextRefresh
-          .isBefore(LocalDateTime.now().plusSeconds(30))) {
-        dataTimer.schedule(tt, TimeUnit.SECONDS.toMillis(30));
-      } else {
-        dataTimer.schedule(tt, convertToDateViaInstant(nextRefresh));
-      }
+      long nextRefresh = runningDataService.getNextRefreshInSeconds();
+      log.info("Start scheduling in {} seconds", nextRefresh);
+      ses.schedule(runningData, nextRefresh, TimeUnit.SECONDS);
     });
   }
 
-  private static Date convertToDateViaInstant(LocalDateTime dateToConvert) {
-    return Date
-        .from(dateToConvert.atZone(ZoneId.systemDefault())
-            .toInstant());
+  private static String getName(DeviceInformation deviceInformation, String name) {
+    return String.join(" ", deviceInformation.getManufacturer(), deviceInformation.getName(),
+        name);
   }
 
-  private static String getPBat(String deviceId) {
-    return String.join("_", deviceId, "pbat");
-  }
-
-  private static String getSocId(String deviceId) {
-    return String.join("_", deviceId, "soc");
+  private static String getUniqueId(String deviceId, String objectId) {
+    return String.join("_", deviceId, objectId);
   }
 
   private static String getDeviceId(DeviceInformation device) {

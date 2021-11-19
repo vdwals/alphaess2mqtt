@@ -15,7 +15,6 @@ public abstract class AlphaService<P> {
 
     protected P latestResponse;
 
-    @Getter
     private LocalDateTime nextRefresh;
 
     public P getData() {
@@ -26,7 +25,7 @@ public abstract class AlphaService<P> {
 
             latestResponse = requestNewData(token, now);
 
-            nextRefresh = calculateNextRefresh(latestResponse, now);
+            nextRefresh = LocalDateTime.now().plusSeconds(getNextRefreshInSeconds());
         }
 
         return latestResponse;
@@ -34,5 +33,5 @@ public abstract class AlphaService<P> {
 
     protected abstract P requestNewData(String token, LocalDateTime now);
 
-    protected abstract LocalDateTime calculateNextRefresh(P responseData, LocalDateTime now);
+    public abstract long getNextRefreshInSeconds();
 }
