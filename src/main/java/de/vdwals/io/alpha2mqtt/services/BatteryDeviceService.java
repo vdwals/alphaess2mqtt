@@ -26,9 +26,11 @@ import org.javalite.activejdbc.Base;
 @Singleton
 public class BatteryDeviceService {
 
+  public static final String START_OF_DAY = "start_of_day";
+  
   @Getter
   private Sensor batteryLoad, batteryEnergy, pvPower, gridPower, powerConsumption, selfConsumption,
-      selfSufficiency, carbonNum, pvToday, pvTotal, treeNum;
+      selfSufficiency, carbonNum, pvToday, pvTotal, treeNum, batteryInput, batteryOutput;
 
   private Device battery;
 
@@ -66,6 +68,12 @@ public class BatteryDeviceService {
 
       batteryEnergy = getEnergySensor(deviceInformation, deviceId, "pBat", "Batterie Leistung");
       battery.addEntity(batteryEnergy);
+      batteryInput =
+          getEnergySensor(deviceInformation, deviceId, "pBatIn", "Batterie Lade-Leistung");
+      battery.addEntity(batteryInput);
+      batteryOutput =
+          getEnergySensor(deviceInformation, deviceId, "pBatOut", "Batterie Entlade-Leistung");
+      battery.addEntity(batteryOutput);
 
       pvPower = getEnergySensor(deviceInformation, deviceId, "ppvTotal", "PV-Leistung");
       battery.addEntity(pvPower);
@@ -88,7 +96,7 @@ public class BatteryDeviceService {
           deviceId,
           "pvToday",
           "PV Energy Heute").stateClass(total)
-          .lastResetValueTemplate("{{ value_json.start_of_day }}")
+          .lastResetValueTemplate(String.format("{{ value_json.%s }}", START_OF_DAY))
           .build();
       battery.addEntity(pvToday);
 

@@ -42,11 +42,18 @@ public class RunningDataUpdateService implements Runnable {
         data.getPpv1() + data.getPpv2() + data.getPpv3() + data.getPpv4() + data.getPmeter_dc();
     double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
 
-    device.updateValue("soc", data.getSoc());
-    device.updateValue("pBat", data.getPbat());
-    device.updateValue("ppvTotal", totalPvPower);
-    device.updateValue("gridPower", totalGridPower);
-    device.updateValue("powerConsumption", totalGridPower + totalPvPower + data.getPbat());
+    device.updateValue(batteryDeviceService.getBatteryLoad().getObjectId(), data.getSoc());
+
+    double pbat = data.getPbat();
+    device.updateValue(batteryDeviceService.getBatteryEnergy().getObjectId(), pbat);
+    device.updateValue(batteryDeviceService.getBatteryInput().getObjectId(),
+        pbat > 0 ? 0 : Math.abs(pbat));
+    device.updateValue(batteryDeviceService.getBatteryOutput().getObjectId(), pbat > 0 ? pbat : 0);
+
+    device.updateValue(batteryDeviceService.getPvPower().getObjectId(), totalPvPower);
+    device.updateValue(batteryDeviceService.getGridPower().getObjectId(), totalGridPower);
+    device.updateValue(batteryDeviceService.getPowerConsumption().getObjectId(),
+        totalGridPower + totalPvPower + pbat);
 
     mqttService.publishValues();
 
