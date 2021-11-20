@@ -25,7 +25,7 @@ public class App {
 
   private final SolarModuleDeviceService solarModuleDeviceService;
 
-  private InverterDeviceService inverterDeviceService;
+  private final InverterDeviceService inverterDeviceService;
 
   private final HomeAssistantMQTTService mqttService;
 
