@@ -6,7 +6,6 @@ import static de.vdwals.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.DeviceInformation;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.SensorBuilder;
 import de.vdwals.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdwals.io.alpha2mqtt.models.api.SummeryDto;
@@ -84,12 +83,13 @@ public class InverterDeviceService extends DeviceService {
         .icon(icon);
   }
 
-  private Sensor getPercentSensor(DeviceInformation deviceInformation, String deviceId,
+  private Sensor getPercentSensor(DeviceInformation deviceInformation,
+                                  String deviceId,
                                   String objectId,
                                   String name) {
     return getSensor(deviceInformation,
         deviceId,
-        DeviceClass.None,
+        null,
         objectId,
         name).unitOfMeasurement(PERCENT.getUnit()).build();
   }
