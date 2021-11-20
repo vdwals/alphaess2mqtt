@@ -43,18 +43,22 @@ public class SolarModuleDeviceService extends DeviceService {
     solarModules = new Device(deviceId, deviceInformation);
 
     pvPower = getPowerSensor(deviceInformation, deviceId, "ppvTotal", "PV Leistung");
+    solarModules.addEntity(pvPower);
 
     ppv1 = getPowerSensor(deviceInformation, deviceId, "ppv1", "PV 1 Leistung");
+    solarModules.addEntity(ppv1);
 
     ppv2 = getPowerSensor(deviceInformation, deviceId, "ppv2", "PV 2 Leistung");
+    solarModules.addEntity(ppv2);
 
     ppv3 = getPowerSensor(deviceInformation, deviceId, "ppv3", "PV 3 Leistung");
+    solarModules.addEntity(ppv3);
 
     ppv4 = getPowerSensor(deviceInformation, deviceId, "ppv4", "PV 4 Leistung");
+    solarModules.addEntity(ppv4);
 
     pMeterDc = getPowerSensor(deviceInformation, deviceId, "pMeterDc", "PV DC Leistung");
-
-    solarModules.addEntity(pvPower);
+    solarModules.addEntity(pMeterDc);
 
     pvToday = getEnergySensor(deviceInformation,
         deviceId,
@@ -89,7 +93,7 @@ public class SolarModuleDeviceService extends DeviceService {
     solarModules.updateValue(ppv2.getObjectId(), data.getPpv2());
     solarModules.updateValue(ppv3.getObjectId(), data.getPpv3());
     solarModules.updateValue(ppv4.getObjectId(), data.getPpv4());
-    
+
     solarModules.updateValue(pMeterDc.getObjectId(), data.getPmeter_dc());
   }
 
