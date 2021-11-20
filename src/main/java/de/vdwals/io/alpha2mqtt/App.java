@@ -1,17 +1,17 @@
 package de.vdwals.io.alpha2mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.vdw.it.hamqtt.Service;
-import de.vdw.it.hamqtt.devices.Device;
+import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import de.vdw.it.hamqtt.utils.ServiceFactory;
-import de.vdwals.io.alpha2mqtt.services.BatteryDeviceService;
-import de.vdwals.io.alpha2mqtt.services.RunningDataUpdateService;
-import de.vdwals.io.alpha2mqtt.services.SummeryDataUpdateService;
+import de.vdwals.io.alpha2mqtt.services.alpha.RunningDataUpdateService;
+import de.vdwals.io.alpha2mqtt.services.alpha.SummeryDataUpdateService;
+import de.vdwals.io.alpha2mqtt.services.ha.BatteryDeviceService;
+import de.vdwals.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
 import eu.lestard.easydi.EasyDI;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.connection_config.DBConfiguration;
@@ -22,11 +22,13 @@ public class App {
 
   private final BatteryDeviceService batteryDeviceService;
 
-  private final Service mqttService;
+  private final SolarModuleDeviceService solarModuleDeviceService;
+
+  private final HomeAssistantMQTTService mqttService;
+
+  private final ScheduledExecutorService scheduledExecutorService;
 
   private final EasyDI easyDI;
-
-  private List<Device> devices;
 
   public static void main(String[] args) {
     log.info("Load DB Settings");
@@ -35,7 +37,7 @@ public class App {
     log.info("Connect to MQTT-Broker");
     Map<String, String> envs = System.getenv();
 
-    Service mqttService = ServiceFactory.getMqttService(envs.get("MQTT_HOST"),
+    HomeAssistantMQTTService mqttService = ServiceFactory.getMqttService(envs.get("MQTT_HOST"),
         envs.get("MQTT_PORT"),
         envs.get("MQTT_USERNAME"),
         envs.get("MQTT_PASSWORD").toCharArray(),
@@ -45,7 +47,7 @@ public class App {
 
     EasyDI ed = new EasyDI();
     ed.bindInstance(ObjectMapper.class, new ObjectMapper());
-    ed.bindInstance(Service.class, mqttService);
+    ed.bindInstance(HomeAssistantMQTTService.class, mqttService);
     ed.bindInstance(ScheduledExecutorService.class, Executors.newSingleThreadScheduledExecutor());
     ed.bindInstance(EasyDI.class, ed);
 
@@ -58,27 +60,25 @@ public class App {
   public void init() {
     mqttService.connect();
 
-    devices = batteryDeviceService.getBatteryDevices();
+    mqttService.addDevice(batteryDeviceService.getBattery());
+    mqttService.addDevice(solarModuleDeviceService.getSolarModules());
 
-    log.info("Publish configs");
-    mqttService.addDevices(devices);
-    mqttService.publishConfigs();
+    scheduledExecutorService.scheduleAtFixedRate(() -> {
+      log.info("Publish configs");
+      mqttService.publishConfigs();
+    }, 0, 1, TimeUnit.HOURS);
   }
 
   public void start() {
 
-    ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+    RunningDataUpdateService runningDataUpdateService =
+        easyDI.getInstance(RunningDataUpdateService.class);
 
-    devices.forEach(device -> {
-      RunningDataUpdateService runningDataUpdateService =
-          easyDI.getInstance(RunningDataUpdateService.class);
+    runningDataUpdateService.init();
 
-      runningDataUpdateService.init(device);
+    SummeryDataUpdateService summeryDataUpdateService =
+        easyDI.getInstance(SummeryDataUpdateService.class);
 
-      SummeryDataUpdateService summeryDataUpdateService =
-          easyDI.getInstance(SummeryDataUpdateService.class);
-
-      summeryDataUpdateService.init(device);
-    });
+    summeryDataUpdateService.init();
   }
 }

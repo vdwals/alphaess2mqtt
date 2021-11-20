@@ -1,4 +1,4 @@
-package de.vdwals.io.alpha2mqtt.services;
+package de.vdwals.io.alpha2mqtt.services.alpha;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;

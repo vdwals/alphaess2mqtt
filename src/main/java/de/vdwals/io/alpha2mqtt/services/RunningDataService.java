@@ -7,6 +7,8 @@ import de.vdwals.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdwals.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdwals.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdwals.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdwals.io.alpha2mqtt.services.alpha.AlphaService;
+import de.vdwals.io.alpha2mqtt.services.alpha.TokenService;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -39,10 +41,8 @@ public class RunningDataService extends AlphaService<RunningDataDto> {
     String dataResponse = dataGet.text();
 
     try {
-      ResponseDto<RunningDataDto> runningDataResponseDto = getObjectMapper().readValue(
-          dataResponse,
-          new TypeReference<ResponseDto<RunningDataDto>>() {
-          });
+      ResponseDto<RunningDataDto> runningDataResponseDto =
+          getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
 
       return runningDataResponseDto.getData();
 
@@ -55,14 +55,12 @@ public class RunningDataService extends AlphaService<RunningDataDto> {
 
   @Override
   public long getNextRefreshInSeconds() {
-    Integer seconds = Base.withDb(
-        () -> AlphaEssLoadJob.getSecondDataJob().getIntervalInSeconds());
+    Integer seconds = Base.withDb(() -> AlphaEssLoadJob.getSecondDataJob().getIntervalInSeconds());
 
     long diff = Long.MAX_VALUE;
     if (latestResponse != null) {
-      LocalDateTime updateAvailableAt = LocalDateTime.parse(latestResponse.getUploadtime(),
-              formatter)
-          .plusSeconds(seconds);
+      LocalDateTime updateAvailableAt =
+          LocalDateTime.parse(latestResponse.getUploadtime(), formatter).plusSeconds(seconds);
 
       long now = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
       long updateAvailable = updateAvailableAt.atZone(ZoneId.systemDefault()).toEpochSecond();
