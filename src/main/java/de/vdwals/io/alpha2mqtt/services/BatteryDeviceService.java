@@ -27,7 +27,7 @@ import org.javalite.activejdbc.Base;
 public class BatteryDeviceService {
 
   public static final String START_OF_DAY = "start_of_day";
-  
+
   @Getter
   private Sensor batteryLoad, batteryEnergy, pvPower, gridPower, powerConsumption, selfConsumption,
       selfSufficiency, carbonNum, pvToday, pvTotal, treeNum, batteryInput, batteryOutput;
@@ -63,26 +63,26 @@ public class BatteryDeviceService {
           deviceId,
           DeviceClass.battery,
           "soc",
-          "Batterie Ladung").build();
+          "Batterie Ladung").unitOfMeasurement(PERCENT.getUnit()).build();
       battery.addEntity(batteryLoad);
 
-      batteryEnergy = getEnergySensor(deviceInformation, deviceId, "pBat", "Batterie Leistung");
+      batteryEnergy = getPowerSensor(deviceInformation, deviceId, "pBat", "Batterie Leistung");
       battery.addEntity(batteryEnergy);
       batteryInput =
-          getEnergySensor(deviceInformation, deviceId, "pBatIn", "Batterie Lade-Leistung");
+          getPowerSensor(deviceInformation, deviceId, "pBatIn", "Batterie Lade-Leistung");
       battery.addEntity(batteryInput);
       batteryOutput =
-          getEnergySensor(deviceInformation, deviceId, "pBatOut", "Batterie Entlade-Leistung");
+          getPowerSensor(deviceInformation, deviceId, "pBatOut", "Batterie Entlade-Leistung");
       battery.addEntity(batteryOutput);
 
-      pvPower = getEnergySensor(deviceInformation, deviceId, "ppvTotal", "PV-Leistung");
+      pvPower = getPowerSensor(deviceInformation, deviceId, "ppvTotal", "PV Leistung");
       battery.addEntity(pvPower);
 
-      gridPower = getEnergySensor(deviceInformation, deviceId, "gridPower", "Netz-Leistung");
+      gridPower = getPowerSensor(deviceInformation, deviceId, "gridPower", "Netz Leistung");
       battery.addEntity(gridPower);
 
       powerConsumption =
-          getEnergySensor(deviceInformation, deviceId, "powerConsumption", "Verbraucher Leistung");
+          getPowerSensor(deviceInformation, deviceId, "powerConsumption", "Verbraucher Leistung");
       battery.addEntity(powerConsumption);
 
       carbonNum = getSensor(deviceInformation,
@@ -92,22 +92,22 @@ public class BatteryDeviceService {
           "CO2 Einsparung").unitOfMeasurement("kg").stateClass(total_increasing).build();
       battery.addEntity(carbonNum);
 
-      pvToday = getPowerSensor(deviceInformation,
-          deviceId,
-          "pvToday",
-          "PV Energy Heute").stateClass(total)
-          .lastResetValueTemplate(String.format("{{ value_json.%s }}", START_OF_DAY))
-          .build();
+      pvToday =
+          getEnergySensor(deviceInformation, deviceId, "pvToday", "PV Energie Heute").stateClass(
+                  total)
+              .lastResetValueTemplate(String.format("{{ value_json.%s }}", START_OF_DAY))
+              .build();
       battery.addEntity(pvToday);
 
-      pvTotal = getPowerSensor(deviceInformation, deviceId, "pvTotal", "PV Energy").stateClass(
-          total_increasing).build();
+      pvTotal =
+          getEnergySensor(deviceInformation, deviceId, "pvTotal", "PV Energie Gesamt").stateClass(
+              total_increasing).build();
       battery.addEntity(pvTotal);
 
       selfConsumption = getPercentSensor(deviceInformation,
           deviceId,
           "selfConsumption",
-          "PV Energie Eigenverbrauch");
+          "Anteil PV Energie Eigenverbrauch");
       battery.addEntity(selfConsumption);
 
       selfSufficiency =
@@ -125,13 +125,13 @@ public class BatteryDeviceService {
     }).collect(Collectors.toList());
   }
 
-  private SensorBuilder getPowerSensor(DeviceInformation deviceInformation,
-                                       String deviceId,
-                                       String objectId,
-                                       String name) {
+  private SensorBuilder getEnergySensor(DeviceInformation deviceInformation,
+                                        String deviceId,
+                                        String objectId,
+                                        String name) {
     return getSensor(deviceInformation,
         deviceId,
-        DeviceClass.power,
+        DeviceClass.energy,
         objectId,
         name).unitOfMeasurement(KILO_WATT_PER_HOUR.getUnit());
   }
@@ -147,13 +147,13 @@ public class BatteryDeviceService {
         name).unitOfMeasurement(PERCENT.getUnit()).build();
   }
 
-  private Sensor getEnergySensor(DeviceInformation deviceInformation,
-                                 String deviceId,
-                                 String objectId,
-                                 String name) {
+  private Sensor getPowerSensor(DeviceInformation deviceInformation,
+                                String deviceId,
+                                String objectId,
+                                String name) {
     return getMeasurementSensor(deviceInformation,
         deviceId,
-        DeviceClass.energy,
+        DeviceClass.power,
         objectId,
         name).unitOfMeasurement(WATT.getUnit()).build();
   }

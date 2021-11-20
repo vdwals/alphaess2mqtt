@@ -3,11 +3,14 @@ package de.vdwals.io.alpha2mqtt.services;
 import de.vdw.it.hamqtt.Service;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdwals.io.alpha2mqtt.models.api.SummeryDto;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.math.NumberUtils;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,9 +29,8 @@ public class SummeryDataUpdateService implements Runnable {
   public void init(Device device) {
     this.device = device;
 
-    long nextRefresh = summeryService.getNextRefreshInSeconds();
-    log.info("Start scheduling summary data in {} seconds", nextRefresh);
-    scheduledExecutorService.schedule(this, nextRefresh, TimeUnit.SECONDS);
+    log.info("Start scheduling summary data in {} seconds", 10);
+    scheduledExecutorService.schedule(this, 10, TimeUnit.SECONDS);
   }
 
   @Override
@@ -40,9 +42,9 @@ public class SummeryDataUpdateService implements Runnable {
     device.updateValue(batteryDeviceService.getPvToday().getObjectId(), data.getEpvtoday());
     device.updateValue(batteryDeviceService.getPvTotal().getObjectId(), data.getEpvtotal());
     device.updateValue(batteryDeviceService.getSelfConsumption().getObjectId(),
-        data.getEselfConsumption());
+        getScaledValue(data.getEselfConsumption()));
     device.updateValue(batteryDeviceService.getSelfSufficiency().getObjectId(),
-        data.getEselfSufficiency());
+        getScaledValue(data.getEselfSufficiency()));
     device.updateValue(batteryDeviceService.getTreeNum().getObjectId(), data.getTreeNum());
 
     device.updateRawValue(batteryDeviceService.getPvToday().getClassName(),
@@ -54,5 +56,9 @@ public class SummeryDataUpdateService implements Runnable {
     long delay = summeryService.getNextRefreshInSeconds();
     log.info("Next summary data update at in {} seconds", delay);
     scheduledExecutorService.schedule(this, delay, TimeUnit.SECONDS);
+  }
+
+  private BigDecimal getScaledValue(double value) {
+    return NumberUtils.toScaledBigDecimal(value * 100, 3, RoundingMode.HALF_UP);
   }
 }
