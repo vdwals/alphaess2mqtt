@@ -7,7 +7,6 @@ import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.DeviceInformation;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
-import de.vdwals.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdwals.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdwals.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdwals.io.alpha2mqtt.utils.IdUtils;
@@ -15,7 +14,6 @@ import java.util.List;
 import javax.inject.Singleton;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.javalite.activejdbc.Base;
 
 @Slf4j
 @Singleton
@@ -29,16 +27,12 @@ public class InverterDeviceService extends DeviceService {
 
   public InverterDeviceService() {
     log.info("Load and init batteries");
-    DeviceInformation deviceInformation = Base.withDb(() -> AlphaEssBattery.findAll()
-        .stream()
-        .map(battery -> (AlphaEssBattery) battery)
-        .map(battery -> DeviceInformation.builder()
-            .manufacturer("Alpha ESS")
-            .model("Smile5")
-            .name("PV-Wechselrichter")
-            .identifiers(List.of(battery.getSn()))
-            .build())
-        .findFirst()).get();
+    DeviceInformation deviceInformation = DeviceInformation.builder()
+        .manufacturer("Alpha ESS")
+        .model("Smile5")
+        .name("PV-Wechselrichter")
+        .identifiers(List.of("Smile5"))
+        .build();
 
     log.info("Create sensors");
     String deviceId = IdUtils.getDeviceId(deviceInformation);
