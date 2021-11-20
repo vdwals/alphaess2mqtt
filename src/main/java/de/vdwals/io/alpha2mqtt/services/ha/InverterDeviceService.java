@@ -1,7 +1,6 @@
 package de.vdwals.io.alpha2mqtt.services.ha;
 
 import static de.vdw.it.hamqtt.devices.Units.PERCENT;
-import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.total_increasing;
 import static de.vdwals.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 
 import de.vdw.it.hamqtt.devices.Device;
@@ -72,25 +71,23 @@ public class InverterDeviceService extends DeviceService {
     inverter.addEntity(carbonNum);
   }
 
-  private SensorBuilder<?, ?> getNumberSensor(DeviceInformation deviceInformation,
-                                              String deviceId,
-                                              String id,
-                                              String name,
-                                              String icon) {
+  private SensorBuilder getNumberSensor(DeviceInformation deviceInformation,
+                                        String deviceId,
+                                        String id,
+                                        String name,
+                                        String icon) {
     return Sensor.builder()
         .device(deviceInformation)
         .objectId(id)
         .uniqueId(getUniqueId(deviceId, id))
         .name(name)
-        .icon(icon)
-        .stateClass(total_increasing);
+        .icon(icon);
   }
 
-  private Sensor getPercentSensor(DeviceInformation deviceInformation,
-                                  String deviceId,
+  private Sensor getPercentSensor(DeviceInformation deviceInformation, String deviceId,
                                   String objectId,
                                   String name) {
-    return getMeasurementSensor(deviceInformation,
+    return getSensor(deviceInformation,
         deviceId,
         DeviceClass.None,
         objectId,
