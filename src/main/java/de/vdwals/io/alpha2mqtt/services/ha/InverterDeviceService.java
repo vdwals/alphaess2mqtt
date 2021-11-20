@@ -2,11 +2,13 @@ package de.vdwals.io.alpha2mqtt.services.ha;
 
 import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.total_increasing;
+import static de.vdwals.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.DeviceInformation;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
+import de.vdw.it.hamqtt.devices.sensor.Sensor.SensorBuilder;
 import de.vdwals.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdwals.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdwals.io.alpha2mqtt.utils.IdUtils;
@@ -46,13 +48,6 @@ public class InverterDeviceService extends DeviceService {
         getPowerSensor(deviceInformation, deviceId, "powerConsumption", "Verbraucher Leistung");
     inverter.addEntity(powerConsumption);
 
-    carbonNum = getSensor(deviceInformation,
-        deviceId,
-        DeviceClass.carbon_dioxide,
-        "carbonNum",
-        "CO2 Einsparung").unitOfMeasurement("kg").stateClass(total_increasing).build();
-    inverter.addEntity(carbonNum);
-
     selfConsumption = getPercentSensor(deviceInformation,
         deviceId,
         "selfConsumption",
@@ -62,23 +57,40 @@ public class InverterDeviceService extends DeviceService {
     selfSufficiency = getPercentSensor(deviceInformation, deviceId, "selfSufficiency", "Autarkie");
     inverter.addEntity(selfSufficiency);
 
-    treeNum = getSensor(deviceInformation,
+    treeNum = getNumberSensor(deviceInformation,
         deviceId,
-        DeviceClass.None,
         "treeNum",
-        "Gepflanzte Bäume").stateClass(total_increasing).build();
+        "Gepflanzte Bäume",
+        "mdi:forest").build();
     inverter.addEntity(treeNum);
 
+    carbonNum = getNumberSensor(deviceInformation,
+        deviceId,
+        "carbonNum",
+        "CO2 Einsparung",
+        "mdi:molecule-co2").unitOfMeasurement("kg").build();
+    inverter.addEntity(carbonNum);
+  }
+
+  private SensorBuilder<?, ?> getNumberSensor(DeviceInformation deviceInformation,
+                                              String deviceId,
+                                              String id,
+                                              String name,
+                                              String icon) {
+    return Sensor.builder()
+        .device(deviceInformation)
+        .objectId(id)
+        .uniqueId(getUniqueId(deviceId, id))
+        .name(name)
+        .icon(icon)
+        .stateClass(total_increasing);
   }
 
   private Sensor getPercentSensor(DeviceInformation deviceInformation,
                                   String deviceId,
                                   String objectId,
                                   String name) {
-    return getMeasurementSensor(deviceInformation,
-        deviceId,
-        DeviceClass.None,
-        objectId,
+    return getMeasurementSensor(deviceInformation, deviceId, DeviceClass.None, objectId,
         name).unitOfMeasurement(PERCENT.getUnit()).build();
   }
 
