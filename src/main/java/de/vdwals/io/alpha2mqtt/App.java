@@ -6,6 +6,7 @@ import de.vdw.it.hamqtt.utils.ServiceFactory;
 import de.vdwals.io.alpha2mqtt.services.alpha.RunningDataUpdateService;
 import de.vdwals.io.alpha2mqtt.services.alpha.SummeryDataUpdateService;
 import de.vdwals.io.alpha2mqtt.services.ha.BatteryDeviceService;
+import de.vdwals.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdwals.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
 import eu.lestard.easydi.EasyDI;
 import java.util.Map;
@@ -23,6 +24,8 @@ public class App {
   private final BatteryDeviceService batteryDeviceService;
 
   private final SolarModuleDeviceService solarModuleDeviceService;
+
+  private InverterDeviceService inverterDeviceService;
 
   private final HomeAssistantMQTTService mqttService;
 
@@ -62,6 +65,7 @@ public class App {
 
     mqttService.addDevice(batteryDeviceService.getBattery());
     mqttService.addDevice(solarModuleDeviceService.getSolarModules());
+    mqttService.addDevice(inverterDeviceService.getInverter());
 
     scheduledExecutorService.scheduleAtFixedRate(() -> {
       log.info("Publish configs");

@@ -1,7 +1,5 @@
 package de.vdwals.io.alpha2mqtt.services.ha;
 
-import static de.vdw.it.hamqtt.devices.Units.PERCENT;
-
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.DeviceInformation;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
@@ -29,14 +27,12 @@ public class BatteryDeviceService extends DeviceService {
     DeviceInformation deviceInformation = Base.withDb(() -> AlphaEssBattery.findAll()
         .stream()
         .map(battery -> (AlphaEssBattery) battery)
-        .map(battery -> {
-          return DeviceInformation.builder()
-              .manufacturer("Alpha ESS")
-              .model("Smile5")
-              .name("PV-Batterie")
-              .identifiers(List.of(battery.getSn()))
-              .build();
-        })
+        .map(battery -> DeviceInformation.builder()
+            .manufacturer("Alpha ESS")
+            .model("Smile5")
+            .name("PV-Batterie")
+            .identifiers(List.of(battery.getSn()))
+            .build())
         .findFirst()).get();
 
     log.info("Create sensors");
@@ -48,7 +44,7 @@ public class BatteryDeviceService extends DeviceService {
         deviceId,
         DeviceClass.battery,
         "soc",
-        "Batterie Ladung").unitOfMeasurement(PERCENT.getUnit()).build();
+        "Batterie Ladung").build();
     battery.addEntity(batteryLoad);
 
     batteryEnergy = getPowerSensor(deviceInformation, deviceId, "pBat", "Batterie Leistung");
@@ -58,17 +54,6 @@ public class BatteryDeviceService extends DeviceService {
     batteryOutput =
         getPowerSensor(deviceInformation, deviceId, "pBatOut", "Batterie Entlade-Leistung");
     battery.addEntity(batteryOutput);
-  }
-
-  private Sensor getPercentSensor(DeviceInformation deviceInformation,
-                                  String deviceId,
-                                  String objectId,
-                                  String name) {
-    return getMeasurementSensor(deviceInformation,
-        deviceId,
-        DeviceClass.None,
-        objectId,
-        name).unitOfMeasurement(PERCENT.getUnit()).build();
   }
 
   public void mapValues(RunningDataDto data) {

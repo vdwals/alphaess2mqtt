@@ -31,32 +31,32 @@ public class SolarModuleDeviceService extends DeviceService {
 
   public SolarModuleDeviceService() {
     log.info("Init solar modules");
-    DeviceInformation solarModuleDeviceInformation = DeviceInformation.builder()
+    DeviceInformation deviceInformation = DeviceInformation.builder()
         .manufacturer("Bauer Solar")
         .model("BS-6MHBB5-GG")
         .name("Solarmodule")
         .identifiers(List.of("BS-6MHBB5-GG"))
         .build();
 
-    String deviceId = IdUtils.getDeviceId(solarModuleDeviceInformation);
+    String deviceId = IdUtils.getDeviceId(deviceInformation);
 
-    solarModules = new Device(deviceId, solarModuleDeviceInformation);
+    solarModules = new Device(deviceId, deviceInformation);
 
-    pvPower = getPowerSensor(solarModuleDeviceInformation, deviceId, "ppvTotal", "PV Leistung");
+    pvPower = getPowerSensor(deviceInformation, deviceId, "ppvTotal", "PV Leistung");
 
-    ppv1 = getPowerSensor(solarModuleDeviceInformation, deviceId, "ppv1", "PV 1 Leistung");
+    ppv1 = getPowerSensor(deviceInformation, deviceId, "ppv1", "PV 1 Leistung");
 
-    ppv2 = getPowerSensor(solarModuleDeviceInformation, deviceId, "ppv2", "PV 2 Leistung");
+    ppv2 = getPowerSensor(deviceInformation, deviceId, "ppv2", "PV 2 Leistung");
 
-    ppv3 = getPowerSensor(solarModuleDeviceInformation, deviceId, "ppv3", "PV 3 Leistung");
+    ppv3 = getPowerSensor(deviceInformation, deviceId, "ppv3", "PV 3 Leistung");
 
-    ppv4 = getPowerSensor(solarModuleDeviceInformation, deviceId, "ppv4", "PV 4 Leistung");
+    ppv4 = getPowerSensor(deviceInformation, deviceId, "ppv4", "PV 4 Leistung");
 
-    pMeterDc = getPowerSensor(solarModuleDeviceInformation, deviceId, "pMeterDc", "PV DC Leistung");
+    pMeterDc = getPowerSensor(deviceInformation, deviceId, "pMeterDc", "PV DC Leistung");
 
     solarModules.addEntity(pvPower);
 
-    pvToday = getEnergySensor(solarModuleDeviceInformation,
+    pvToday = getEnergySensor(deviceInformation,
         deviceId,
         "pvToday",
         "PV Energie Heute").stateClass(total)
@@ -64,10 +64,9 @@ public class SolarModuleDeviceService extends DeviceService {
         .build();
     solarModules.addEntity(pvToday);
 
-    pvTotal = getEnergySensor(solarModuleDeviceInformation,
-        deviceId,
-        "pvTotal",
-        "PV Energie Gesamt").stateClass(total_increasing).build();
+    pvTotal =
+        getEnergySensor(deviceInformation, deviceId, "pvTotal", "PV Energie Gesamt").stateClass(
+            total_increasing).build();
     solarModules.addEntity(pvTotal);
   }
 
@@ -86,6 +85,12 @@ public class SolarModuleDeviceService extends DeviceService {
     solarModules.updateValue(pvPower.getObjectId(),
         data.getPpv1() + data.getPpv2() + data.getPpv3() + data.getPpv4() + data.getPmeter_dc());
 
+    solarModules.updateValue(ppv1.getObjectId(), data.getPpv1());
+    solarModules.updateValue(ppv2.getObjectId(), data.getPpv2());
+    solarModules.updateValue(ppv3.getObjectId(), data.getPpv3());
+    solarModules.updateValue(ppv4.getObjectId(), data.getPpv4());
+    
+    solarModules.updateValue(pMeterDc.getObjectId(), data.getPmeter_dc());
   }
 
   public void mapValues(SummeryDto data) {

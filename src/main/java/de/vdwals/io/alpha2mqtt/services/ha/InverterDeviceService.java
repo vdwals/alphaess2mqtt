@@ -25,57 +25,55 @@ public class InverterDeviceService extends DeviceService {
       treeNum;
 
   @Getter
-  private final Device battery;
+  private final Device inverter;
 
   public InverterDeviceService() {
     log.info("Load and init batteries");
     DeviceInformation deviceInformation = Base.withDb(() -> AlphaEssBattery.findAll()
         .stream()
         .map(battery -> (AlphaEssBattery) battery)
-        .map(battery -> {
-          return DeviceInformation.builder()
-              .manufacturer("Alpha ESS")
-              .model("Smile5")
-              .name("PV-Batterie")
-              .identifiers(List.of(battery.getSn()))
-              .build();
-        })
+        .map(battery -> DeviceInformation.builder()
+            .manufacturer("Alpha ESS")
+            .model("Smile5")
+            .name("PV-Wechselrichter")
+            .identifiers(List.of(battery.getSn()))
+            .build())
         .findFirst()).get();
 
     log.info("Create sensors");
     String deviceId = IdUtils.getDeviceId(deviceInformation);
 
-    battery = new Device(deviceId, deviceInformation);
+    inverter = new Device(deviceId, deviceInformation);
 
     gridPower = getPowerSensor(deviceInformation, deviceId, "gridPower", "Netz Leistung");
-    battery.addEntity(gridPower);
+    inverter.addEntity(gridPower);
 
     powerConsumption =
         getPowerSensor(deviceInformation, deviceId, "powerConsumption", "Verbraucher Leistung");
-    battery.addEntity(powerConsumption);
+    inverter.addEntity(powerConsumption);
 
     carbonNum = getSensor(deviceInformation,
         deviceId,
         DeviceClass.carbon_dioxide,
         "carbonNum",
         "CO2 Einsparung").unitOfMeasurement("kg").stateClass(total_increasing).build();
-    battery.addEntity(carbonNum);
+    inverter.addEntity(carbonNum);
 
     selfConsumption = getPercentSensor(deviceInformation,
         deviceId,
         "selfConsumption",
         "Anteil PV Energie Eigenverbrauch");
-    battery.addEntity(selfConsumption);
+    inverter.addEntity(selfConsumption);
 
     selfSufficiency = getPercentSensor(deviceInformation, deviceId, "selfSufficiency", "Autarkie");
-    battery.addEntity(selfSufficiency);
+    inverter.addEntity(selfSufficiency);
 
     treeNum = getSensor(deviceInformation,
         deviceId,
         DeviceClass.None,
         "treeNum",
         "Gepflanzte Bäume").stateClass(total_increasing).build();
-    battery.addEntity(treeNum);
+    inverter.addEntity(treeNum);
 
   }
 
@@ -93,18 +91,18 @@ public class InverterDeviceService extends DeviceService {
   public void mapValues(RunningDataDto data) {
     double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
 
-    battery.updateValue(gridPower.getObjectId(), totalGridPower);
-    battery.updateValue(powerConsumption.getObjectId(),
+    inverter.updateValue(gridPower.getObjectId(), totalGridPower);
+    inverter.updateValue(powerConsumption.getObjectId(),
         totalGridPower + data.getPpv1() + data.getPpv2() + data.getPpv3() + data.getPpv4()
             + data.getPmeter_dc() + data.getPbat());
   }
 
   public void mapValues(SummeryDto data) {
-    battery.updateValue(carbonNum.getObjectId(), data.getCarbonNum());
-    battery.updateValue(selfConsumption.getObjectId(),
+    inverter.updateValue(carbonNum.getObjectId(), data.getCarbonNum());
+    inverter.updateValue(selfConsumption.getObjectId(),
         getScaledValue(data.getEselfConsumption() * 100));
-    battery.updateValue(selfSufficiency.getObjectId(),
+    inverter.updateValue(selfSufficiency.getObjectId(),
         getScaledValue(data.getEselfSufficiency() * 100));
-    battery.updateValue(treeNum.getObjectId(), data.getTreeNum());
+    inverter.updateValue(treeNum.getObjectId(), data.getTreeNum());
   }
 }
