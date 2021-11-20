@@ -90,7 +90,10 @@ public class InverterDeviceService extends DeviceService {
                                   String deviceId,
                                   String objectId,
                                   String name) {
-    return getMeasurementSensor(deviceInformation, deviceId, DeviceClass.None, objectId,
+    return getMeasurementSensor(deviceInformation,
+        deviceId,
+        DeviceClass.None,
+        objectId,
         name).unitOfMeasurement(PERCENT.getUnit()).build();
   }
 
@@ -109,6 +112,6 @@ public class InverterDeviceService extends DeviceService {
         getScaledValue(data.getEselfConsumption() * 100));
     inverter.updateValue(selfSufficiency.getObjectId(),
         getScaledValue(data.getEselfSufficiency() * 100));
-    inverter.updateValue(treeNum.getObjectId(), data.getTreeNum());
+    inverter.updateValue(treeNum.getObjectId(), getScaledValue(data.getTreeNum()));
   }
 }
