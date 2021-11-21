@@ -1,0 +1,21 @@
+version: '2'
+
+services:
+  alpha_ess_2_mqtt:
+    container_name: alphaEss2Mqtt
+    build:
+      context: .
+    image: alpha_ess_2_mqtt
+    volumes:
+      - /etc/localtim:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      MQTT_HOST: host
+      MQTT_PASSWORD: password
+      #      MQTT_DISCOVERY_TOPIC: test
+      MQTT_USERNAME: username
+      MQTT_PORT: port
+      ACTIVEJDBC.URL: url
+      ACTIVEJDBC.PASSWORD: p@ssword
+      ACTIVEJDBC.DRIVER: driver
+      ACTIVEJDBC.USER: user
