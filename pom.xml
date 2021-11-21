@@ -12,7 +12,7 @@
             <configuration>
               <archive>
                 <manifest>
-                  <mainClass>de.vdw.io.enocean2mqtt.App</mainClass>
+                  <mainClass>de.vdw.io.alpha2mqtt.App</mainClass>
                 </manifest>
               </archive>
               <descriptorRefs>
