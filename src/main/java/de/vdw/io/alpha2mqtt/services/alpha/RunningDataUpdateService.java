@@ -6,10 +6,11 @@ import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,9 +29,9 @@ public class RunningDataUpdateService implements Runnable {
   private final HomeAssistantMQTTService mqttService;
 
   public void init() {
-    long nextRefresh = runningDataService.getNextRefreshInSeconds();
+    long nextRefresh = runningDataService.getRefreshRate();
     log.info("Start scheduling live data in {} seconds", nextRefresh);
-    scheduledExecutorService.schedule(this, nextRefresh, TimeUnit.SECONDS);
+    scheduledExecutorService.scheduleAtFixedRate(this, nextRefresh, nextRefresh, TimeUnit.SECONDS);
   }
 
   @Override
@@ -43,9 +44,5 @@ public class RunningDataUpdateService implements Runnable {
     inverterDeviceService.mapValues(data);
 
     mqttService.publishValues();
-
-    long delay = runningDataService.getNextRefreshInSeconds();
-    log.info("Next live data update in {} seconds", delay);
-    scheduledExecutorService.schedule(this, delay, TimeUnit.SECONDS);
   }
 }
