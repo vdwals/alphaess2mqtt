@@ -7,7 +7,7 @@ services:
       context: .
     image: alpha_ess_2_mqtt
     volumes:
-      - /etc/localtim:/etc/localtime:ro
+      - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     environment:
       MQTT_HOST: host
