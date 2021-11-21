@@ -18,7 +18,8 @@ COPY ./pom.xml .
 RUN mvn dependency:go-offline
 
 # Build app
-COPY . .
+COPY ./src ./src
+COPY ./lombok.config ./lombok.config
 RUN mvn package
 
 # Build running container
