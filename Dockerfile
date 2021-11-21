@@ -25,7 +25,7 @@ RUN mvn package
 # Build running container
 FROM arm32v7/openjdk:11.0.3-jre
 WORKDIR /app
-COPY --from=builder /app/target/alpha_ess*-jar-with-dependencies.jar ./alpha_ess_2_mqtt.jar
+COPY --from=builder /app/target/alpha_ess*.jar ./alpha_ess_2_mqtt.jar
 LABEL name="Alpha-ESS-2-MQTT"
 ENV TZ=UTC
 ENTRYPOINT ["java",  "-jar", "alpha_ess_2_mqtt.jar"]
