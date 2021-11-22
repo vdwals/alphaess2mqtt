@@ -15,11 +15,11 @@ WORKDIR /app
 
 # Prepare maven
 COPY ./pom.xml .
+COPY ./lombok.config ./lombok.config
 RUN mvn dependency:go-offline
 
 # Build app
 COPY ./src ./src
-COPY ./lombok.config ./lombok.config
 RUN mvn package
 
 # Build running container
