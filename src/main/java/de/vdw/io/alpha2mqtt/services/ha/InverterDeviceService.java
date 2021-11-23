@@ -76,10 +76,12 @@ public class InverterDeviceService extends DeviceService {
     private Sensor getPercentSensor(
             String objectId,
             String name) {
-        return getSensor(
+        Sensor s = getSensor(
                 null,
                 objectId,
                 name).unitOfMeasurement(PERCENT.getUnit()).build();
+        getDevice().addEntity(s);
+        return s;
     }
     
     public void mapValues(RunningDataDto data) {
