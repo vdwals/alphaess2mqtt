@@ -2,12 +2,8 @@ package de.vdw.io.alpha2mqtt.services.ha;
 
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
-import de.vdw.io.alpha2mqtt.utils.IdUtils;
-import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.DeviceInformation;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import de.vdw.it.hamqtt.devices.sensor.Sensor.SensorBuilder;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
@@ -21,81 +17,66 @@ import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 public class InverterDeviceService extends DeviceService {
     
     private final Sensor gridPower, gridPowerIn, gridPowerOut, powerConsumption, selfConsumption, selfSufficiency, carbonNum,
-            treeNum;
-    
-    @Getter
-    private final Device inverter;
+            treeNum, vGridPowerIn, vGridPowerOut;
     
     public InverterDeviceService() {
-        log.info("Load and init batteries");
-        DeviceInformation deviceInformation = DeviceInformation.builder()
+        super(DeviceInformation.builder()
                 .manufacturer("Alpha ESS")
                 .model("Smile5")
                 .name("PV-Wechselrichter")
                 .identifiers(List.of("Smile5"))
-                .build();
+                .build());
         
-        log.info("Create sensors");
-        String deviceId = IdUtils.getDeviceId(deviceInformation);
-        
-        inverter = new Device(deviceId, deviceInformation);
-        
-        gridPower = getPowerSensor(deviceInformation, deviceId, "gridPower", "Netz Leistung");
-        inverter.addEntity(gridPower);
+        gridPower = getPowerSensor("gridPower", "Netz Leistung");
         
         powerConsumption =
-                getPowerSensor(deviceInformation, deviceId, "powerConsumption", "Verbraucher Leistung");
-        inverter.addEntity(powerConsumption);
+                getPowerSensor("powerConsumption", "Verbraucher Leistung");
         
-        selfConsumption = getPercentSensor(deviceInformation,
-                deviceId,
+        selfConsumption = getPercentSensor(
                 "selfConsumption",
                 "Anteil PV Energie Eigenverbrauch");
-        inverter.addEntity(selfConsumption);
         
-        selfSufficiency = getPercentSensor(deviceInformation, deviceId, "selfSufficiency", "Autarkie");
-        inverter.addEntity(selfSufficiency);
+        selfSufficiency = getPercentSensor("selfSufficiency", "Autarkie");
         
-        gridPowerIn = getPowerSensor(deviceInformation, deviceId, "gridPowerIn", "Netzbezug");
-        inverter.addEntity(gridPowerIn);
+        gridPowerIn = getPowerSensor("gridPowerIn", "Netzbezug");
         gridPowerOut =
-                getPowerSensor(deviceInformation, deviceId, "gridPowerOut", "Netzeinspeisung");
-        inverter.addEntity(gridPowerOut);
+                getPowerSensor("gridPowerOut", "Netzeinspeisung");
         
-        treeNum = getNumberSensor(deviceInformation,
-                deviceId,
+        vGridPowerIn = getPowerSensor("vGridPowerIn", "virtueller Netzbezug");
+        vGridPowerOut =
+                getPowerSensor("vGridPowerOut", "virtuelle Netzeinspeisung");
+        
+        treeNum = getNumberSensor(
                 "treeNum",
                 "Gepflanzte Bäume",
-                "mdi:forest").unitOfMeasurement("Stk").build();
-        inverter.addEntity(treeNum);
+                "mdi:forest", "Stk");
         
-        carbonNum = getNumberSensor(deviceInformation,
-                deviceId,
+        carbonNum = getNumberSensor(
                 "carbonNum",
                 "CO2 Einsparung",
-                "mdi:molecule-co2").unitOfMeasurement("kg").build();
-        inverter.addEntity(carbonNum);
+                "mdi:molecule-co2", "kg");
     }
     
-    private SensorBuilder getNumberSensor(DeviceInformation deviceInformation,
-                                          String deviceId,
-                                          String id,
-                                          String name,
-                                          String icon) {
-        return Sensor.builder()
-                .device(deviceInformation)
+    private Sensor getNumberSensor(
+            String id,
+            String name,
+            String icon,
+            String unitOfMeasurement) {
+        Sensor s = Sensor.builder()
+                .device(getDevice().getDeviceInformation())
                 .objectId(id)
-                .uniqueId(getUniqueId(deviceId, id))
+                .uniqueId(getUniqueId(getDevice().getNodeId(), id))
                 .name(name)
-                .icon(icon);
+                .icon(icon).unitOfMeasurement(unitOfMeasurement).build();
+        
+        getDevice().addEntity(s);
+        return s;
     }
     
-    private Sensor getPercentSensor(DeviceInformation deviceInformation,
-                                    String deviceId,
-                                    String objectId,
-                                    String name) {
-        return getSensor(deviceInformation,
-                deviceId,
+    private Sensor getPercentSensor(
+            String objectId,
+            String name) {
+        return getSensor(
                 null,
                 objectId,
                 name).unitOfMeasurement(PERCENT.getUnit()).build();
@@ -104,21 +85,29 @@ public class InverterDeviceService extends DeviceService {
     public void mapValues(RunningDataDto data) {
         double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
         
-        inverter.updateValue(gridPower.getObjectId(), totalGridPower);
-        inverter.updateValue(powerConsumption.getObjectId(),
+        getDevice().updateValue(gridPower.getObjectId(), totalGridPower);
+        getDevice().updateValue(powerConsumption.getObjectId(),
                 totalGridPower + data.getPpv1() + data.getPpv2() + data.getPpv3() + data.getPpv4()
                         + data.getPmeter_dc() + data.getPbat());
         
-        inverter.updateValue(gridPowerIn.getObjectId(), totalGridPower < 0 ? 0 : totalGridPower);
-        inverter.updateValue(gridPowerOut.getObjectId(), totalGridPower < 0 ? totalGridPower : 0);
+        double gridIn = totalGridPower < 0 ? 0 : totalGridPower;
+        getDevice().updateValue(gridPowerIn.getObjectId(), gridIn);
+        double gridOut = totalGridPower < 0 ? Math.abs(totalGridPower) : 0;
+        getDevice().updateValue(gridPowerOut.getObjectId(), gridOut);
+        
+        double pBat = data.getPbat();
+        double batteryIn = pBat > 0 ? 0 : Math.abs(pBat);
+        getDevice().updateValue(vGridPowerOut.getObjectId(), batteryIn + gridOut);
+        double batteryOut = pBat > 0 ? pBat : 0;
+        getDevice().updateValue(vGridPowerIn.getObjectId(), batteryOut + gridIn);
     }
     
     public void mapValues(SummeryDto data) {
-        inverter.updateValue(carbonNum.getObjectId(), data.getCarbonNum());
-        inverter.updateValue(selfConsumption.getObjectId(),
+        getDevice().updateValue(carbonNum.getObjectId(), data.getCarbonNum());
+        getDevice().updateValue(selfConsumption.getObjectId(),
                 getScaledValue(data.getEselfConsumption() * 100));
-        inverter.updateValue(selfSufficiency.getObjectId(),
+        getDevice().updateValue(selfSufficiency.getObjectId(),
                 getScaledValue(data.getEselfSufficiency() * 100));
-        inverter.updateValue(treeNum.getObjectId(), getScaledValue(data.getTreeNum()));
+        getDevice().updateValue(treeNum.getObjectId(), getScaledValue(data.getTreeNum()));
     }
 }

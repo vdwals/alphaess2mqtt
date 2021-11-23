@@ -1,21 +1,22 @@
 package de.vdw.io.alpha2mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.vdw.it.hamqtt.HomeAssistantMQTTService;
-import de.vdw.it.hamqtt.utils.ServiceFactory;
 import de.vdw.io.alpha2mqtt.services.alpha.RunningDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.alpha.SummeryDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
+import de.vdw.it.hamqtt.HomeAssistantMQTTService;
+import de.vdw.it.hamqtt.utils.ServiceFactory;
 import eu.lestard.easydi.EasyDI;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.javalite.activejdbc.connection_config.DBConfiguration;
+
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.javalite.activejdbc.connection_config.DBConfiguration;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -62,11 +63,11 @@ public class App {
 
   public void init() {
     mqttService.connect();
-
-    mqttService.addDevice(batteryDeviceService.getBattery());
-    mqttService.addDevice(solarModuleDeviceService.getSolarModules());
-    mqttService.addDevice(inverterDeviceService.getInverter());
-
+  
+    mqttService.addDevice(batteryDeviceService.getDevice());
+    mqttService.addDevice(solarModuleDeviceService.getDevice());
+    mqttService.addDevice(inverterDeviceService.getDevice());
+  
     scheduledExecutorService.scheduleAtFixedRate(() -> {
       log.info("Publish configs");
       mqttService.publishConfigs();
