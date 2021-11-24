@@ -25,7 +25,7 @@ public class BatteryDeviceService extends DeviceService {
 
     capacity = getBattery().getUsableCapacity();
 
-    batteryLoad = getMeasurementSensor(DeviceClass.battery, "soc", "Batterie Ladung").build();
+    batteryLoad = getMeasurementSensor(DeviceClass.battery, "soc", "Batterie Ladung %").build();
     getDevice().addEntity(batteryLoad);
 
     batteryEnergy = getPowerSensor("pBat", "Batterie Leistung");
@@ -33,7 +33,7 @@ public class BatteryDeviceService extends DeviceService {
     batteryOutput = getPowerSensor("pBatOut", "Batterie Entlade-Leistung");
 
     batteryLoadEnergy =
-        getEnergySensor("pBatOut", "Batterie Entlade-Leistung")
+        getEnergySensor("pBatLoad", "Batterie Ladung (kWh)")
             .stateClass(Sensor.StateClass.measurement)
             .build();
   }
