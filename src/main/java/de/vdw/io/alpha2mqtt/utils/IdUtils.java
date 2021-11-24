@@ -1,6 +1,6 @@
 package de.vdw.io.alpha2mqtt.utils;
 
-import de.vdw.it.hamqtt.devices.DeviceInformation;
+import de.vdw.it.hamqtt.devices.Device;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -12,9 +12,11 @@ public class IdUtils {
     return String.join(DELIMITER, deviceId, objectId);
   }
 
-  public static String getDeviceId(DeviceInformation device) {
-    return String.join(DELIMITER, device.getManufacturer(), device.getModel(), device.getName())
-        .toLowerCase()
-        .replace(" ", "");
+  public static String getDeviceId(Device device) {
+    return getDeviceId(device.getManufacturer(), device.getModel(), device.getName());
+  }
+
+  public static String getDeviceId(String manufacturer, String model, String name) {
+    return String.join(DELIMITER, manufacturer, model, name).toLowerCase().replace(" ", "");
   }
 }

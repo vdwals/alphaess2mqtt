@@ -4,7 +4,7 @@ import lombok.Value;
 
 @Value
 public class TokenDto {
-    String AccessToken, RefreshTokenKey, TokenCreateTime;
-    
-    int ExpiresIn;
+  String AccessToken, RefreshTokenKey, TokenCreateTime;
+
+  int ExpiresIn;
 }

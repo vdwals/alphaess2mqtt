@@ -5,10 +5,15 @@ import org.javalite.activejdbc.annotations.Cached;
 
 @Cached
 public class AlphaEssBattery extends Model {
-    
-    public static final String SN = "sn";
-    
-    public String getSn() {
-        return getString(SN);
-    }
+
+  public static final String SN = "sn";
+  public static final String SYSTEM_ID = "systemId";
+
+  public String getSn() {
+    return getString(SN);
+  }
+
+  public String getSystemId() {
+    return getString(SYSTEM_ID);
+  }
 }

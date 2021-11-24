@@ -5,28 +5,30 @@ import de.vdw.io.alpha2mqtt.services.RunningDataService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.WallboxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
+@Value
 public class RunningDataUpdateService implements Runnable {
 
-  private final BatteryDeviceService batteryDeviceService;
+  BatteryDeviceService batteryDeviceService;
 
-  private final SolarModuleDeviceService solarModuleDeviceService;
+  SolarModuleDeviceService solarModuleDeviceService;
 
-  private final InverterDeviceService inverterDeviceService;
+  InverterDeviceService inverterDeviceService;
 
-  private final ScheduledExecutorService scheduledExecutorService;
+  WallboxDeviceService wallboxDeviceService;
 
-  private final RunningDataService runningDataService;
+  ScheduledExecutorService scheduledExecutorService;
 
-  private final HomeAssistantMQTTService mqttService;
+  RunningDataService runningDataService;
+
+  HomeAssistantMQTTService mqttService;
 
   public void init() {
     long nextRefresh = runningDataService.getRefreshRate();
@@ -42,6 +44,7 @@ public class RunningDataUpdateService implements Runnable {
     batteryDeviceService.mapValues(data);
     solarModuleDeviceService.mapValues(data);
     inverterDeviceService.mapValues(data);
+    wallboxDeviceService.mapValues(data);
 
     mqttService.publishValues();
   }

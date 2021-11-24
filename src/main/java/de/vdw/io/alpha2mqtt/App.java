@@ -1,53 +1,60 @@
 package de.vdw.io.alpha2mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.vdw.io.alpha2mqtt.services.ItemListService;
 import de.vdw.io.alpha2mqtt.services.alpha.RunningDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.alpha.SummeryDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.WallboxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import de.vdw.it.hamqtt.utils.ServiceFactory;
 import eu.lestard.easydi.EasyDI;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.javalite.activejdbc.connection_config.DBConfiguration;
-
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.javalite.activejdbc.connection_config.DBConfiguration;
 
 @Slf4j
 @RequiredArgsConstructor
+@Value
 public class App {
 
-  private final BatteryDeviceService batteryDeviceService;
+  BatteryDeviceService batteryDeviceService;
 
-  private final SolarModuleDeviceService solarModuleDeviceService;
+  SolarModuleDeviceService solarModuleDeviceService;
 
-  private final InverterDeviceService inverterDeviceService;
+  InverterDeviceService inverterDeviceService;
 
-  private final HomeAssistantMQTTService mqttService;
+  WallboxDeviceService wallboxDeviceService;
 
-  private final ScheduledExecutorService scheduledExecutorService;
+  HomeAssistantMQTTService mqttService;
 
-  private final EasyDI easyDI;
+  ScheduledExecutorService scheduledExecutorService;
+
+  EasyDI easyDI;
 
   public static void main(String[] args) {
     log.info("Load DB Settings");
     DBConfiguration.loadConfiguration("/database.properties");
 
     log.info("Connect to MQTT-Broker");
-    Map<String, String> envs = System.getenv();
+    Map<String, String> environmentVariables = System.getenv();
 
-    HomeAssistantMQTTService mqttService = ServiceFactory.getMqttService(envs.get("MQTT_HOST"),
-        envs.get("MQTT_PORT"),
-        envs.get("MQTT_USERNAME"),
-        envs.get("MQTT_PASSWORD").toCharArray(),
-        "alpha_energy",
-        envs.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
-        "Alpha ESS Proxy");
+    HomeAssistantMQTTService mqttService =
+        ServiceFactory.getMqttService(
+            environmentVariables.get("MQTT_HOST"),
+            environmentVariables.get("MQTT_PORT"),
+            environmentVariables.get("MQTT_USERNAME"),
+            environmentVariables.get("MQTT_PASSWORD").toCharArray(),
+            "alpha_energy",
+            environmentVariables.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
+            "Alpha ESS Proxy");
 
     EasyDI ed = new EasyDI();
     ed.bindInstance(ObjectMapper.class, new ObjectMapper());
@@ -63,18 +70,24 @@ public class App {
 
   public void init() {
     mqttService.connect();
-  
+
     mqttService.addDevice(batteryDeviceService.getDevice());
     mqttService.addDevice(solarModuleDeviceService.getDevice());
     mqttService.addDevice(inverterDeviceService.getDevice());
-  
-    scheduledExecutorService.scheduleAtFixedRate(() -> {
-      log.info("Publish configs");
-      mqttService.publishConfigs();
-    }, 0, 1, TimeUnit.HOURS);
+    mqttService.addDevice(wallboxDeviceService.getDevice());
+
+    scheduledExecutorService.scheduleAtFixedRate(
+        () -> {
+          log.info("Publish configs");
+          mqttService.publishConfigs();
+        },
+        0,
+        1,
+        TimeUnit.HOURS);
   }
 
   public void start() {
+    easyDI.getInstance(ItemListService.class).getData();
 
     RunningDataUpdateService runningDataUpdateService =
         easyDI.getInstance(RunningDataUpdateService.class);
