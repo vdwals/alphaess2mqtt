@@ -11,26 +11,24 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Singleton
 public abstract class AlphaService<P> {
-    
-    @Getter
-    private final ObjectMapper objectMapper;
-    
-    private final TokenService tokenService;
-    
-    protected P latestResponse;
-    
-    
-    public P getData() {
-        LocalDateTime now = LocalDateTime.now();
-        
-        String token = tokenService.getToken();
-        
-        latestResponse = requestNewData(token, now);
-        
-        return latestResponse;
-    }
-    
-    protected abstract P requestNewData(String token, LocalDateTime now);
-    
-    public abstract long getRefreshRate();
+
+  @Getter private final ObjectMapper objectMapper;
+
+  private final TokenService tokenService;
+
+  protected P latestResponse;
+
+  public P getData() {
+    LocalDateTime now = LocalDateTime.now();
+
+    String token = tokenService.getToken();
+
+    latestResponse = requestNewData(token, now);
+
+    return latestResponse;
+  }
+
+  protected abstract P requestNewData(String token, LocalDateTime now);
+
+  public abstract long getRefreshRate();
 }

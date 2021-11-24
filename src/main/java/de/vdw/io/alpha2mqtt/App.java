@@ -41,13 +41,15 @@ public class App {
     log.info("Connect to MQTT-Broker");
     Map<String, String> envs = System.getenv();
 
-    HomeAssistantMQTTService mqttService = ServiceFactory.getMqttService(envs.get("MQTT_HOST"),
-        envs.get("MQTT_PORT"),
-        envs.get("MQTT_USERNAME"),
-        envs.get("MQTT_PASSWORD").toCharArray(),
-        "alpha_energy",
-        envs.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
-        "Alpha ESS Proxy");
+    HomeAssistantMQTTService mqttService =
+        ServiceFactory.getMqttService(
+            envs.get("MQTT_HOST"),
+            envs.get("MQTT_PORT"),
+            envs.get("MQTT_USERNAME"),
+            envs.get("MQTT_PASSWORD").toCharArray(),
+            "alpha_energy",
+            envs.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
+            "Alpha ESS Proxy");
 
     EasyDI ed = new EasyDI();
     ed.bindInstance(ObjectMapper.class, new ObjectMapper());
@@ -63,15 +65,19 @@ public class App {
 
   public void init() {
     mqttService.connect();
-  
+
     mqttService.addDevice(batteryDeviceService.getDevice());
     mqttService.addDevice(solarModuleDeviceService.getDevice());
     mqttService.addDevice(inverterDeviceService.getDevice());
-  
-    scheduledExecutorService.scheduleAtFixedRate(() -> {
-      log.info("Publish configs");
-      mqttService.publishConfigs();
-    }, 0, 1, TimeUnit.HOURS);
+
+    scheduledExecutorService.scheduleAtFixedRate(
+        () -> {
+          log.info("Publish configs");
+          mqttService.publishConfigs();
+        },
+        0,
+        1,
+        TimeUnit.HOURS);
   }
 
   public void start() {

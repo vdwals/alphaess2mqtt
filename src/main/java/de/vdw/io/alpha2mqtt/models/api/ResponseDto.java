@@ -8,8 +8,8 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class ResponseDto<P> {
-    int code;
-    String info;
-    
-    P data;
+  int code;
+  String info;
+
+  P data;
 }

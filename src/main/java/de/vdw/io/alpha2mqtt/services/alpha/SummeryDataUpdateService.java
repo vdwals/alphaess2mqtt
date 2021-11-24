@@ -14,28 +14,29 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @RequiredArgsConstructor
 public class SummeryDataUpdateService implements Runnable {
-    
-    private final InverterDeviceService inverterDeviceService;
-    
-    private final SolarModuleDeviceService solarModuleDeviceService;
-    
-    private final SummeryService summeryService;
-    
-    private final ScheduledExecutorService scheduledExecutorService;
-    
-    private final HomeAssistantMQTTService mqttService;
-    
-    public void init() {
-        log.info("Start scheduling summary data in {} seconds", 10);
-        scheduledExecutorService.scheduleAtFixedRate(this, 10, summeryService.getRefreshRate(), TimeUnit.SECONDS);
-    }
-    
-    @Override
-    public void run() {
-        log.info("Update summary data");
-        SummeryDto data = summeryService.getData();
-        
-        inverterDeviceService.mapValues(data);
-        solarModuleDeviceService.mapValues(data);
-    }
+
+  private final InverterDeviceService inverterDeviceService;
+
+  private final SolarModuleDeviceService solarModuleDeviceService;
+
+  private final SummeryService summeryService;
+
+  private final ScheduledExecutorService scheduledExecutorService;
+
+  private final HomeAssistantMQTTService mqttService;
+
+  public void init() {
+    log.info("Start scheduling summary data in {} seconds", 10);
+    scheduledExecutorService.scheduleAtFixedRate(
+        this, 10, summeryService.getRefreshRate(), TimeUnit.SECONDS);
+  }
+
+  @Override
+  public void run() {
+    log.info("Update summary data");
+    SummeryDto data = summeryService.getData();
+
+    inverterDeviceService.mapValues(data);
+    solarModuleDeviceService.mapValues(data);
+  }
 }
