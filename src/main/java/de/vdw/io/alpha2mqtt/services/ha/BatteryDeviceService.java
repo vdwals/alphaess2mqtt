@@ -4,6 +4,7 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
+import de.vdw.it.hamqtt.devices.sensor.Sensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
 import javax.inject.Singleton;
 import lombok.Value;
@@ -15,23 +16,14 @@ import org.javalite.activejdbc.Base;
 @Value
 public class BatteryDeviceService extends DeviceService {
 
-  AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput;
+  AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput, batteryLoadEnergy;
+
+  double capacity;
 
   public BatteryDeviceService() {
-    super(
-        "Alpha ESS",
-        "Smile5",
-        "PV-Batterie",
-        Base.withDb(
-            () -> {
-              log.info("Load and init batteries");
+    super("Alpha ESS", "Smile5", "PV-Batterie", getBattery().getSn());
 
-              return AlphaEssBattery.findAll().stream()
-                  .map(battery -> (AlphaEssBattery) battery)
-                  .map(AlphaEssBattery::getSn)
-                  .findFirst()
-                  .orElseThrow();
-            }));
+    capacity = getBattery().getUsableCapacity();
 
     batteryLoad = getMeasurementSensor(DeviceClass.battery, "soc", "Batterie Ladung").build();
     getDevice().addEntity(batteryLoad);
@@ -39,6 +31,23 @@ public class BatteryDeviceService extends DeviceService {
     batteryEnergy = getPowerSensor("pBat", "Batterie Leistung");
     batteryInput = getPowerSensor("pBatIn", "Batterie Lade-Leistung");
     batteryOutput = getPowerSensor("pBatOut", "Batterie Entlade-Leistung");
+
+    batteryLoadEnergy =
+        getEnergySensor("pBatOut", "Batterie Entlade-Leistung")
+            .stateClass(Sensor.StateClass.measurement)
+            .build();
+  }
+
+  private static AlphaEssBattery getBattery() {
+    return Base.withDb(
+        () -> {
+          log.info("Load and init batteries");
+
+          return AlphaEssBattery.findAll().stream()
+              .map(batteryModel -> (AlphaEssBattery) batteryModel)
+              .findFirst()
+              .orElseThrow();
+        });
   }
 
   @Override
@@ -49,6 +58,8 @@ public class BatteryDeviceService extends DeviceService {
     batteryEnergy.setValue(pBat);
     batteryInput.setValue(pBat > 0 ? 0 : Math.abs(pBat));
     batteryOutput.setValue(pBat > 0 ? pBat : 0);
+
+    batteryEnergy.setValue(getScaledValue(data.getSoc() * capacity));
   }
 
   @Override

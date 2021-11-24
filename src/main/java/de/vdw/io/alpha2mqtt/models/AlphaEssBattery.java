@@ -16,4 +16,8 @@ public class AlphaEssBattery extends Model {
   public String getSystemId() {
     return getString(SYSTEM_ID);
   }
+
+  public Double getUsableCapacity() {
+    return getDouble("surpluscobat");
+  }
 }
