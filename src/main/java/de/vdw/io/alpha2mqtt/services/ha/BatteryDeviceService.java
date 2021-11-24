@@ -36,7 +36,7 @@ public class BatteryDeviceService extends DeviceService {
     batteryOutput = getPowerSensor("pBatOut", "Batterie Entlade-Leistung");
 
     batteryLoadEnergy =
-        getSensor(DeviceClass.energy, "pBatLoad", "Batterie Ladung (kWh)")
+        getSensor(DeviceClass.energy, "pBatLoad", "Batterie Ladung (Wh)")
             .unitOfMeasurement(WATT_PER_HOUR.getUnit())
             .stateClass(Sensor.StateClass.measurement)
             .build();
