@@ -12,6 +12,8 @@ import org.javalite.activejdbc.Base;
 
 import javax.inject.Singleton;
 
+import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
+
 @Slf4j
 @Singleton
 @Value
@@ -34,7 +36,8 @@ public class BatteryDeviceService extends DeviceService {
     batteryOutput = getPowerSensor("pBatOut", "Batterie Entlade-Leistung");
 
     batteryLoadEnergy =
-        getEnergySensor("pBatLoad", "Batterie Ladung (kWh)")
+        getSensor(DeviceClass.energy, "pBatLoad", "Batterie Ladung (kWh)")
+            .unitOfMeasurement(WATT_PER_HOUR.getUnit())
             .stateClass(Sensor.StateClass.measurement)
             .build();
     getDevice().addEntity(batteryLoadEnergy);
@@ -61,7 +64,7 @@ public class BatteryDeviceService extends DeviceService {
     batteryInput.setValue(pBat > 0 ? 0 : Math.abs(pBat));
     batteryOutput.setValue(pBat > 0 ? pBat : 0);
 
-    batteryEnergy.setValue(getScaledValue(data.getSoc() * capacity));
+    batteryLoadEnergy.setValue(getScaledValue(data.getSoc() * capacity));
   }
 
   @Override
