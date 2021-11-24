@@ -2,16 +2,18 @@ package de.vdw.io.alpha2mqtt.services.ha;
 
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.it.hamqtt.IMqttUpdateListener;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import javax.inject.Singleton;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+
+import javax.inject.Singleton;
 
 @Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class WallboxDeviceService extends DeviceService {
+public class WallboxDeviceService extends DeviceService implements IMqttUpdateListener {
 
   AbstractEntity chargeEnergy, chargePower;
 
