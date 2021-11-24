@@ -1,10 +1,5 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
-import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
-import static de.vdw.it.hamqtt.devices.Units.KILO_WATT_PER_HOUR;
-import static de.vdw.it.hamqtt.devices.Units.WATT;
-import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.measurement;
-
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
@@ -12,11 +7,17 @@ import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.SensorBuilder;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
+import static de.vdw.it.hamqtt.devices.Units.KILO_WATT_PER_HOUR;
+import static de.vdw.it.hamqtt.devices.Units.WATT;
+import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.measurement;
 
 @Slf4j
 public abstract class DeviceService {
@@ -27,9 +28,9 @@ public abstract class DeviceService {
 
     this.device =
         Device.builder()
-            .manufacturer("Alpha ESS")
-            .model("Smile5")
-            .name("PV-Batterie")
+            .manufacturer(manufacturer)
+            .model(model)
+            .name(name)
             .identifier(identifier)
             .nodeId(IdUtils.getDeviceId(manufacturer, model, name))
             .build();
