@@ -2,7 +2,6 @@ package de.vdw.io.alpha2mqtt.services.ha;
 
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.Device;
-import de.vdw.it.hamqtt.devices.DeviceInformation;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.SensorBuilder;
@@ -21,11 +20,17 @@ import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.measurement;
 public abstract class DeviceService {
   @Getter private final Device device;
 
-  protected DeviceService(DeviceInformation deviceInformation) {
-    log.info("Create sensors");
-    String deviceId = IdUtils.getDeviceId(deviceInformation);
+  protected DeviceService(String manufacturer, String model, String name, String identifier) {
+    log.info("Create device");
 
-    device = new Device(deviceId, deviceInformation);
+    this.device =
+        Device.builder()
+            .manufacturer("Alpha ESS")
+            .model("Smile5")
+            .name("PV-Batterie")
+            .identifier(identifier)
+            .nodeId(IdUtils.getDeviceId(manufacturer, model, name))
+            .build();
   }
 
   protected Sensor getPowerSensor(String objectId, String name) {
@@ -46,7 +51,6 @@ public abstract class DeviceService {
   protected SensorBuilder getSensor(DeviceClass deviceClass, String id, String name) {
     return Sensor.builder()
         .deviceClass(deviceClass)
-        .device(device.getDeviceInformation())
         .objectId(id)
         .uniqueId(getUniqueId(device.getNodeId(), id))
         .name(name);

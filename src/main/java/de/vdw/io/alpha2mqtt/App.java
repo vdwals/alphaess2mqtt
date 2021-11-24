@@ -39,16 +39,16 @@ public class App {
     DBConfiguration.loadConfiguration("/database.properties");
 
     log.info("Connect to MQTT-Broker");
-    Map<String, String> envs = System.getenv();
+    Map<String, String> environmentVariables = System.getenv();
 
     HomeAssistantMQTTService mqttService =
         ServiceFactory.getMqttService(
-            envs.get("MQTT_HOST"),
-            envs.get("MQTT_PORT"),
-            envs.get("MQTT_USERNAME"),
-            envs.get("MQTT_PASSWORD").toCharArray(),
+            environmentVariables.get("MQTT_HOST"),
+            environmentVariables.get("MQTT_PORT"),
+            environmentVariables.get("MQTT_USERNAME"),
+            environmentVariables.get("MQTT_PASSWORD").toCharArray(),
             "alpha_energy",
-            envs.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
+            environmentVariables.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
             "Alpha ESS Proxy");
 
     EasyDI ed = new EasyDI();

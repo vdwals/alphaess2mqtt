@@ -28,7 +28,7 @@ public class TokenService {
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   public String getToken() {
-    AlphaEssToken currentToken = Base.withDb(() -> AlphaEssToken.findCurrentToken());
+    AlphaEssToken currentToken = Base.withDb(AlphaEssToken::findCurrentToken);
 
     if (currentToken == null) {
       String url = Base.withDb(() -> AlphaEssLoadJob.getLoginJob().getUrl());
@@ -44,7 +44,7 @@ public class TokenService {
 
       try {
         ResponseDto<TokenDto> loginResponseDto =
-            objectMapper.readValue(loginResponse, new TypeReference<ResponseDto<TokenDto>>() {});
+            objectMapper.readValue(loginResponse, new TypeReference<>() {});
         TokenDto tokenDto = loginResponseDto.getData();
 
         LocalDateTime expirationTime =

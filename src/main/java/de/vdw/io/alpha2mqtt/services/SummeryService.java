@@ -23,8 +23,6 @@ public class SummeryService extends AlphaService<SummeryDto> {
 
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-  private LocalDateTime lastRequest;
-
   public SummeryService(ObjectMapper objectMapper, TokenService tokenService) {
     super(objectMapper, tokenService);
   }
@@ -46,8 +44,6 @@ public class SummeryService extends AlphaService<SummeryDto> {
     try {
       ResponseDto<SummeryDto> summaryResponseDto =
           getObjectMapper().readValue(summaryResponse, new TypeReference<>() {});
-
-      lastRequest = LocalDateTime.now();
 
       return summaryResponseDto.getData();
 

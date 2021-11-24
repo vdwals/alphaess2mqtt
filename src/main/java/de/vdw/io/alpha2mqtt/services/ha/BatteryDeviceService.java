@@ -2,14 +2,12 @@ package de.vdw.io.alpha2mqtt.services.ha;
 
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
-import de.vdw.it.hamqtt.devices.DeviceInformation;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 
 import javax.inject.Singleton;
-import java.util.List;
 
 @Slf4j
 @Singleton
@@ -19,22 +17,18 @@ public class BatteryDeviceService extends DeviceService {
 
   public BatteryDeviceService() {
     super(
+        "Alpha ESS",
+        "Smile5",
+        "PV-Batterie",
         Base.withDb(
             () -> {
               log.info("Load and init batteries");
 
               return AlphaEssBattery.findAll().stream()
                   .map(battery -> (AlphaEssBattery) battery)
-                  .map(
-                      battery ->
-                          DeviceInformation.builder()
-                              .manufacturer("Alpha ESS")
-                              .model("Smile5")
-                              .name("PV-Batterie")
-                              .identifiers(List.of(battery.getSn()))
-                              .build())
+                  .map(AlphaEssBattery::getSn)
                   .findFirst()
-                  .get();
+                  .orElseThrow();
             }));
 
     batteryLoad = getMeasurementSensor(DeviceClass.battery, "soc", "Batterie Ladung").build();
@@ -46,11 +40,11 @@ public class BatteryDeviceService extends DeviceService {
   }
 
   public void mapValues(RunningDataDto data) {
-    getDevice().updateValue(batteryLoad.getObjectId(), data.getSoc());
+    batteryLoad.setValue(data.getSoc());
 
     double pBat = data.getPbat();
-    getDevice().updateValue(batteryEnergy.getObjectId(), pBat);
-    getDevice().updateValue(batteryInput.getObjectId(), pBat > 0 ? 0 : Math.abs(pBat));
-    getDevice().updateValue(batteryOutput.getObjectId(), pBat > 0 ? pBat : 0);
+    batteryEnergy.setValue(pBat);
+    batteryInput.setValue(pBat > 0 ? 0 : Math.abs(pBat));
+    batteryOutput.setValue(pBat > 0 ? pBat : 0);
   }
 }
