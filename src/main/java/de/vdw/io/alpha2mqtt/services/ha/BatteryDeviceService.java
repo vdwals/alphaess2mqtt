@@ -6,10 +6,11 @@ import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
-import javax.inject.Singleton;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
+
+import javax.inject.Singleton;
 
 @Slf4j
 @Singleton
@@ -36,6 +37,7 @@ public class BatteryDeviceService extends DeviceService {
         getEnergySensor("pBatLoad", "Batterie Ladung (kWh)")
             .stateClass(Sensor.StateClass.measurement)
             .build();
+    getDevice().addEntity(batteryLoadEnergy);
   }
 
   private static AlphaEssBattery getBattery() {
