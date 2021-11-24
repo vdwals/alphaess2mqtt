@@ -2,18 +2,20 @@ package de.vdw.io.alpha2mqtt.services.ha;
 
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
-import de.vdw.it.hamqtt.devices.sensor.Sensor;
+import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
+import javax.inject.Singleton;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 
-import javax.inject.Singleton;
-
 @Slf4j
 @Singleton
+@Value
 public class BatteryDeviceService extends DeviceService {
 
-  private final Sensor batteryLoad, batteryEnergy, batteryInput, batteryOutput;
+  AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput;
 
   public BatteryDeviceService() {
     super(
@@ -39,6 +41,7 @@ public class BatteryDeviceService extends DeviceService {
     batteryOutput = getPowerSensor("pBatOut", "Batterie Entlade-Leistung");
   }
 
+  @Override
   public void mapValues(RunningDataDto data) {
     batteryLoad.setValue(data.getSoc());
 
@@ -47,4 +50,7 @@ public class BatteryDeviceService extends DeviceService {
     batteryInput.setValue(pBat > 0 ? 0 : Math.abs(pBat));
     batteryOutput.setValue(pBat > 0 ? pBat : 0);
   }
+
+  @Override
+  public void mapValues(SummeryDto dataDto) {}
 }

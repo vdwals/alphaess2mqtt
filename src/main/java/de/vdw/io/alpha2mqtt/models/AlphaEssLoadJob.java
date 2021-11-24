@@ -13,6 +13,7 @@ public class AlphaEssLoadJob extends Model {
   public static final String SECOND = "second";
   public static final String COLUMN_INTERVAL_S = "interval_s";
   private static final String COLUMN_URL = "url";
+  public static final String SETTING = "setting";
 
   public static AlphaEssLoadJob getLoginJob() {
     return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), LOGIN);
@@ -28,6 +29,10 @@ public class AlphaEssLoadJob extends Model {
 
   public static AlphaEssLoadJob getSecondDataJob() {
     return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), SECOND);
+  }
+
+  public static AlphaEssLoadJob getSettingsJob() {
+    return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), SETTING);
   }
 
   public String getUrl() {

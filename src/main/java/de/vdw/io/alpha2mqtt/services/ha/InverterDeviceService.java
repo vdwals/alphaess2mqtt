@@ -1,20 +1,22 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
-import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
-import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import lombok.extern.slf4j.Slf4j;
-
-import javax.inject.Singleton;
-
 import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 
+import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.it.hamqtt.devices.AbstractEntity;
+import de.vdw.it.hamqtt.devices.sensor.Sensor;
+import javax.inject.Singleton;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 @Singleton
+@Value
 public class InverterDeviceService extends DeviceService {
 
-  private final Sensor gridPower,
+  AbstractEntity gridPower,
       gridPowerIn,
       gridPowerOut,
       powerConsumption,
@@ -67,6 +69,7 @@ public class InverterDeviceService extends DeviceService {
     return s;
   }
 
+  @Override
   public void mapValues(RunningDataDto data) {
     double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
 
@@ -92,6 +95,7 @@ public class InverterDeviceService extends DeviceService {
     vGridPowerIn.setValue(batteryOut + gridIn);
   }
 
+  @Override
   public void mapValues(SummeryDto data) {
     carbonNum.setValue(data.getCarbonNum());
     selfConsumption.setValue(getScaledValue(data.getEselfConsumption() * 100));

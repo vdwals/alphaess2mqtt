@@ -1,21 +1,17 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
+import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.total;
+import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.total_increasing;
+
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.raw.RawEntity;
-import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
-import de.vdw.it.hamqtt.devices.sensor.Sensor.SensorBuilder;
+import java.time.LocalDate;
+import javax.inject.Singleton;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.inject.Singleton;
-import java.time.LocalDate;
-
-import static de.vdw.it.hamqtt.devices.Units.KILO_WATT_PER_HOUR;
-import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.total;
-import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.total_increasing;
 
 @Slf4j
 @Singleton
@@ -56,11 +52,7 @@ public class SolarModuleDeviceService extends DeviceService {
         RawEntity.builder().objectId(START_OF_DAY).className(pvToday.getClassName()).build();
   }
 
-  private SensorBuilder getEnergySensor(String objectId, String name) {
-    return getSensor(DeviceClass.energy, objectId, name)
-        .unitOfMeasurement(KILO_WATT_PER_HOUR.getUnit());
-  }
-
+  @Override
   public void mapValues(RunningDataDto data) {
     pvPower.setValue(
         data.getPpv1() + data.getPpv2() + data.getPpv3() + data.getPpv4() + data.getPmeter_dc());
@@ -73,6 +65,7 @@ public class SolarModuleDeviceService extends DeviceService {
     pMeterDc.setValue(data.getPmeter_dc());
   }
 
+  @Override
   public void mapValues(SummeryDto data) {
 
     pvToday.setValue(data.getEpvtoday());
