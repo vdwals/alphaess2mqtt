@@ -1,15 +1,16 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
-import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
-import static de.vdw.it.hamqtt.devices.Units.PERCENT;
-
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import javax.inject.Singleton;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.inject.Singleton;
+
+import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
+import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 
 @Slf4j
 @Singleton
@@ -75,13 +76,7 @@ public class InverterDeviceService extends DeviceService {
 
     gridPower.setValue(totalGridPower);
     powerConsumption.setValue(
-        totalGridPower
-            + data.getPpv1()
-            + data.getPpv2()
-            + data.getPpv3()
-            + data.getPpv4()
-            + data.getPmeter_dc()
-            + data.getPbat());
+        totalGridPower + data.getPpv1() + data.getPpv2() + data.getPmeter_dc() + data.getPbat());
 
     double gridIn = totalGridPower < 0 ? 0 : totalGridPower;
     gridPowerIn.setValue(gridIn);
