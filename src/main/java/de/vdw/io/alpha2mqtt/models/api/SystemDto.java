@@ -1,9 +1,12 @@
 package de.vdw.io.alpha2mqtt.models.api;
 
-import java.util.List;
 import lombok.Value;
+import lombok.With;
+
+import java.util.List;
 
 @Value
+@With
 public class SystemDto {
   String sys_sn;
   String ems_version;

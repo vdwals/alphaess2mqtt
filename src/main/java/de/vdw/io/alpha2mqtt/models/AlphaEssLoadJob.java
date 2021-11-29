@@ -15,7 +15,8 @@ public class AlphaEssLoadJob extends Model {
   private static final String COLUMN_URL = "url";
   private static final String SETTING = "GetCustomUseESSSetting".toLowerCase();
   private static final String SET_SETTING = "/CustomUseESSSetting".toLowerCase();
-  private static final String CHARGING = "charging";
+  private static final String START_CHARGING = "start";
+  private static final String STOP_CHARGING = "stop";
 
   public static AlphaEssLoadJob getLoginJob() {
     return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), LOGIN);
@@ -42,7 +43,11 @@ public class AlphaEssLoadJob extends Model {
   }
 
   public static AlphaEssLoadJob getStartChargingJob() {
-    return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), CHARGING);
+    return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), START_CHARGING);
+  }
+
+  public static AlphaEssLoadJob getStopChargingJob() {
+    return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), STOP_CHARGING);
   }
 
   public String getUrl() {

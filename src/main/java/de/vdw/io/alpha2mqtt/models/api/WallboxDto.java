@@ -1,8 +1,10 @@
 package de.vdw.io.alpha2mqtt.models.api;
 
 import lombok.Value;
+import lombok.With;
 
 @Value
+@With
 public class WallboxDto {
   String chargingpile_sn;
   String chargingpile_id;

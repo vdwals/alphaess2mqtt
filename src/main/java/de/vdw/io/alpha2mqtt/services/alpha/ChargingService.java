@@ -3,9 +3,7 @@ package de.vdw.io.alpha2mqtt.services.alpha;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
-import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +15,6 @@ import org.javalite.http.Post;
 
 import javax.inject.Singleton;
 import java.net.HttpURLConnection;
-import java.time.LocalTime;
 import java.util.Optional;
 
 @Singleton
@@ -28,10 +25,7 @@ public class ChargingService {
   private final ItemListService itemListService;
   private final TokenService tokenService;
 
-  public enum ChargingTimeSlot {
-    FIRST,
-    SECOND;
-  }
+  // private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 
   public boolean startCharging() {
     String token = tokenService.getToken();
@@ -41,21 +35,6 @@ public class ChargingService {
       return false;
     }
 
-    RunningDataDto data = runningDataService.getData();
-    SystemDto systemData = itemListService.getData();
-
-    if (systemData == null) {
-      log.error("Could not retrieve system settings");
-      return false;
-    }
-
-    if (systemData.getCharging_pile_list() == null
-        || systemData.getCharging_pile_list().isEmpty()) {
-      log.error("No charging piles found");
-      return false;
-    }
-
-    WallboxDto wallboxDto = systemData.getCharging_pile_list().get(0);
     String url =
         Base.withDb(
             () -> {
@@ -73,51 +52,18 @@ public class ChargingService {
       return false;
     }
 
-    Optional<ChargingDto> chargingDto1 =
-        Base.withDb(
-            () -> {
-              AlphaEssLoadJob startChargingJob = AlphaEssLoadJob.getStartChargingJob();
+    Optional<ChargingDto> chargingDto = getChargingDto();
 
-              if (startChargingJob == null) {
-                logError();
-                return null;
-              }
-
-              Optional<ChargingDto> chargingDto =
-                  AlphaEssBattery.findAll().include(AlphaEssWallbox.class).limit(1).stream()
-                      .map(battery -> (AlphaEssBattery) battery)
-                      .map(
-                          battery -> {
-                            String sn = battery.getSn();
-                            Optional<String> wallboxSn =
-                                battery.getAll(AlphaEssWallbox.class).limit(1).stream()
-                                    .map(wallbox -> (AlphaEssWallbox) wallbox)
-                                    .map(AlphaEssWallbox::getSn)
-                                    .findFirst();
-
-                            if (wallboxSn.isEmpty()) {
-                              logError();
-                              return null;
-                            }
-                            return new ChargingDto(sn, wallboxSn.get());
-                          })
-                      .findFirst();
-
-              if (chargingDto.isEmpty()) {
-                logError();
-                return null;
-              }
-
-              return chargingDto;
-            });
-
-    if (chargingDto1.isEmpty()) {
+    if (chargingDto.isEmpty()) {
       logError();
       return false;
     }
 
-    Post post =
-        RequestUtils.addHeader(Http.post(url, JsonHelper.toJsonString(chargingDto1)), token);
+    boolean chargingModeSet = setChargingMode(token, ChargingMode.MAX);
+
+    if (!chargingModeSet) return false;
+
+    Post post = RequestUtils.addHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(
@@ -131,13 +77,178 @@ public class ChargingService {
     return true;
   }
 
+  private boolean setChargingMode(String token, ChargingMode mode) {
+    SystemDto systemData = itemListService.getData();
+
+    /*if (systemData == null
+        || systemData.getCharging_pile_list() == null
+        || systemData.getCharging_pile_list().isEmpty()) {
+      log.error("Could not retrieve system settings. No charging piles found");
+      return false;
+    }
+
+    // Set charging times from now to in 5 hours
+    LocalTime now = LocalTime.now();
+    WallboxDto wallBoxDtoToSet =
+        systemData
+            .getCharging_pile_list()
+            .get(0)
+            .withTime_charge_1(1)
+            .withTime_charge_s1(now.format(formatter))
+            .withTime_charge_e1(now.plusHours(5).format(formatter));
+
+    SystemDto systemDtoToSet =
+        systemData.withCharge_mode1(4).withCharging_pile_list(List.of(wallBoxDtoToSet));
+     */
+
+    if (systemData == null) {
+      log.error("Could not retrieve system settings.");
+      return false;
+    }
+
+    SystemDto systemDtoToSet = systemData.withCharge_mode1(mode.mode);
+
+    String url =
+        Base.withDb(
+            () -> {
+              AlphaEssLoadJob alphaEssLoadJob = AlphaEssLoadJob.setSettingsJob();
+
+              if (alphaEssLoadJob == null) {
+                log.error("No Settings set job found");
+                return null;
+              }
+
+              return alphaEssLoadJob.getUrl();
+            });
+
+    Post post =
+        RequestUtils.addHeader(Http.post(url, JsonHelper.toJsonString(systemDtoToSet)), token);
+
+    if (post.responseCode() != HttpURLConnection.HTTP_OK) {
+      log.error(
+          "Charging mode not changed. Code: {}, Message: {}",
+          post.responseCode(),
+          post.responseMessage());
+      return false;
+    }
+
+    return true;
+  }
+
+  private Optional<ChargingDto> getChargingDto() {
+    return Base.withDb(
+        () -> {
+          AlphaEssLoadJob startChargingJob = AlphaEssLoadJob.getStartChargingJob();
+
+          if (startChargingJob == null) {
+            logError();
+            return null;
+          }
+
+          Optional<ChargingDto> chargingDto =
+              AlphaEssBattery.findAll().include(AlphaEssWallbox.class).limit(1).stream()
+                  .map(battery -> (AlphaEssBattery) battery)
+                  .map(
+                      battery -> {
+                        String sn = battery.getSn();
+                        Optional<String> wallBoxSn =
+                            battery.getAll(AlphaEssWallbox.class).limit(1).stream()
+                                .map(wallBox -> (AlphaEssWallbox) wallBox)
+                                .map(AlphaEssWallbox::getSn)
+                                .findFirst();
+
+                        if (wallBoxSn.isEmpty()) {
+                          logError();
+                          return null;
+                        }
+                        return new ChargingDto(sn, wallBoxSn.get());
+                      })
+                  .findFirst();
+
+          if (chargingDto.isEmpty()) {
+            logError();
+            return null;
+          }
+
+          return chargingDto;
+        });
+  }
+
+  public boolean resetCharging() {
+    String token = tokenService.getToken();
+
+    if (token == null) {
+      log.error("No token available");
+      return false;
+    }
+
+    return setChargingMode(token, ChargingMode.NORMAL);
+  }
+
   private void logError() {
     log.error("No charging job found");
   }
 
-  public void stopCharging() {}
+  public boolean stopCharging() {
+    String token = tokenService.getToken();
 
-  public void setChargingTime(ChargingTimeSlot timeSlot, LocalTime time) {}
+    if (token == null) {
+      log.error("No token available");
+      return false;
+    }
 
-  public void setCharingTimeActive(ChargingTimeSlot timeSlot, boolean active) {}
+    String url =
+        Base.withDb(
+            () -> {
+              AlphaEssLoadJob stopChargingJob = AlphaEssLoadJob.getStopChargingJob();
+
+              if (stopChargingJob == null) {
+                logError();
+                return null;
+              }
+              return stopChargingJob.getUrl();
+            });
+
+    if (url == null) {
+      log.error("No url available for stopping charging process");
+      return false;
+    }
+
+    Optional<ChargingDto> chargingDto = getChargingDto();
+
+    if (chargingDto.isEmpty()) {
+      logError();
+      return false;
+    }
+
+    boolean chargingModeReset = resetCharging();
+
+    if (!chargingModeReset) {
+      log.error("Charging mode not rested");
+      return false;
+    }
+
+    Post post = RequestUtils.addHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
+
+    if (post.responseCode() != HttpURLConnection.HTTP_OK) {
+      log.error(
+          "Charging not stopped. Code: {}, Message: {}",
+          post.responseCode(),
+          post.responseMessage());
+      return false;
+    }
+
+    log.debug("Stop Charging response: {}", post.responseMessage());
+    return true;
+  }
+
+  @RequiredArgsConstructor
+  public enum ChargingMode {
+    SLOW(1),
+    NORMAL(2),
+    FAST(3),
+    MAX(4);
+
+    final int mode;
+  }
 }
