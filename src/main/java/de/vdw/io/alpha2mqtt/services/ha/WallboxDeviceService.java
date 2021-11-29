@@ -46,7 +46,7 @@ public class WallboxDeviceService extends DeviceService {
             + dataDto.getPpv2()
             + dataDto.getPbat();
 
-    if (totalAvailablePower <= wallboxPower) {
+    if (wallboxPower > 0.0 && totalAvailablePower <= wallboxPower) {
       log.warn(
           "Wallbox power {} Wh exceeds total available power of {} Wh. Fixing by recalculating wallbox power",
           wallboxPower,
