@@ -9,6 +9,7 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssToken;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.TokenDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Http;
@@ -21,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 
 @RequiredArgsConstructor
 @Singleton
+@Slf4j
 public class TokenService {
 
   private final ObjectMapper objectMapper;
@@ -63,7 +65,7 @@ public class TokenService {
                 });
 
       } catch (IOException e) {
-        e.printStackTrace();
+        log.error("Error receiving token:", e);
       }
     }
 

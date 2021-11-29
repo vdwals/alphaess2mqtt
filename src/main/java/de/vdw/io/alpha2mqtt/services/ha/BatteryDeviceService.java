@@ -64,7 +64,7 @@ public class BatteryDeviceService extends DeviceService {
     batteryInput.setValue(pBat > 0 ? 0 : Math.abs(pBat));
     batteryOutput.setValue(pBat > 0 ? pBat : 0);
 
-    batteryLoadEnergy.setValue(getScaledValue(data.getSoc() * capacity));
+    batteryLoadEnergy.setValue(getScaledValue(data.getSoc() * capacity * 1000 / 100));
   }
 
   @Override
