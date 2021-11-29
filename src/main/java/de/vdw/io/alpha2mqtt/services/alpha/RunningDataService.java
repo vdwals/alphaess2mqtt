@@ -6,6 +6,7 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.http.Get;
@@ -49,7 +50,7 @@ public class RunningDataService extends AlphaService<RunningDataDto> {
       return null;
     }
 
-    Get dataGet = addHeader(Http.get(url), token);
+    Get dataGet = RequestUtils.addHeader(Http.get(url), token);
     if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(
           "Unexpected response code while receiving live data {}: {}",

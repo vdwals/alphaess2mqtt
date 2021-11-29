@@ -7,6 +7,7 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.SummaryRequestDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.common.JsonHelper;
@@ -53,7 +54,7 @@ public class SummeryService extends AlphaService<SummeryDto> {
         SummaryRequestDto.builder().showLoading(true).tday(now.format(formatter)).build();
 
     Post summaryPost =
-        addHeader(
+        RequestUtils.addHeader(
             Http.post(url, JsonHelper.toJsonString(requestDto))
                 .header("Content-Type", Constants.APPLICATION_JSON),
             token);

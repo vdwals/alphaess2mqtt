@@ -8,6 +8,7 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
+import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.http.Get;
@@ -50,7 +51,7 @@ public class ItemListService extends AlphaService<SystemDto> {
         settingsUrl.entrySet().stream()
             .map(
                 entry -> {
-                  Get dataGet = addHeader(Http.get(entry.getKey()), token);
+                  Get dataGet = RequestUtils.addHeader(Http.get(entry.getKey()), token);
 
                   if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
                     log.error(
