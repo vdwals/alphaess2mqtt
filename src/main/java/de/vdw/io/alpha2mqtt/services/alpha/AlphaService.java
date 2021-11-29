@@ -1,12 +1,12 @@
-package de.vdw.io.alpha2mqtt.services;
+package de.vdw.io.alpha2mqtt.services.alpha;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.config.Constants;
-import de.vdw.io.alpha2mqtt.services.alpha.TokenService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.common.JsonHelper;
+import org.javalite.http.Post;
 import org.javalite.http.Request;
 
 import javax.inject.Singleton;
@@ -21,9 +21,21 @@ public abstract class AlphaService<P> {
 
   private final TokenService tokenService;
 
-  public P getData() {
-    LocalDateTime now = LocalDateTime.now();
+  protected static <T extends Request<T>> T addHeader(T request, String token) {
+    return request
+        .header("Accept", Constants.APPLICATION_JSON)
+        .header("authorization", "Bearer " + token);
+  }
 
+  protected abstract P requestNewData(String token, LocalDateTime now);
+
+  public abstract long getRefreshRate();
+
+  protected static Post addHeader(Post postRequest, String token) {
+    return addHeader(postRequest.header("Content-Type", Constants.APPLICATION_JSON), token);
+  }
+
+  public P getData() {
     String token = tokenService.getToken();
 
     if (token == null) {
@@ -31,21 +43,11 @@ public abstract class AlphaService<P> {
       return null;
     }
 
-    P response = requestNewData(token, now);
+    P response = requestNewData(token, LocalDateTime.now());
 
     if (response == null) log.error("No response available.");
     else log.debug("Response: {}", JsonHelper.toJsonString(response, true));
 
     return response;
-  }
-
-  protected abstract P requestNewData(String token, LocalDateTime now);
-
-  public abstract long getRefreshRate();
-
-  protected <T extends Request<T>> T addHeader(T request, String token) {
-    return request
-        .header("Accept", Constants.APPLICATION_JSON)
-        .header("authorization", "Bearer " + token);
   }
 }

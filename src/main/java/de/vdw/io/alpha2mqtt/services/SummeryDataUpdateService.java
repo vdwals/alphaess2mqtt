@@ -1,7 +1,7 @@
-package de.vdw.io.alpha2mqtt.services.alpha;
+package de.vdw.io.alpha2mqtt.services;
 
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
-import de.vdw.io.alpha2mqtt.services.SummeryService;
+import de.vdw.io.alpha2mqtt.services.alpha.SummeryService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;

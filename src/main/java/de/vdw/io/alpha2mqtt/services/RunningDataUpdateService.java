@@ -1,7 +1,7 @@
-package de.vdw.io.alpha2mqtt.services.alpha;
+package de.vdw.io.alpha2mqtt.services;
 
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
-import de.vdw.io.alpha2mqtt.services.RunningDataService;
+import de.vdw.io.alpha2mqtt.services.alpha.RunningDataService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;

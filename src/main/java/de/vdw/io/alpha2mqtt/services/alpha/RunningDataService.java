@@ -1,4 +1,4 @@
-package de.vdw.io.alpha2mqtt.services;
+package de.vdw.io.alpha2mqtt.services.alpha;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,7 +6,6 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
-import de.vdw.io.alpha2mqtt.services.alpha.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.http.Get;

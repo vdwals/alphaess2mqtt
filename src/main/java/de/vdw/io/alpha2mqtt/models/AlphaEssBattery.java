@@ -2,8 +2,10 @@ package de.vdw.io.alpha2mqtt.models;
 
 import org.javalite.activejdbc.Model;
 import org.javalite.activejdbc.annotations.Cached;
+import org.javalite.activejdbc.annotations.IdName;
 
 @Cached
+@IdName("sn")
 public class AlphaEssBattery extends Model {
 
   public static final String SN = "sn";
