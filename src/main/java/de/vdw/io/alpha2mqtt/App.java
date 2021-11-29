@@ -7,7 +7,7 @@ import de.vdw.io.alpha2mqtt.services.alpha.ItemListService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
-import de.vdw.io.alpha2mqtt.services.ha.WallboxDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import de.vdw.it.hamqtt.utils.ServiceFactory;
 import eu.lestard.easydi.EasyDI;
@@ -32,7 +32,7 @@ public class App {
 
   InverterDeviceService inverterDeviceService;
 
-  WallboxDeviceService wallboxDeviceService;
+  WallBoxDeviceService wallboxDeviceService;
 
   HomeAssistantMQTTService mqttService;
 

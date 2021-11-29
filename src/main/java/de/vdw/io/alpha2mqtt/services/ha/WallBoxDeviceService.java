@@ -10,17 +10,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
 
-import javax.inject.Singleton;
-
 @Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
-public class WallboxDeviceService extends DeviceService {
+public class WallBoxDeviceService extends DeviceService {
 
   AbstractEntity chargeEnergy, chargePower;
 
-  public WallboxDeviceService() {
+  public WallBoxDeviceService() {
     super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", "ALP2021040257071");
 
     chargeEnergy =

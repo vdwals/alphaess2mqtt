@@ -5,8 +5,12 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
+import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
+import de.vdw.it.hamqtt.ICommandListener;
+import de.vdw.it.hamqtt.devices.Device;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.common.JsonHelper;
@@ -15,19 +19,21 @@ import org.javalite.http.Post;
 
 import javax.inject.Singleton;
 import java.net.HttpURLConnection;
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
-@RequiredArgsConstructor
+@Value
 @Slf4j
-public class ChargingService {
-  private final RunningDataService runningDataService;
-  private final ItemListService itemListService;
-  private final TokenService tokenService;
+public class ChargingService implements ICommandListener {
+  // private final RunningDataService runningDataService;
+  ItemListService itemListService;
+  TokenService tokenService;
+  WallBoxDeviceService wallboxDeviceService;
 
   // private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 
-  public boolean startCharging() {
+  private boolean startCharging() {
     String token = tokenService.getToken();
 
     if (token == null) {
@@ -174,7 +180,7 @@ public class ChargingService {
         });
   }
 
-  public boolean resetCharging() {
+  private boolean resetCharging() {
     String token = tokenService.getToken();
 
     if (token == null) {
@@ -189,7 +195,7 @@ public class ChargingService {
     log.error("No charging job found");
   }
 
-  public boolean stopCharging() {
+  private boolean stopCharging() {
     String token = tokenService.getToken();
 
     if (token == null) {
@@ -240,6 +246,16 @@ public class ChargingService {
 
     log.debug("Stop Charging response: {}", post.responseMessage());
     return true;
+  }
+
+  @Override
+  public void received(String s, byte[] bytes) {
+    // Topic und command prüfen
+  }
+
+  @Override
+  public List<Device> getDevices() {
+    return List.of(wallboxDeviceService.getDevice());
   }
 
   @RequiredArgsConstructor
