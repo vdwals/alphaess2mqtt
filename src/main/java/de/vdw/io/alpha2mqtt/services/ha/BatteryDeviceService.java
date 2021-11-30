@@ -6,6 +6,7 @@ import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
@@ -17,6 +18,7 @@ import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
 @Slf4j
 @Singleton
 @Value
+@EqualsAndHashCode(callSuper = true)
 public class BatteryDeviceService extends DeviceService {
 
   AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput, batteryLoadEnergy;

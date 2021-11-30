@@ -3,6 +3,7 @@ version: '2'
 services:
   alpha_ess_2_mqtt:
     container_name: alphaEss2Mqtt
+    restart: always
     build:
       context: .
     image: alpha_ess_2_mqtt
