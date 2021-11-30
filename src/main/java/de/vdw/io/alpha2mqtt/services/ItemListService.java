@@ -9,17 +9,19 @@ import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
 import de.vdw.io.alpha2mqtt.services.alpha.TokenService;
+import lombok.extern.slf4j.Slf4j;
+import org.javalite.activejdbc.Base;
+import org.javalite.http.Get;
+import org.javalite.http.Http;
+
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
-import org.javalite.activejdbc.Base;
-import org.javalite.http.Get;
-import org.javalite.http.Http;
 
 @Slf4j
 public class ItemListService extends AlphaService<SystemDto> {
@@ -50,6 +52,14 @@ public class ItemListService extends AlphaService<SystemDto> {
             .map(
                 entry -> {
                   Get dataGet = addHeader(Http.get(entry.getKey()), token);
+
+                  if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
+                    log.error(
+                        "Unexpected response code while receiving list items {}: {}",
+                        dataGet.responseCode(),
+                        dataGet.responseMessage());
+                    return null;
+                  }
 
                   String dataResponse = dataGet.text();
 
