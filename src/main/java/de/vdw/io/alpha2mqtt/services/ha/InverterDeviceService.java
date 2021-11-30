@@ -1,19 +1,22 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
-import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
-import static de.vdw.it.hamqtt.devices.Units.PERCENT;
-
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import javax.inject.Singleton;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.inject.Singleton;
+
+import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
+import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 
 @Slf4j
 @Singleton
 @Value
+@EqualsAndHashCode(callSuper = true)
 public class InverterDeviceService extends DeviceService {
 
   AbstractEntity gridPower,
