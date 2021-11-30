@@ -26,12 +26,9 @@ import java.util.Optional;
 @Value
 @Slf4j
 public class ChargingService implements ICommandListener {
-  // private final RunningDataService runningDataService;
   ItemListService itemListService;
   TokenService tokenService;
   WallBoxDeviceService wallboxDeviceService;
-
-  // private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 
   private boolean startCharging() {
     String token = tokenService.getToken();
@@ -86,27 +83,6 @@ public class ChargingService implements ICommandListener {
   private boolean setChargingMode(String token, ChargingMode mode) {
     SystemDto systemData = itemListService.getData();
 
-    /*if (systemData == null
-        || systemData.getCharging_pile_list() == null
-        || systemData.getCharging_pile_list().isEmpty()) {
-      log.error("Could not retrieve system settings. No charging piles found");
-      return false;
-    }
-
-    // Set charging times from now to in 5 hours
-    LocalTime now = LocalTime.now();
-    WallboxDto wallBoxDtoToSet =
-        systemData
-            .getCharging_pile_list()
-            .get(0)
-            .withTime_charge_1(1)
-            .withTime_charge_s1(now.format(formatter))
-            .withTime_charge_e1(now.plusHours(5).format(formatter));
-
-    SystemDto systemDtoToSet =
-        systemData.withCharge_mode1(4).withCharging_pile_list(List.of(wallBoxDtoToSet));
-     */
-
     if (systemData == null) {
       log.error("Could not retrieve system settings.");
       return false;
@@ -148,7 +124,7 @@ public class ChargingService implements ICommandListener {
 
           if (startChargingJob == null) {
             logError();
-            return null;
+            return Optional.empty();
           }
 
           Optional<ChargingDto> chargingDto =
@@ -173,7 +149,7 @@ public class ChargingService implements ICommandListener {
 
           if (chargingDto.isEmpty()) {
             logError();
-            return null;
+            return Optional.empty();
           }
 
           return chargingDto;
@@ -249,7 +225,7 @@ public class ChargingService implements ICommandListener {
   }
 
   @Override
-  public void received(String s, byte[] bytes) {
+  public void received(String topic, byte[] bytes) {
     // Topic und command prüfen
   }
 
