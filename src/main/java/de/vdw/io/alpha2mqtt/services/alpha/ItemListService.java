@@ -60,6 +60,7 @@ public class ItemListService extends AlphaService<SystemDto> {
                         dataGet.responseMessage());
                     return null;
                   }
+
                   String dataResponse = dataGet.text();
 
                   try {

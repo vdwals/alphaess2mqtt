@@ -19,7 +19,6 @@ import org.javalite.activejdbc.connection_config.DBConfiguration;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -77,14 +76,7 @@ public class App {
     mqttService.addDevice(inverterDeviceService.getDevice());
     mqttService.addDevice(wallboxDeviceService.getDevice());
 
-    scheduledExecutorService.scheduleAtFixedRate(
-        () -> {
-          log.info("Publish configs");
-          mqttService.publishConfigs();
-        },
-        0,
-        1,
-        TimeUnit.HOURS);
+    mqttService.publishConfigs();
   }
 
   public void start() {

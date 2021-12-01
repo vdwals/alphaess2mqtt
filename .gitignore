@@ -3,3 +3,4 @@
 target/
 *.lck
 dependency-reduced-pom.xml
+*.orig

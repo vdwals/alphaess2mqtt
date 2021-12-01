@@ -39,19 +39,24 @@ public class RunningDataUpdateService implements Runnable {
 
   @Override
   public void run() {
-    log.info("Update live data");
+    log.info("Update live data.");
     RunningDataDto data = runningDataService.getData();
 
     if (data == null) {
-      log.error("No data available");
+      log.error("No data available.");
       return;
     }
+    log.debug("Live data received.");
+    log.debug("Data: {}", data);
 
     batteryDeviceService.mapValues(data);
     solarModuleDeviceService.mapValues(data);
     inverterDeviceService.mapValues(data);
     wallboxDeviceService.mapValues(data);
 
+    log.debug("Live data mapped. Publishing via service.");
     mqttService.publishValues();
+
+    log.debug("Live data updated successfully");
   }
 }
