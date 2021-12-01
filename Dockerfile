@@ -3,7 +3,7 @@ FROM drone/git as clone
 WORKDIR /hamqtt
 
 RUN git clone https://bitbucket.org/vdwals/hamqtt.git . \
-    && git checkout 3.0.1
+    && git checkout 3.0.2
 
 # Build application
 FROM arm32v7/maven as builder

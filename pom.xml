@@ -124,7 +124,7 @@
         <apache-commons.version>3.12.0</apache-commons.version>
         <easy-di.version>0.3.0</easy-di.version>
         <ehcache.version>2.10.9.2</ehcache.version>
-        <hamqtt.version>3.0.1</hamqtt.version>
+        <hamqtt.version>3.0.2</hamqtt.version>
         <java.version>11</java.version>
         <javalite.version>2.5-j8</javalite.version>
         <lombok.version>1.18.22</lombok.version>
