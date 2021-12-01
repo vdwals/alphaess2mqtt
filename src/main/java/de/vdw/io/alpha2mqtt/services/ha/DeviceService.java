@@ -3,6 +3,7 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
+import de.vdw.it.hamqtt.devices.AbstractSensorEntity;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
@@ -13,6 +14,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.concurrent.TimeUnit;
 
 import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 import static de.vdw.it.hamqtt.devices.Units.KILO_WATT_PER_HOUR;
@@ -36,10 +38,12 @@ public abstract class DeviceService {
             .build();
   }
 
-  protected Sensor getPowerSensor(String objectId, String name) {
-    Sensor s =
+  protected AbstractSensorEntity getPowerSensor(String objectId, String name) {
+    AbstractSensorEntity s =
         getMeasurementSensor(DeviceClass.power, objectId, name)
             .unitOfMeasurement(WATT.getUnit())
+            .forceUpdate(true)
+            .expireAfter((int) TimeUnit.SECONDS.toSeconds(30))
             .build();
 
     getDevice().addEntity(s);

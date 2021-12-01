@@ -10,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
 
-import javax.inject.Singleton;
-
 @Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)
