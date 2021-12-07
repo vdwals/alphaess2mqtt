@@ -43,11 +43,10 @@ public class RunningDataUpdateService implements Runnable {
     RunningDataDto data = runningDataService.getData();
 
     if (data == null) {
-      log.error("No data available.");
+      log.error("No live data available.");
       return;
     }
     log.debug("Live data received.");
-    log.debug("Data: {}", data);
 
     batteryDeviceService.mapValues(data);
     solarModuleDeviceService.mapValues(data);
