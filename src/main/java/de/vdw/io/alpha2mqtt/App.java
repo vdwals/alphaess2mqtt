@@ -3,6 +3,7 @@ package de.vdw.io.alpha2mqtt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.services.RunningDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.SummeryDataUpdateService;
+import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
 import de.vdw.io.alpha2mqtt.services.alpha.ItemListService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
@@ -32,6 +33,8 @@ public class App {
   InverterDeviceService inverterDeviceService;
 
   WallBoxDeviceService wallboxDeviceService;
+
+  ChargingService chargingService;
 
   HomeAssistantMQTTService mqttService;
 
@@ -75,6 +78,8 @@ public class App {
     mqttService.addDevice(solarModuleDeviceService.getDevice());
     mqttService.addDevice(inverterDeviceService.getDevice());
     mqttService.addDevice(wallboxDeviceService.getDevice());
+
+    mqttService.addCommandListener(chargingService);
 
     mqttService.publishConfigs();
   }

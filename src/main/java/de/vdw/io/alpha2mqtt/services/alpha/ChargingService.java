@@ -54,6 +54,8 @@ public class ChargingService implements ICommandListener {
             .build();
 
     charger.setValue("OFF");
+
+    wallboxDeviceService.getDevice().addEntity(charger);
   }
 
   private boolean startCharging() {
