@@ -17,10 +17,7 @@ import org.javalite.http.Http;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,29 +48,11 @@ public class ItemListService extends AlphaService<SystemDto> {
         settingsUrl.entrySet().stream()
             .map(
                 entry -> {
-                  Get dataGet = RequestUtils.addHeader(Http.get(entry.getKey()), token);
+                  String url = entry.getKey();
+                  SystemDto systemResponseDto = getResponse(token, url);
 
-                  if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
-                    log.error(
-                        "Unexpected response code while receiving items {}: {}",
-                        dataGet.responseCode(),
-                        dataGet.responseMessage());
-                    return null;
-                  }
-
-                  String dataResponse = dataGet.text();
-
-                  try {
-                    ResponseDto<SystemDto> systemResponseDto =
-                        getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
-
-                    return new AbstractMap.SimpleEntry<>(
-                        entry.getValue(), systemResponseDto.getData().getCharging_pile_list());
-
-                  } catch (IOException e) {
-                    log.error("Could not parse response.", e);
-                    return null;
-                  }
+                  return new AbstractMap.SimpleEntry<>(
+                      entry.getValue(), systemResponseDto.getCharging_pile_list());
                 })
             .filter(Objects::nonNull)
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -91,6 +70,59 @@ public class ItemListService extends AlphaService<SystemDto> {
         });
 
     return null;
+  }
+
+  private SystemDto getResponse(String token, String url) {
+    Get dataGet = RequestUtils.addHeader(Http.get(url), token);
+
+    if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
+      log.error(
+          "Unexpected response code while receiving items {}: {}",
+          dataGet.responseCode(),
+          dataGet.responseMessage());
+      return null;
+    }
+
+    String dataResponse = dataGet.text();
+
+    try {
+      ResponseDto<SystemDto> systemResponseDto =
+          getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
+
+      log.debug("Itemlist response: {}", systemResponseDto);
+
+      return systemResponseDto.getData();
+
+    } catch (IOException e) {
+      log.error("Could not parse response.", e);
+      return null;
+    }
+  }
+
+  public SystemDto getSystemSettings() {
+    String token = tokenService.getToken();
+
+    if (token == null) {
+      log.error("No token available");
+      return null;
+    }
+
+    log.info("Load wallbox information.");
+    Optional<String> settingsUrl =
+        Base.withDb(
+            () -> {
+              String url = AlphaEssLoadJob.getSettingsJob().getUrl();
+              return AlphaEssBattery.findAll().stream()
+                  .map(model -> (AlphaEssBattery) model)
+                  .map(battery -> String.format(url, battery.getSystemId()))
+                  .findFirst();
+            });
+
+    if (settingsUrl.isEmpty()) return null;
+
+    String url = settingsUrl.get();
+
+    return getResponse(token, url);
   }
 
   @Override

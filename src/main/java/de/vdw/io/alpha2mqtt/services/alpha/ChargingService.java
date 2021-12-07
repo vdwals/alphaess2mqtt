@@ -3,12 +3,14 @@ package de.vdw.io.alpha2mqtt.services.alpha;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
+import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
 import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.ICommandListener;
 import de.vdw.it.hamqtt.devices.Device;
+import de.vdw.it.hamqtt.devices.switches.Switch;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +21,11 @@ import org.javalite.http.Post;
 
 import javax.inject.Singleton;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+
+import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 
 @Singleton
 @Value
@@ -30,6 +35,27 @@ public class ChargingService implements ICommandListener {
   TokenService tokenService;
   WallBoxDeviceService wallboxDeviceService;
 
+  Switch charger;
+
+  public ChargingService(
+      ItemListService itemListService,
+      TokenService tokenService,
+      WallBoxDeviceService wallboxDeviceService) {
+    this.itemListService = itemListService;
+    this.tokenService = tokenService;
+    this.wallboxDeviceService = wallboxDeviceService;
+
+    charger =
+        Switch.builder()
+            .device(wallboxDeviceService.getDevice())
+            .name("charger")
+            .objectId("alphaCharger")
+            .uniqueId(getUniqueId(wallboxDeviceService.getDevice().getNodeId(), "alphaCharger"))
+            .build();
+
+    charger.setValue("OFF");
+  }
+
   private boolean startCharging() {
     String token = tokenService.getToken();
 
@@ -38,6 +64,7 @@ public class ChargingService implements ICommandListener {
       return false;
     }
 
+    // Get url for charging start job.
     String url =
         Base.withDb(
             () -> {
@@ -54,18 +81,23 @@ public class ChargingService implements ICommandListener {
       log.error("No url available for starting charging process");
       return false;
     }
+    log.debug("Charging command url: {}", url);
 
+    // Build post body.
     Optional<ChargingDto> chargingDto = getChargingDto();
 
     if (chargingDto.isEmpty()) {
       logError();
       return false;
     }
+    log.debug("System settings received: {}", chargingDto.get());
 
+    // Set charging mode to max.
     boolean chargingModeSet = setChargingMode(token, ChargingMode.MAX);
 
     if (!chargingModeSet) return false;
 
+    // Post charging command.
     Post post = RequestUtils.addHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
@@ -81,7 +113,7 @@ public class ChargingService implements ICommandListener {
   }
 
   private boolean setChargingMode(String token, ChargingMode mode) {
-    SystemDto systemData = itemListService.getData();
+    SystemDto systemData = itemListService.getSystemSettings();
 
     if (systemData == null) {
       log.error("Could not retrieve system settings.");
@@ -113,6 +145,8 @@ public class ChargingService implements ICommandListener {
           post.responseMessage());
       return false;
     }
+
+    log.debug("Charging mode changed to {}. Response: {}", mode, post.text());
 
     return true;
   }
@@ -227,11 +261,30 @@ public class ChargingService implements ICommandListener {
   @Override
   public void received(String topic, byte[] bytes) {
     // Topic und command prüfen
+    String command = new String(bytes, StandardCharsets.UTF_8);
+
+    log.debug("Command received: {}", command);
+
+    switch (command) {
+      case "ON":
+        if (startCharging()) charger.setValue("ON");
+
+        break;
+
+      case "OFF":
+        if (stopCharging()) charger.setValue("OFF");
+        break;
+    }
   }
 
   @Override
   public List<Device> getDevices() {
     return List.of(wallboxDeviceService.getDevice());
+  }
+
+  public void mapValues(RunningDataDto data) {
+    if (data.getEv1_power() > 10) charger.setValue("ON");
+    else charger.setValue("OFF");
   }
 
   @RequiredArgsConstructor

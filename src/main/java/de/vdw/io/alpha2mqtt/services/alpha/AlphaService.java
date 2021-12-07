@@ -16,7 +16,7 @@ public abstract class AlphaService<P> {
 
   @Getter private final ObjectMapper objectMapper;
 
-  private final TokenService tokenService;
+  protected final TokenService tokenService;
 
   protected abstract P requestNewData(String token, LocalDateTime now);
 

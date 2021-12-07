@@ -1,6 +1,7 @@
 package de.vdw.io.alpha2mqtt.services;
 
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
 import de.vdw.io.alpha2mqtt.services.alpha.RunningDataService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
@@ -29,6 +30,8 @@ public class RunningDataUpdateService implements Runnable {
 
   RunningDataService runningDataService;
 
+  ChargingService chargingService;
+
   HomeAssistantMQTTService mqttService;
 
   public void init() {
@@ -52,6 +55,7 @@ public class RunningDataUpdateService implements Runnable {
     solarModuleDeviceService.mapValues(data);
     inverterDeviceService.mapValues(data);
     wallboxDeviceService.mapValues(data);
+    chargingService.mapValues(data);
 
     log.debug("Live data mapped. Publishing via service.");
     mqttService.publishValues();
