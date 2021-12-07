@@ -100,7 +100,8 @@ public class ChargingService implements ICommandListener {
     if (!chargingModeSet) return false;
 
     // Post charging command.
-    Post post = RequestUtils.addHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
+    Post post =
+        RequestUtils.addPostHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(
@@ -138,7 +139,7 @@ public class ChargingService implements ICommandListener {
             });
 
     Post post =
-        RequestUtils.addHeader(Http.post(url, JsonHelper.toJsonString(systemDtoToSet)), token);
+        RequestUtils.addPostHeader(Http.post(url, JsonHelper.toJsonString(systemDtoToSet)), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(
@@ -163,6 +164,7 @@ public class ChargingService implements ICommandListener {
             return Optional.empty();
           }
 
+          //noinspection unchecked
           Optional<ChargingDto> chargingDto =
               AlphaEssBattery.findAll().include(AlphaEssWallbox.class).limit(1).stream()
                   .map(battery -> (AlphaEssBattery) battery)
@@ -246,7 +248,8 @@ public class ChargingService implements ICommandListener {
       return false;
     }
 
-    Post post = RequestUtils.addHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
+    Post post =
+        RequestUtils.addPostHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(

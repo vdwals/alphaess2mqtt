@@ -11,9 +11,9 @@ public class AlphaEssWallbox extends Model {
   public static final String BATTERY = "battery";
   public static final String SN = "sn";
 
-  public static AlphaEssWallbox create(AlphaEssBattery battery, String sn) {
+  public static void create(AlphaEssBattery battery, String sn) {
     log.debug("Created new Wallbox: {}", sn);
-    return findOrCreateIt(BATTERY, battery.getSn(), SN, sn);
+    findOrCreateIt(BATTERY, battery.getSn(), SN, sn);
   }
 
   public String getSn() {

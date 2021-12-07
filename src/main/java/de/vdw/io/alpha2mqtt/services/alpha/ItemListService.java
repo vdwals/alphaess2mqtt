@@ -51,6 +51,9 @@ public class ItemListService extends AlphaService<SystemDto> {
                   String url = entry.getKey();
                   SystemDto systemResponseDto = getResponse(token, url);
 
+                  if (systemResponseDto == null
+                      || systemResponseDto.getCharging_pile_list() == null) return null;
+
                   return new AbstractMap.SimpleEntry<>(
                       entry.getValue(), systemResponseDto.getCharging_pile_list());
                 })

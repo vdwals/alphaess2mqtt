@@ -54,7 +54,7 @@ public class SummeryService extends AlphaService<SummeryDto> {
         SummaryRequestDto.builder().showLoading(true).tday(now.format(formatter)).build();
 
     Post summaryPost =
-        RequestUtils.addHeader(
+        RequestUtils.addPostHeader(
             Http.post(url, JsonHelper.toJsonString(requestDto))
                 .header("Content-Type", Constants.APPLICATION_JSON),
             token);

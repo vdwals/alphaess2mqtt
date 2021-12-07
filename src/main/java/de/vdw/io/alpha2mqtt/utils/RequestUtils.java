@@ -8,7 +8,7 @@ import org.javalite.http.Request;
 @UtilityClass
 public final class RequestUtils {
 
-  public static Post addHeader(Post postRequest, String token) {
+  public static Post addPostHeader(Post postRequest, String token) {
     return addHeader(postRequest.header("Content-Type", Constants.APPLICATION_JSON), token);
   }
 

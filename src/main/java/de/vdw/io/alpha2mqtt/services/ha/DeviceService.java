@@ -21,6 +21,7 @@ import static de.vdw.it.hamqtt.devices.Units.KILO_WATT_PER_HOUR;
 import static de.vdw.it.hamqtt.devices.Units.WATT;
 import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.measurement;
 
+@SuppressWarnings("rawtypes")
 @Slf4j
 public abstract class DeviceService {
   @Getter private final Device device;
