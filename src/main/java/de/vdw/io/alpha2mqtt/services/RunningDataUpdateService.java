@@ -55,7 +55,6 @@ public class RunningDataUpdateService implements Runnable {
     solarModuleDeviceService.mapValues(data);
     inverterDeviceService.mapValues(data);
     wallboxDeviceService.mapValues(data);
-    chargingService.mapValues(data);
 
     log.debug("Live data mapped. Publishing via service.");
     mqttService.publishValues();

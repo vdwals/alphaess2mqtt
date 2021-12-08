@@ -7,12 +7,18 @@ import de.vdw.it.hamqtt.devices.AbstractAvailabilityEntity;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.entities.BinarySensor;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
+import de.vdw.it.hamqtt.devices.entities.Switch;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
 import java.util.concurrent.TimeUnit;
+
+import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
+import static de.vdw.it.hamqtt.devices.entities.BinarySensor.Payload.OFF;
+import static de.vdw.it.hamqtt.devices.entities.BinarySensor.Payload.ON;
 
 @Singleton
 @Value
@@ -21,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 public class WallBoxDeviceService extends DeviceService {
 
   AbstractEntity chargeEnergy, chargePower, chargeState, plugState, pluggedCarState;
+
+  @Getter Switch charger;
 
   public WallBoxDeviceService() {
     super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", "ALP2021040257071");
@@ -69,6 +77,16 @@ public class WallBoxDeviceService extends DeviceService {
             .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
             .deviceClass(BinarySensor.DeviceClass.connectivity)
             .build();
+
+    charger =
+        Switch.builder()
+            .device(getDevice())
+            .name("charger")
+            .objectId("alphaCharger")
+            .uniqueId(getUniqueId(getDevice().getNodeId(), "alphaCharger"))
+            .build();
+
+    charger.setValue(OFF);
   }
 
   @Override
@@ -105,27 +123,28 @@ public class WallBoxDeviceService extends DeviceService {
 
     switch (dataDto.getEv1_mode()) {
       case 1:
-        chargeState.setValue(BinarySensor.Payload.OFF.toString());
-        plugState.setValue(BinarySensor.Payload.OFF.toString());
-        pluggedCarState.setValue(BinarySensor.Payload.OFF.toString());
+        charger.setValue(OFF);
+        chargeState.setValue(OFF);
+        plugState.setValue(OFF);
+        pluggedCarState.setValue(OFF);
         break;
       case 4:
       case 2:
         break;
       case 3:
-        chargeState.setValue(BinarySensor.Payload.OFF.toString());
-        plugState.setValue(BinarySensor.Payload.ON.toString());
-        pluggedCarState.setValue(BinarySensor.Payload.OFF.toString());
+        chargeState.setValue(OFF);
+        plugState.setValue(ON);
+        pluggedCarState.setValue(OFF);
         break;
       case 5:
-        chargeState.setValue(BinarySensor.Payload.OFF.toString());
-        plugState.setValue(BinarySensor.Payload.ON.toString());
-        pluggedCarState.setValue(BinarySensor.Payload.ON.toString());
+        chargeState.setValue(OFF);
+        plugState.setValue(ON);
+        pluggedCarState.setValue(ON);
         break;
       case 6:
-        chargeState.setValue(BinarySensor.Payload.ON.toString());
-        plugState.setValue(BinarySensor.Payload.ON.toString());
-        pluggedCarState.setValue(BinarySensor.Payload.ON.toString());
+        chargeState.setValue(ON);
+        plugState.setValue(ON);
+        pluggedCarState.setValue(ON);
         break;
     }
   }

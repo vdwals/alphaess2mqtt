@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
@@ -12,11 +11,13 @@ import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.ICommandListener;
 import de.vdw.it.hamqtt.devices.Device;
+import de.vdw.it.hamqtt.devices.entities.BinarySensor;
 import de.vdw.it.hamqtt.devices.entities.Switch;
 import de.vdw.it.hamqtt.utils.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.EnumUtils;
 import org.javalite.activejdbc.Base;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Http;
@@ -28,19 +29,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
-import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
-
 @Singleton
 @Value
 @Slf4j
 public class ChargingService implements ICommandListener {
-  private static final String ON = "ON";
-  private static final String OFF = "OFF";
   ItemListService itemListService;
   TokenService tokenService;
   WallBoxDeviceService wallboxDeviceService;
-
-  Switch charger;
 
   public ChargingService(
       ItemListService itemListService,
@@ -49,18 +44,6 @@ public class ChargingService implements ICommandListener {
     this.itemListService = itemListService;
     this.tokenService = tokenService;
     this.wallboxDeviceService = wallboxDeviceService;
-
-    charger =
-        Switch.builder()
-            .device(wallboxDeviceService.getDevice())
-            .name("charger")
-            .objectId("alphaCharger")
-            .uniqueId(getUniqueId(wallboxDeviceService.getDevice().getNodeId(), "alphaCharger"))
-            .build();
-
-    charger.setValue(OFF);
-
-    wallboxDeviceService.getDevice().addEntity(charger);
   }
 
   private boolean startCharging() {
@@ -259,14 +242,22 @@ public class ChargingService implements ICommandListener {
 
     log.debug("Command received: {}", command);
 
-    switch (command) {
+    BinarySensor.Payload payload = EnumUtils.getEnum(BinarySensor.Payload.class, command);
+    if (payload == null) {
+      log.error("Command {} could not be interpreted as expected payload.", command);
+      return;
+    }
+
+    Switch charger = wallboxDeviceService.getCharger();
+
+    switch (payload) {
       case ON:
-        if (startCharging()) charger.setValue(ON);
+        if (startCharging()) charger.setValue(payload);
 
         break;
 
       case OFF:
-        if (stopCharging()) charger.setValue(OFF);
+        if (stopCharging()) charger.setValue(payload);
         break;
     }
   }
@@ -274,11 +265,6 @@ public class ChargingService implements ICommandListener {
   @Override
   public List<Device> getDevices() {
     return List.of(wallboxDeviceService.getDevice());
-  }
-
-  public void mapValues(RunningDataDto data) {
-    if (data.getEv1_power() > 10) charger.setValue(ON);
-    else charger.setValue(OFF);
   }
 
   @RequiredArgsConstructor
