@@ -1,13 +1,13 @@
 package de.vdw.io.alpha2mqtt.services.alpha;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.SummaryRequestDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
-import de.vdw.it.hamqtt.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.common.JsonHelper;
@@ -26,8 +26,8 @@ public class SummeryService extends AlphaService<SummeryDto> {
 
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-  public SummeryService(TokenService tokenService) {
-    super(tokenService);
+  public SummeryService(ObjectMapper objectMapper, TokenService tokenService) {
+    super(objectMapper, tokenService);
   }
 
   @Override
@@ -70,7 +70,7 @@ public class SummeryService extends AlphaService<SummeryDto> {
     String summaryResponse = summaryPost.text();
     try {
       ResponseDto<SummeryDto> summaryResponseDto =
-          JsonUtils.jsonMapper.readValue(summaryResponse, new TypeReference<>() {});
+          getObjectMapper().readValue(summaryResponse, new TypeReference<>() {});
 
       return summaryResponseDto.getData();
 

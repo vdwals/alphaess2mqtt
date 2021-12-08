@@ -1,6 +1,7 @@
 package de.vdw.io.alpha2mqtt.services.alpha;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
@@ -8,7 +9,6 @@ import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
-import de.vdw.it.hamqtt.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.http.Get;
@@ -23,9 +23,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ItemListService extends AlphaService<SystemDto> {
 
-  public ItemListService(TokenService tokenService) {
-    super(tokenService);
-  }
+  public ItemListService(ObjectMapper objectMapper, TokenService tokenService) {
+    super(objectMapper, tokenService);
 
   public Optional<String> getSystemId() {
     return Base.withDb(
@@ -100,7 +99,7 @@ public class ItemListService extends AlphaService<SystemDto> {
 
     try {
       ResponseDto<SystemDto> systemResponseDto =
-          JsonUtils.jsonMapper.readValue(dataResponse, new TypeReference<>() {});
+          getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
 
       log.debug("Itemlist response: {}", systemResponseDto);
 

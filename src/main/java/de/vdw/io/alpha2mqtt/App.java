@@ -1,5 +1,6 @@
 package de.vdw.io.alpha2mqtt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.services.RunningDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.SummeryDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
@@ -59,6 +60,7 @@ public class App {
             "Alpha ESS Proxy");
 
     EasyDI ed = new EasyDI();
+    ed.bindInstance(ObjectMapper.class, new ObjectMapper());
     ed.bindInstance(HomeAssistantMQTTService.class, mqttService);
     ed.bindInstance(ScheduledExecutorService.class, Executors.newSingleThreadScheduledExecutor());
     ed.bindInstance(EasyDI.class, ed);
