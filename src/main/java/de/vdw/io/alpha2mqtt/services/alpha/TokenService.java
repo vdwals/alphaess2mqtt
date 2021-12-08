@@ -1,13 +1,13 @@
 package de.vdw.io.alpha2mqtt.services.alpha;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssSetting;
 import de.vdw.io.alpha2mqtt.models.AlphaEssToken;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.TokenDto;
+import de.vdw.it.hamqtt.utils.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
@@ -24,8 +24,6 @@ import java.time.format.DateTimeFormatter;
 @Singleton
 @Slf4j
 public class TokenService {
-
-  private final ObjectMapper objectMapper;
 
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -46,7 +44,7 @@ public class TokenService {
 
       try {
         ResponseDto<TokenDto> loginResponseDto =
-            objectMapper.readValue(loginResponse, new TypeReference<>() {});
+            JsonUtils.jsonMapper.readValue(loginResponse, new TypeReference<>() {});
         TokenDto tokenDto = loginResponseDto.getData();
 
         LocalDateTime expirationTime =
