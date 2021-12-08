@@ -25,6 +25,7 @@ public class ItemListService extends AlphaService<SystemDto> {
 
   public ItemListService(ObjectMapper objectMapper, TokenService tokenService) {
     super(objectMapper, tokenService);
+  }
 
   public Optional<String> getSystemId() {
     return Base.withDb(
