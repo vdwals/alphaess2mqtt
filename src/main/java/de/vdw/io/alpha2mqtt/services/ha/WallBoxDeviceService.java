@@ -69,13 +69,6 @@ public class WallBoxDeviceService extends DeviceService {
             .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
             .deviceClass(BinarySensor.DeviceClass.connectivity)
             .build();
-
-    // 1: Nicht angeschlossen
-    // 2:
-    // 3: Angeschlossen, nicht laden
-    // 4:
-    // 5: Warten auf Antwort des E-Autos (EV)
-    // 6: Lädt
   }
 
   @Override
@@ -102,6 +95,39 @@ public class WallBoxDeviceService extends DeviceService {
 
     chargePower.setValue(wallBoxPower);
     chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
+
+    // 1: Nicht angeschlossen
+    // 2:
+    // 3: Angeschlossen, nicht laden
+    // 4:
+    // 5: Warten auf Antwort des E-Autos (EV)
+    // 6: Lädt
+
+    switch (dataDto.getEv1_mode()) {
+      case 1:
+        chargeState.setValue(BinarySensor.Payload.OFF.toString());
+        plugState.setValue(BinarySensor.Payload.OFF.toString());
+        pluggedCarState.setValue(BinarySensor.Payload.OFF.toString());
+        break;
+      case 4:
+      case 2:
+        break;
+      case 3:
+        chargeState.setValue(BinarySensor.Payload.OFF.toString());
+        plugState.setValue(BinarySensor.Payload.ON.toString());
+        pluggedCarState.setValue(BinarySensor.Payload.OFF.toString());
+        break;
+      case 5:
+        chargeState.setValue(BinarySensor.Payload.OFF.toString());
+        plugState.setValue(BinarySensor.Payload.ON.toString());
+        pluggedCarState.setValue(BinarySensor.Payload.ON.toString());
+        break;
+      case 6:
+        chargeState.setValue(BinarySensor.Payload.ON.toString());
+        plugState.setValue(BinarySensor.Payload.ON.toString());
+        pluggedCarState.setValue(BinarySensor.Payload.ON.toString());
+        break;
+    }
   }
 
   @Override
