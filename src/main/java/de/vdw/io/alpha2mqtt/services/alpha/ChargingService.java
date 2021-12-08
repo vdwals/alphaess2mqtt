@@ -34,6 +34,8 @@ import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 @Value
 @Slf4j
 public class ChargingService implements ICommandListener {
+  public static final String ON = "ON";
+  public static final String OFF = "OFF";
   ItemListService itemListService;
   TokenService tokenService;
   WallBoxDeviceService wallboxDeviceService;
@@ -56,19 +58,12 @@ public class ChargingService implements ICommandListener {
             .uniqueId(getUniqueId(wallboxDeviceService.getDevice().getNodeId(), "alphaCharger"))
             .build();
 
-    charger.setValue("OFF");
+    charger.setValue(OFF);
 
     wallboxDeviceService.getDevice().addEntity(charger);
   }
 
   private boolean startCharging() {
-    String token = tokenService.getToken();
-
-    if (token == null) {
-      log.error("No token available");
-      return false;
-    }
-
     // Get url for charging start job.
     String url =
         Base.withDb(
@@ -82,11 +77,22 @@ public class ChargingService implements ICommandListener {
               return startChargingJob.getUrl();
             });
 
+    return callChargingUrl(url, ChargingMode.MAX);
+  }
+
+  private boolean callChargingUrl(String url, ChargingMode chargingMode) {
     if (url == null) {
-      log.error("No url available for starting charging process");
+      log.error("No url available for changing process");
       return false;
     }
     log.debug("Charging command url: {}", url);
+
+    String token = tokenService.getToken();
+
+    if (token == null) {
+      log.error("No token available");
+      return false;
+    }
 
     // Build post body.
     Optional<ChargingDto> chargingDto = getChargingDto();
@@ -98,7 +104,7 @@ public class ChargingService implements ICommandListener {
     log.debug("System settings received: {}", chargingDto.get());
 
     // Set charging mode to max.
-    boolean chargingModeSet = setChargingMode(token, ChargingMode.MAX);
+    boolean chargingModeSet = setChargingMode(token, chargingMode);
 
     if (!chargingModeSet) return false;
 
@@ -162,7 +168,7 @@ public class ChargingService implements ICommandListener {
     // Add wallbox values
     settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
 
-    // Set system Id
+    // Set system id
     settingDto.setSystem_id(systemId.get());
 
     String setting = JsonHelper.toJsonString(settingDto);
@@ -243,13 +249,7 @@ public class ChargingService implements ICommandListener {
   }
 
   private boolean stopCharging() {
-    String token = tokenService.getToken();
-
-    if (token == null) {
-      log.error("No token available");
-      return false;
-    }
-
+    // Get url for charging stop job.
     String url =
         Base.withDb(
             () -> {
@@ -262,55 +262,23 @@ public class ChargingService implements ICommandListener {
               return stopChargingJob.getUrl();
             });
 
-    if (url == null) {
-      log.error("No url available for stopping charging process");
-      return false;
-    }
-
-    Optional<ChargingDto> chargingDto = getChargingDto();
-
-    if (chargingDto.isEmpty()) {
-      logError();
-      return false;
-    }
-
-    boolean chargingModeReset = resetCharging();
-
-    if (!chargingModeReset) {
-      log.error("Charging mode not rested");
-      return false;
-    }
-
-    Post post =
-        RequestUtils.addPostHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
-
-    if (post.responseCode() != HttpURLConnection.HTTP_OK) {
-      log.error(
-          "Charging not stopped. Code: {}, Message: {}",
-          post.responseCode(),
-          post.responseMessage());
-      return false;
-    }
-
-    log.debug("Stop Charging response: {}", post.responseMessage());
-    return true;
+    return callChargingUrl(url, ChargingMode.NORMAL);
   }
 
   @Override
   public void received(String topic, byte[] bytes) {
-    // Topic und command prüfen
     String command = new String(bytes, StandardCharsets.UTF_8);
 
     log.debug("Command received: {}", command);
 
     switch (command) {
-      case "ON":
-        if (startCharging()) charger.setValue("ON");
+      case ON:
+        if (startCharging()) charger.setValue(ON);
 
         break;
 
-      case "OFF":
-        if (stopCharging()) charger.setValue("OFF");
+      case OFF:
+        if (stopCharging()) charger.setValue(OFF);
         break;
     }
   }
@@ -321,8 +289,8 @@ public class ChargingService implements ICommandListener {
   }
 
   public void mapValues(RunningDataDto data) {
-    if (data.getEv1_power() > 10) charger.setValue("ON");
-    else charger.setValue("OFF");
+    if (data.getEv1_power() > 10) charger.setValue(ON);
+    else charger.setValue(OFF);
   }
 
   @RequiredArgsConstructor
