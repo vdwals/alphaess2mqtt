@@ -135,5 +135,5 @@
         <maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
     </properties>
 
-    <version>1.0</version>
+    <version>1.0.1</version>
 </project>

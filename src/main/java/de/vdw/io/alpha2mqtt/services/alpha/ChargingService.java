@@ -211,7 +211,7 @@ public class ChargingService implements ICommandListener {
                       battery -> {
                         String sn = battery.getSn();
                         Optional<String> wallBoxSn =
-                            battery.getAll(AlphaEssWallbox.class).limit(1).stream()
+                            battery.getAll(AlphaEssWallbox.class).stream()
                                 .map(wallBox -> (AlphaEssWallbox) wallBox)
                                 .map(AlphaEssWallbox::getSn)
                                 .findFirst();
