@@ -1,11 +1,12 @@
-package de.vdw.io.alpha2mqtt.services.alpha;
+package de.vdw.io.alpha2mqtt.services;
 
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
-import de.vdw.io.alpha2mqtt.services.RunningDataService;
+import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
+import de.vdw.io.alpha2mqtt.services.alpha.RunningDataService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
-import de.vdw.io.alpha2mqtt.services.ha.WallboxDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -23,11 +24,13 @@ public class RunningDataUpdateService implements Runnable {
 
   InverterDeviceService inverterDeviceService;
 
-  WallboxDeviceService wallboxDeviceService;
+  WallBoxDeviceService wallboxDeviceService;
 
   ScheduledExecutorService scheduledExecutorService;
 
   RunningDataService runningDataService;
+
+  ChargingService chargingService;
 
   HomeAssistantMQTTService mqttService;
 
@@ -52,6 +55,7 @@ public class RunningDataUpdateService implements Runnable {
     solarModuleDeviceService.mapValues(data);
     inverterDeviceService.mapValues(data);
     wallboxDeviceService.mapValues(data);
+    chargingService.mapValues(data);
 
     log.debug("Live data mapped. Publishing via service.");
     mqttService.publishValues();

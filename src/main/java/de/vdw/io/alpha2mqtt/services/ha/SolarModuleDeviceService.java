@@ -51,8 +51,7 @@ public class SolarModuleDeviceService extends DeviceService {
 
   @Override
   public void mapValues(RunningDataDto data) {
-    pvPower.setValue(
-        data.getPpv1() + data.getPpv2() + data.getPpv3() + data.getPpv4() + data.getPmeter_dc());
+    pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
 
     ppv1.setValue(data.getPpv1());
     ppv2.setValue(data.getPpv2());

@@ -4,21 +4,24 @@ import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
+import de.vdw.it.hamqtt.devices.switches.Switch;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
 
+import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
+
 @Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
-public class WallboxDeviceService extends DeviceService {
+public class WallBoxDeviceService extends DeviceService {
 
-  AbstractEntity chargeEnergy, chargePower;
+  AbstractEntity chargeEnergy, chargePower, switchCharge;
 
-  public WallboxDeviceService() {
+  public WallBoxDeviceService() {
     super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", "ALP2021040257071");
 
     chargeEnergy =
@@ -29,11 +32,18 @@ public class WallboxDeviceService extends DeviceService {
     getDevice().addEntity(chargeEnergy);
 
     chargePower = getPowerSensor("chargePower", "Wallbox Ladeleistung");
+
+    switchCharge =
+        Switch.builder()
+            .name("Starte Ladevorgang")
+            .objectId("startCharging")
+            .uniqueId(getUniqueId(getDevice().getNodeId(), "startCharging"))
+            .build();
   }
 
   @Override
   public void mapValues(RunningDataDto dataDto) {
-    double wallboxPower = dataDto.getEv1_power();
+    double wallBoxPower = dataDto.getEv1_power();
 
     double totalAvailablePower =
         dataDto.getPmeter_l1()
@@ -44,16 +54,16 @@ public class WallboxDeviceService extends DeviceService {
             + dataDto.getPpv2()
             + dataDto.getPbat();
 
-    if (wallboxPower > 0.0 && totalAvailablePower <= wallboxPower) {
+    if (wallBoxPower > 0.0 && totalAvailablePower < wallBoxPower) {
       log.warn(
           "Wallbox power {} Wh exceeds total available power of {} Wh. Fixing by recalculating wallbox power",
-          wallboxPower,
+          wallBoxPower,
           totalAvailablePower);
 
-      wallboxPower -= 2 * Math.abs(totalAvailablePower - wallboxPower);
+      wallBoxPower -= 2 * Math.abs(totalAvailablePower - wallBoxPower);
     }
 
-    chargePower.setValue(wallboxPower);
+    chargePower.setValue(wallBoxPower);
     chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
   }
 

@@ -124,9 +124,9 @@
         <apache-commons.version>3.12.0</apache-commons.version>
         <easy-di.version>0.3.0</easy-di.version>
         <ehcache.version>2.10.9.2</ehcache.version>
-        <hamqtt.version>3.0.2</hamqtt.version>
-        <java.version>11</java.version>
-        <javalite.version>2.5-j8</javalite.version>
+        <hamqtt.version>3.1.0</hamqtt.version>
+        <java.version>16</java.version>
+        <javalite.version>3.0-j11</javalite.version>
         <lombok.version>1.18.22</lombok.version>
         <mariadb-java-client.version>2.7.3</mariadb-java-client.version>
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>

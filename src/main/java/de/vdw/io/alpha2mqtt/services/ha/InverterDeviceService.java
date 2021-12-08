@@ -78,13 +78,7 @@ public class InverterDeviceService extends DeviceService {
 
     gridPower.setValue(totalGridPower);
     powerConsumption.setValue(
-        totalGridPower
-            + data.getPpv1()
-            + data.getPpv2()
-            + data.getPpv3()
-            + data.getPpv4()
-            + data.getPmeter_dc()
-            + data.getPbat());
+        totalGridPower + data.getPpv1() + data.getPpv2() + data.getPmeter_dc() + data.getPbat());
 
     double gridIn = totalGridPower < 0 ? 0 : totalGridPower;
     gridPowerIn.setValue(gridIn);

@@ -1,11 +1,14 @@
-package de.vdw.io.alpha2mqtt.models.api;
+package de.vdw.io.alpha2mqtt.models.api.charge;
 
+import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
+import lombok.Setter;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 
 import java.util.List;
 
 @Value
-public class SystemDto {
+public class SettingDto {
   String sys_sn;
   String ems_version;
   String charge_workdays;
@@ -91,7 +94,6 @@ public class SystemDto {
   int gc_rate_percent;
   int chargingpile;
   String currentsetting;
-  int chargingmode;
   List<WallboxDto> charging_pile_list;
   int peak_fill_en;
   int peakvalue;
@@ -118,4 +120,33 @@ public class SystemDto {
   int ac_tied;
   int soc_50_flag;
   int auto_soccalib_en;
+  @NonFinal @Setter int chargingmode;
+  @NonFinal String chargingpile_sn;
+  @NonFinal String chargingpile_id;
+  @NonFinal int chargingpile_switch;
+  @NonFinal int priority;
+  @NonFinal int time_charge_1;
+  @NonFinal String time_charge_s1;
+  @NonFinal String time_charge_e1;
+  @NonFinal int time_charge_2;
+  @NonFinal String time_charge_s2;
+  @NonFinal String time_charge_e2;
+  int sts_en = 1;
+  int auto_startdg_en = 0;
+  int max_gridcharge = 10;
+  @NonFinal @Setter String system_id;
+  String languageCode = "de-DE";
+
+  public void setWallbox(WallboxDto wallboxDto) {
+    chargingpile_id = wallboxDto.getChargingpile_id();
+    chargingpile_sn = wallboxDto.getChargingpile_sn();
+    time_charge_1 = wallboxDto.getTime_charge_1();
+    time_charge_2 = wallboxDto.getTime_charge_2();
+    time_charge_s1 = wallboxDto.getTime_charge_s1();
+    time_charge_e1 = wallboxDto.getTime_charge_e1();
+    time_charge_s2 = wallboxDto.getTime_charge_s2();
+    time_charge_e2 = wallboxDto.getTime_charge_e2();
+    chargingpile_switch = wallboxDto.getChargingpile_switch();
+    priority = wallboxDto.getPriority();
+  }
 }

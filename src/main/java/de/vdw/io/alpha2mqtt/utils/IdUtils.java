@@ -4,7 +4,7 @@ import de.vdw.it.hamqtt.devices.Device;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class IdUtils {
+public final class IdUtils {
 
   public static final String DELIMITER = "_";
 
