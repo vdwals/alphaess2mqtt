@@ -2,16 +2,16 @@ package de.vdw.io.alpha2mqtt.services.ha;
 
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
+import de.vdw.it.hamqtt.devices.binarySensor.BinarySensor;
 import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import de.vdw.it.hamqtt.devices.switches.Switch;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
-
-import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 @Value
@@ -19,7 +19,7 @@ import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 @Slf4j
 public class WallBoxDeviceService extends DeviceService {
 
-  AbstractEntity chargeEnergy, chargePower, switchCharge;
+  AbstractEntity chargeEnergy, chargePower, chargeState, plugState, pluggedCarState;
 
   public WallBoxDeviceService() {
     super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", "ALP2021040257071");
@@ -33,12 +33,48 @@ public class WallBoxDeviceService extends DeviceService {
 
     chargePower = getPowerSensor("chargePower", "Wallbox Ladeleistung");
 
-    switchCharge =
-        Switch.builder()
-            .name("Starte Ladevorgang")
-            .objectId("startCharging")
-            .uniqueId(getUniqueId(getDevice().getNodeId(), "startCharging"))
+    chargeState =
+        BinarySensor.builder()
+            .device(getDevice())
+            .name("Wallbox lädt")
+            .objectId("charging")
+            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "charging"))
+            .expireAfter(TimeUnit.SECONDS.toSeconds(30))
+            .forceUpdate(true)
+            .entityCategory(AbstractEntity.EntityCategory.diagnostic)
+            .deviceClass(BinarySensor.DeviceClass.battery_charging)
             .build();
+
+    plugState =
+        BinarySensor.builder()
+            .device(getDevice())
+            .name("Wallbox Stecker")
+            .objectId("plug")
+            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "plug"))
+            .expireAfter(TimeUnit.SECONDS.toSeconds(30))
+            .forceUpdate(true)
+            .entityCategory(AbstractEntity.EntityCategory.diagnostic)
+            .deviceClass(BinarySensor.DeviceClass.plug)
+            .build();
+
+    pluggedCarState =
+        BinarySensor.builder()
+            .device(getDevice())
+            .name("E-Auto")
+            .objectId("ev_car")
+            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "ev_car"))
+            .expireAfter(TimeUnit.SECONDS.toSeconds(30))
+            .forceUpdate(true)
+            .entityCategory(AbstractEntity.EntityCategory.diagnostic)
+            .deviceClass(BinarySensor.DeviceClass.connectivity)
+            .build();
+
+    // 1: Nicht angeschlossen
+    // 2:
+    // 3: Angeschlossen, nicht laden
+    // 4:
+    // 5: Warten auf Antwort des E-Autos (EV)
+    // 6: Lädt
   }
 
   @Override
