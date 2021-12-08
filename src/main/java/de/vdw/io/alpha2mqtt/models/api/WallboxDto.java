@@ -16,9 +16,9 @@ public class WallboxDto {
   int time_charge_2;
   String time_charge_s2;
   String time_charge_e2;
-  Object chargingpile_soft_ver;
-  Object chargingpile_hard_ver;
-  Object chargingpiletype;
-  Object chargingpile_startpower;
-  Object chargingpilename;
+  String chargingpile_soft_ver;
+  String chargingpile_hard_ver;
+  String chargingpiletype;
+  String chargingpile_startpower;
+  String chargingpilename;
 }

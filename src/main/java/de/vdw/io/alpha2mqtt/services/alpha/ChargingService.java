@@ -123,7 +123,7 @@ public class ChargingService implements ICommandListener {
       return false;
     }
 
-    SystemDto systemDtoToSet = systemData.withCharge_mode1(mode.mode);
+    SystemDto systemDtoToSet = systemData.withChargingmode(mode.mode);
 
     String url =
         Base.withDb(
@@ -166,7 +166,7 @@ public class ChargingService implements ICommandListener {
 
           //noinspection unchecked
           Optional<ChargingDto> chargingDto =
-              AlphaEssBattery.findAll().include(AlphaEssWallbox.class).limit(1).stream()
+              AlphaEssBattery.findAll().include(AlphaEssWallbox.class).stream()
                   .map(battery -> (AlphaEssBattery) battery)
                   .map(
                       battery -> {

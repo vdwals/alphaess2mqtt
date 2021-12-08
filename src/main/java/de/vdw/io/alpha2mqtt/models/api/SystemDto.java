@@ -2,11 +2,13 @@ package de.vdw.io.alpha2mqtt.models.api;
 
 import lombok.Value;
 import lombok.With;
+import lombok.experimental.NonFinal;
 
 import java.util.List;
 
 @Value
 @With
+@NonFinal
 public class SystemDto {
   String sys_sn;
   String ems_version;
@@ -22,21 +24,21 @@ public class SystemDto {
   String time_dise1a;
   String time_disf2a;
   String time_dise2a;
-  double bat_high_cap;
-  double bat_use_cap;
+  String bat_high_cap;
+  String bat_use_cap;
   String charge_weekend;
   int grid_Charge_we;
   String time_cha_fwe1a;
   String time_cha_ewe1a;
   String time_cha_fwe2a;
   String time_cha_ewe2a;
-  double bat_highcap_we;
+  int bat_highcap_we;
   int ctr_dis_we;
   String time_dis_fwe1a;
   String time_dis_ewe1a;
   String time_dis_fwe2a;
   String time_dis_ewe2a;
-  double bat_usecap_we;
+  int bat_usecap_we;
   int basic_mode_jp;
   int peace_mode_jp;
   int vpp_mode_jp;
@@ -51,9 +53,9 @@ public class SystemDto {
   String ups1;
   int switch_on1;
   int switch_off1;
-  String delay1;
-  String duration1;
-  String pause1;
+  int delay1;
+  int duration1;
+  int pause1;
   String channel2;
   String control_mode2;
   String start_time2a;
@@ -65,15 +67,15 @@ public class SystemDto {
   String ups2;
   int switch_on2;
   int switch_off2;
-  String delay2;
-  String duration2;
-  String pause2;
+  int delay2;
+  int duration2;
+  int pause2;
   int l1_priority;
   int l2_priority;
   int l3_priority;
-  double l1_soc_limit;
-  double l2_soc_limit;
-  double l3_soc_limit;
+  String l1_soc_limit;
+  String l2_soc_limit;
+  String l3_soc_limit;
   int charge_mode2;
   int charge_mode1;
   int backupbox;
@@ -84,21 +86,21 @@ public class SystemDto {
   int generator_mode;
   int gc_soc_start;
   int gc_soc_end;
-  int gc_time_start;
-  int gc_time_end;
+  String gc_time_start;
+  String gc_time_end;
   int gc_charge_power;
   int gc_rated_power;
   int dg_cap;
   int dg_frequency;
   int gc_rate_percent;
   int chargingpile;
-  double currentsetting;
+  String currentsetting;
   int chargingmode;
   List<WallboxDto> charging_pile_list;
   int peak_fill_en;
-  double peakvalue;
-  double fillvalue;
-  double delta;
+  int peakvalue;
+  int fillvalue;
+  int delta;
   String peak_s1a;
   String peak_e1a;
   String peak_s2a;
@@ -107,8 +109,8 @@ public class SystemDto {
   String fill_e1a;
   String fill_s2a;
   String fill_e2a;
-  double pm_offset;
-  double pm_max;
+  int pm_offset;
+  int pm_max;
   int pm_offset_en;
   String pm_offset_s1a;
   String pm_offset_e1a;
