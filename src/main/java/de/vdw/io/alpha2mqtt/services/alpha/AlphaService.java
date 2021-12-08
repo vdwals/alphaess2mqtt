@@ -1,7 +1,5 @@
 package de.vdw.io.alpha2mqtt.services.alpha;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.common.JsonHelper;
@@ -13,8 +11,6 @@ import java.time.LocalDateTime;
 @Singleton
 @Slf4j
 public abstract class AlphaService<P> {
-
-  @Getter private final ObjectMapper objectMapper;
 
   protected final TokenService tokenService;
 

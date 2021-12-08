@@ -1,16 +1,19 @@
 package de.vdw.io.alpha2mqtt.services.alpha;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
+import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
 import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.ICommandListener;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.switches.Switch;
+import de.vdw.it.hamqtt.utils.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -116,14 +119,18 @@ public class ChargingService implements ICommandListener {
   }
 
   private boolean setChargingMode(String token, ChargingMode mode) {
+    Optional<String> systemId = itemListService.getSystemId();
+    if (systemId.isEmpty()) {
+      log.error("No System Id available.");
+      return false;
+    }
+
     SystemDto systemData = itemListService.getSystemSettings();
 
     if (systemData == null) {
       log.error("Could not retrieve system settings.");
       return false;
     }
-
-    SystemDto systemDtoToSet = systemData.withChargingmode(mode.mode);
 
     String url =
         Base.withDb(
@@ -138,8 +145,31 @@ public class ChargingService implements ICommandListener {
               return alphaEssLoadJob.getUrl();
             });
 
-    Post post =
-        RequestUtils.addPostHeader(Http.post(url, JsonHelper.toJsonString(systemDtoToSet)), token);
+    SettingDto settingDto;
+    try {
+      // Copy system from response to setting for request.
+      String systemString = JsonUtils.jsonMapper.writeValueAsString(systemData);
+
+      settingDto = JsonUtils.jsonMapper.readValue(systemString, SettingDto.class);
+    } catch (JsonProcessingException e) {
+      log.error(e.getMessage(), e);
+      return false;
+    }
+
+    // Adjust mode.
+    settingDto.setChargingmode(mode.mode);
+
+    // Add wallbox values
+    settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
+
+    // Set system Id
+    settingDto.setSystem_id(systemId.get());
+
+    String setting = JsonHelper.toJsonString(settingDto);
+
+    log.debug("Posting charging mode request: {}", setting);
+
+    Post post = RequestUtils.addPostHeader(Http.post(url, setting), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(
@@ -151,7 +181,10 @@ public class ChargingService implements ICommandListener {
 
     log.debug("Charging mode changed to {}. Response: {}", mode, post.text());
 
-    return true;
+    // Validate
+    systemData = itemListService.getSystemSettings();
+
+    return systemData.getChargingmode() == mode.mode;
   }
 
   private Optional<ChargingDto> getChargingDto() {

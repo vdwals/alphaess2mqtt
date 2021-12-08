@@ -1,12 +1,12 @@
 package de.vdw.io.alpha2mqtt.services.alpha;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
+import de.vdw.it.hamqtt.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.http.Get;
@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 @Singleton
 public class RunningDataService extends AlphaService<RunningDataDto> {
 
-  public RunningDataService(ObjectMapper objectMapper, TokenService tokenService) {
-    super(objectMapper, tokenService);
+  public RunningDataService(TokenService tokenService) {
+    super(tokenService);
   }
 
   public RunningDataDto requestNewData(String token, LocalDateTime now) {
@@ -63,7 +63,7 @@ public class RunningDataService extends AlphaService<RunningDataDto> {
 
     try {
       ResponseDto<RunningDataDto> runningDataResponseDto =
-          getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
+          JsonUtils.jsonMapper.readValue(dataResponse, new TypeReference<>() {});
 
       log.debug("Response: {}", runningDataResponseDto);
 
