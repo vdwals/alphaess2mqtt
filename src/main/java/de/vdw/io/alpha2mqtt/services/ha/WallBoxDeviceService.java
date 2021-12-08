@@ -17,8 +17,8 @@ import javax.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 
 import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
-import static de.vdw.it.hamqtt.devices.entities.BinarySensor.Payload.OFF;
-import static de.vdw.it.hamqtt.devices.entities.BinarySensor.Payload.ON;
+import static de.vdw.it.hamqtt.devices.Payload.OFF;
+import static de.vdw.it.hamqtt.devices.Payload.ON;
 
 @Singleton
 @Value

@@ -11,7 +11,7 @@ import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.ICommandListener;
 import de.vdw.it.hamqtt.devices.Device;
-import de.vdw.it.hamqtt.devices.entities.BinarySensor;
+import de.vdw.it.hamqtt.devices.Payload;
 import de.vdw.it.hamqtt.devices.entities.Switch;
 import de.vdw.it.hamqtt.utils.JsonUtils;
 import lombok.RequiredArgsConstructor;
@@ -242,7 +242,7 @@ public class ChargingService implements ICommandListener {
 
     log.debug("Command received: {}", command);
 
-    BinarySensor.Payload payload = EnumUtils.getEnum(BinarySensor.Payload.class, command);
+    Payload payload = EnumUtils.getEnum(Payload.class, command);
     if (payload == null) {
       log.error("Command {} could not be interpreted as expected payload.", command);
       return;
