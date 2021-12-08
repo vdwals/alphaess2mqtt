@@ -34,8 +34,8 @@ import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 @Value
 @Slf4j
 public class ChargingService implements ICommandListener {
-  public static final String ON = "ON";
-  public static final String OFF = "OFF";
+  private static final String ON = "ON";
+  private static final String OFF = "OFF";
   ItemListService itemListService;
   TokenService tokenService;
   WallBoxDeviceService wallboxDeviceService;
@@ -231,17 +231,6 @@ public class ChargingService implements ICommandListener {
 
           return chargingDto;
         });
-  }
-
-  private boolean resetCharging() {
-    String token = tokenService.getToken();
-
-    if (token == null) {
-      log.error("No token available");
-      return false;
-    }
-
-    return setChargingMode(token, ChargingMode.NORMAL);
   }
 
   private void logError() {
