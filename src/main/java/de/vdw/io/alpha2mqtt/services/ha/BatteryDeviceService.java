@@ -4,8 +4,7 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
-import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
+import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,8 @@ public class BatteryDeviceService extends DeviceService {
 
     capacity = getBattery().getUsableCapacity();
 
-    batteryLoad = getMeasurementSensor(DeviceClass.battery, "soc", "Batterie Ladung %").build();
+    batteryLoad =
+        getMeasurementSensor(Sensor.DeviceClass.battery, "soc", "Batterie Ladung %").build();
     getDevice().addEntity(batteryLoad);
 
     batteryEnergy = getPowerSensor("pBat", "Batterie Leistung");
@@ -38,7 +38,7 @@ public class BatteryDeviceService extends DeviceService {
     batteryOutput = getPowerSensor("pBatOut", "Batterie Entlade-Leistung");
 
     batteryLoadEnergy =
-        getSensor(DeviceClass.energy, "pBatLoad", "Batterie Ladung (Wh)")
+        getSensor(Sensor.DeviceClass.energy, "pBatLoad", "Batterie Ladung (Wh)")
             .unitOfMeasurement(WATT_PER_HOUR.getUnit())
             .stateClass(Sensor.StateClass.measurement)
             .build();

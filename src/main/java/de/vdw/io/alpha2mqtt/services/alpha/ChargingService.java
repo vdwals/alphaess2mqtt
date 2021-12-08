@@ -12,7 +12,7 @@ import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.ICommandListener;
 import de.vdw.it.hamqtt.devices.Device;
-import de.vdw.it.hamqtt.devices.switches.Switch;
+import de.vdw.it.hamqtt.devices.entities.Switch;
 import de.vdw.it.hamqtt.utils.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -212,7 +212,6 @@ public class ChargingService implements ICommandListener {
                         String sn = battery.getSn();
                         Optional<String> wallBoxSn =
                             battery.getAll(AlphaEssWallbox.class).stream()
-                                .map(wallBox -> (AlphaEssWallbox) wallBox)
                                 .map(AlphaEssWallbox::getSn)
                                 .findFirst();
 

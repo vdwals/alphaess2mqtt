@@ -3,9 +3,10 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
+import de.vdw.it.hamqtt.devices.AbstractAvailabilityEntity;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
-import de.vdw.it.hamqtt.devices.binarySensor.BinarySensor;
-import de.vdw.it.hamqtt.devices.sensor.Sensor;
+import de.vdw.it.hamqtt.devices.entities.BinarySensor;
+import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,7 @@ public class WallBoxDeviceService extends DeviceService {
             .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "charging"))
             .expireAfter(TimeUnit.SECONDS.toSeconds(30))
             .forceUpdate(true)
-            .entityCategory(AbstractEntity.EntityCategory.diagnostic)
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
             .deviceClass(BinarySensor.DeviceClass.battery_charging)
             .build();
 
@@ -53,7 +54,7 @@ public class WallBoxDeviceService extends DeviceService {
             .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "plug"))
             .expireAfter(TimeUnit.SECONDS.toSeconds(30))
             .forceUpdate(true)
-            .entityCategory(AbstractEntity.EntityCategory.diagnostic)
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
             .deviceClass(BinarySensor.DeviceClass.plug)
             .build();
 
@@ -65,7 +66,7 @@ public class WallBoxDeviceService extends DeviceService {
             .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "ev_car"))
             .expireAfter(TimeUnit.SECONDS.toSeconds(30))
             .forceUpdate(true)
-            .entityCategory(AbstractEntity.EntityCategory.diagnostic)
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
             .deviceClass(BinarySensor.DeviceClass.connectivity)
             .build();
 
