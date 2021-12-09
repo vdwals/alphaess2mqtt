@@ -2,14 +2,16 @@ package de.vdw.io.alpha2mqtt.services.ha;
 
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.AbstractAvailabilityEntity;
+import de.vdw.it.hamqtt.devices.AbstractCommandEntity;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
 import de.vdw.it.hamqtt.devices.entities.BinarySensor;
+import de.vdw.it.hamqtt.devices.entities.Select;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import de.vdw.it.hamqtt.devices.entities.Switch;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,18 +29,10 @@ import static de.vdw.it.hamqtt.devices.Payload.ON;
 public class WallBoxDeviceService extends DeviceService {
 
   AbstractEntity chargeEnergy, chargePower, chargeState, plugState, pluggedCarState;
-
-  @Getter Switch charger;
+  AbstractCommandEntity charger, chargerMode;
 
   public WallBoxDeviceService() {
     super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", "ALP2021040257071");
-
-    chargeEnergy =
-        getEnergySensor("chargeEnergy", "Wallbox Energie geladen")
-            .stateClass(Sensor.StateClass.total_increasing)
-            .build();
-
-    getDevice().addEntity(chargeEnergy);
 
     chargePower = getPowerSensor("chargePower", "Wallbox Ladeleistung");
 
@@ -54,6 +48,13 @@ public class WallBoxDeviceService extends DeviceService {
             .deviceClass(BinarySensor.DeviceClass.battery_charging)
             .build();
 
+    chargeEnergy =
+        getEnergySensor("chargeEnergy", "Wallbox Energie geladen")
+            .stateClass(Sensor.StateClass.total_increasing)
+            .build();
+
+    getDevice().addEntity(chargeEnergy);
+
     plugState =
         BinarySensor.builder()
             .device(getDevice())
@@ -65,6 +66,8 @@ public class WallBoxDeviceService extends DeviceService {
             .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
             .deviceClass(BinarySensor.DeviceClass.plug)
             .build();
+
+    getDevice().addEntity(plugState);
 
     pluggedCarState =
         BinarySensor.builder()
@@ -78,15 +81,31 @@ public class WallBoxDeviceService extends DeviceService {
             .deviceClass(BinarySensor.DeviceClass.connectivity)
             .build();
 
+    getDevice().addEntity(pluggedCarState);
+
     charger =
         Switch.builder()
             .device(getDevice())
-            .name("charger")
-            .objectId("alphaCharger")
-            .uniqueId(getUniqueId(getDevice().getNodeId(), "alphaCharger"))
+            .name("Wallbox Laderegler")
+            .objectId("charger_switch")
+            .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_switch"))
             .build();
 
     charger.setValue(OFF);
+    getDevice().addEntity(charger);
+
+    chargerMode =
+        Select.builder()
+            .device(getDevice())
+            .name("Wallbox Lademodus")
+            .objectId("charger_mode")
+            .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_mode"))
+            .option(ChargingService.ChargingMode.SLOW.name())
+            .option(ChargingService.ChargingMode.NORMAL.name())
+            .option(ChargingService.ChargingMode.FAST.name())
+            .option(ChargingService.ChargingMode.MAX.name())
+            .build();
+    getDevice().addEntity(chargerMode);
   }
 
   @Override
@@ -115,11 +134,11 @@ public class WallBoxDeviceService extends DeviceService {
     chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
 
     // 1: Nicht angeschlossen
-    // 2:
-    // 3: Angeschlossen, nicht laden
+    // 2: Angeschlossen, nicht laden
+    // 3: Laden
     // 4:
     // 5: Warten auf Antwort des E-Autos (EV)
-    // 6: Lädt
+    // 6:
 
     switch (dataDto.getEv1_mode()) {
       case 1:
@@ -129,22 +148,23 @@ public class WallBoxDeviceService extends DeviceService {
         pluggedCarState.setValue(OFF);
         break;
       case 4:
-      case 2:
         break;
       case 3:
-        chargeState.setValue(OFF);
+        charger.setValue(ON);
+        chargeState.setValue(ON);
         plugState.setValue(ON);
-        pluggedCarState.setValue(OFF);
+        pluggedCarState.setValue(ON);
         break;
+      case 2:
       case 5:
         chargeState.setValue(OFF);
         plugState.setValue(ON);
         pluggedCarState.setValue(ON);
         break;
       case 6:
-        chargeState.setValue(ON);
+        chargeState.setValue(OFF);
         plugState.setValue(ON);
-        pluggedCarState.setValue(ON);
+        pluggedCarState.setValue(OFF);
         break;
     }
   }

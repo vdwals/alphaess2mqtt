@@ -10,10 +10,11 @@ import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
 import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.ICommandListener;
+import de.vdw.it.hamqtt.devices.AbstractCommandEntity;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.Payload;
-import de.vdw.it.hamqtt.devices.entities.Switch;
 import de.vdw.it.hamqtt.utils.JsonUtils;
+import de.vdw.it.hamqtt.utils.TopicUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -108,6 +109,15 @@ public class ChargingService implements ICommandListener {
   }
 
   private boolean setChargingMode(String token, ChargingMode mode) {
+    if (token == null) {
+      token = tokenService.getToken();
+
+      if (token == null) {
+        log.error("No token available");
+        return false;
+      }
+    }
+
     Optional<String> systemId = itemListService.getSystemId();
     if (systemId.isEmpty()) {
       log.error("No System Id available.");
@@ -242,23 +252,36 @@ public class ChargingService implements ICommandListener {
 
     log.debug("Command received: {}", command);
 
-    Payload payload = EnumUtils.getEnum(Payload.class, command);
-    if (payload == null) {
-      log.error("Command {} could not be interpreted as expected payload.", command);
-      return;
-    }
+    AbstractCommandEntity charger = wallboxDeviceService.getCharger();
+    AbstractCommandEntity chargerMode = wallboxDeviceService.getChargerMode();
 
-    Switch charger = wallboxDeviceService.getCharger();
+    if (topic.endsWith(TopicUtils.removeRelativeTopic(charger.getCommandTopic()))) {
+      Payload payload = EnumUtils.getEnum(Payload.class, command);
+      if (payload == null) {
+        log.error("Command {} could not be interpreted as expected payload.", command);
+        return;
+      }
+      log.debug("Execute command for charger with payload {}", payload);
 
-    switch (payload) {
-      case ON:
-        if (startCharging()) charger.setValue(payload);
+      switch (payload) {
+        case ON:
+          if (startCharging()) charger.setValue(payload);
 
-        break;
+          break;
 
-      case OFF:
-        if (stopCharging()) charger.setValue(payload);
-        break;
+        case OFF:
+          if (stopCharging()) charger.setValue(payload);
+          break;
+      }
+    } else if (topic.endsWith(TopicUtils.removeRelativeTopic(chargerMode.getCommandTopic()))) {
+      ChargingMode chargingMode = EnumUtils.getEnumIgnoreCase(ChargingMode.class, command);
+      if (chargingMode == null) {
+        log.error("Command {} could not be interpreted as expected chargingMode.", command);
+        return;
+      }
+      log.debug("Execute command for charge mode with chargingMode {}", chargingMode);
+
+      setChargingMode(null, chargingMode);
     }
   }
 
