@@ -28,9 +28,9 @@ public class SettingsUpdateService implements Runnable {
 
   public void init() {
     long delay = RandomUtils.nextLong(1, 11);
-    log.info("Start scheduling settings update in {} seconds", delay);
-    scheduledExecutorService.scheduleAtFixedRate(
-        this, delay, settingService.getRefreshRate(), TimeUnit.SECONDS);
+    long interval = settingService.getRefreshRate();
+    log.info("Start scheduling settings update in {} seconds with interval {}", delay, interval);
+    scheduledExecutorService.scheduleAtFixedRate(this, delay, interval, TimeUnit.SECONDS);
   }
 
   @Override

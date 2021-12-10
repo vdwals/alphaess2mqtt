@@ -28,9 +28,9 @@ public class SummeryDataUpdateService implements Runnable {
 
   public void init() {
     long delay = RandomUtils.nextLong(1, 11);
-    log.info("Start scheduling summary data in {} seconds", delay);
-    scheduledExecutorService.scheduleAtFixedRate(
-        this, 10, summeryService.getRefreshRate(), TimeUnit.SECONDS);
+    long interval = summeryService.getRefreshRate();
+    log.info("Start scheduling summary data in {} seconds with interval {}", delay, interval);
+    scheduledExecutorService.scheduleAtFixedRate(this, delay, interval, TimeUnit.SECONDS);
   }
 
   @Override
