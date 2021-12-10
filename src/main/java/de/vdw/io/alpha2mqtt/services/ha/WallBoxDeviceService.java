@@ -139,7 +139,7 @@ public class WallBoxDeviceService extends DeviceService {
     // 1: Nicht angeschlossen
     // 2: Angeschlossen, nicht laden
     // 3: Laden
-    // 4:
+    // 4: Unzureichende Leisuntg
     // 5: Warten auf Antwort des E-Autos (EV)
     // 6:
 
@@ -150,8 +150,6 @@ public class WallBoxDeviceService extends DeviceService {
         anyChange |= plugState.setValue(OFF);
         anyChange |= pluggedCarState.setValue(OFF);
         break;
-      case 4:
-        break;
       case 3:
         anyChange |= charger.setValue(ON);
         anyChange |= chargeState.setValue(ON);
@@ -159,6 +157,7 @@ public class WallBoxDeviceService extends DeviceService {
         anyChange |= pluggedCarState.setValue(ON);
         break;
       case 2:
+      case 4:
       case 5:
         anyChange |= chargeState.setValue(OFF);
         anyChange |= plugState.setValue(ON);
