@@ -183,7 +183,14 @@ public class ChargingService implements ICommandListener {
     // Validate
     systemData = settingService.getSystemSettings();
 
-    return systemData.getChargingmode() == mode.mode;
+    boolean modeSet = systemData.getChargingmode() == mode.mode;
+
+    if (modeSet) {
+      // Update value of select entity
+      wallboxDeviceService.getChargerMode().setValue(mode);
+    }
+
+    return modeSet;
   }
 
   private Optional<ChargingDto> getChargingDto() {
