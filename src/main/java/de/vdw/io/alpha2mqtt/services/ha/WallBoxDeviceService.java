@@ -35,12 +35,19 @@ public class WallBoxDeviceService extends DeviceService {
   public WallBoxDeviceService() {
     super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", "ALP2021040257071");
 
-    chargePower = getPowerSensor("chargePower", "Wallbox Ladeleistung");
+    chargePower = getPowerSensor("chargePower", "Ladeleistung");
+
+    chargeEnergy =
+        getEnergySensor("chargeEnergy", "Energie geladen")
+            .stateClass(Sensor.StateClass.total_increasing)
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
+            .build();
+    getDevice().addEntity(chargeEnergy);
 
     chargeState =
         BinarySensor.builder()
             .device(getDevice())
-            .name("Wallbox lädt")
+            .name("Ladestatus")
             .objectId("charging")
             .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "charging"))
             .expireAfter(TimeUnit.SECONDS.toSeconds(30))
@@ -48,18 +55,12 @@ public class WallBoxDeviceService extends DeviceService {
             .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
             .deviceClass(BinarySensor.DeviceClass.battery_charging)
             .build();
-
-    chargeEnergy =
-        getEnergySensor("chargeEnergy", "Wallbox Energie geladen")
-            .stateClass(Sensor.StateClass.total_increasing)
-            .build();
-
-    getDevice().addEntity(chargeEnergy);
+    getDevice().addEntity(chargeState);
 
     plugState =
         BinarySensor.builder()
             .device(getDevice())
-            .name("Wallbox Stecker")
+            .name("Steckerzustand")
             .objectId("plug")
             .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "plug"))
             .expireAfter(TimeUnit.SECONDS.toSeconds(30))
@@ -67,13 +68,12 @@ public class WallBoxDeviceService extends DeviceService {
             .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
             .deviceClass(BinarySensor.DeviceClass.plug)
             .build();
-
     getDevice().addEntity(plugState);
 
     pluggedCarState =
         BinarySensor.builder()
             .device(getDevice())
-            .name("E-Auto")
+            .name("E-Auto Zustand")
             .objectId("ev_car")
             .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "ev_car"))
             .expireAfter(TimeUnit.SECONDS.toSeconds(30))
@@ -82,25 +82,24 @@ public class WallBoxDeviceService extends DeviceService {
             .deviceClass(BinarySensor.DeviceClass.connectivity)
             .icon("mdi:car-electric")
             .build();
-
     getDevice().addEntity(pluggedCarState);
 
     charger =
         Switch.builder()
             .device(getDevice())
-            .name("Wallbox Laderegler")
+            .name("Laden")
             .objectId("charger_switch")
             .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_switch"))
             .icon("mdi:toggle-switch")
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.config)
             .build();
-
     charger.setValue(OFF);
     getDevice().addEntity(charger);
 
     chargerMode =
         Select.builder()
             .device(getDevice())
-            .name("Wallbox Lademodus")
+            .name("Lademodus")
             .objectId("charger_mode")
             .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_mode"))
             .option(ChargingService.ChargingMode.SLOW.name())
