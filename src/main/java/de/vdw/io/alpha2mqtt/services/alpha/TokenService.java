@@ -44,7 +44,7 @@ public class TokenService {
         return null;
       }
 
-      Map<String, String> settingMap = Base.withDb(() -> AlphaEssSetting.getSettings());
+      Map<String, String> settingMap = Base.withDb(AlphaEssSetting::getSettings);
 
       if (settingMap == null || settingMap.isEmpty()) {
         log.error("No Login settings found.");

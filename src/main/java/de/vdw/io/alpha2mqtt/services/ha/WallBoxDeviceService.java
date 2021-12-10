@@ -111,7 +111,6 @@ public class WallBoxDeviceService extends DeviceService {
 
   @Override
   public boolean mapValues(RunningDataDto dataDto) {
-    boolean anyChange = false;
     double wallBoxPower = dataDto.getEv1_power();
 
     double totalAvailablePower =
@@ -132,7 +131,7 @@ public class WallBoxDeviceService extends DeviceService {
       wallBoxPower -= 2 * Math.abs(totalAvailablePower - wallBoxPower);
     }
 
-    anyChange |= chargePower.setValue(wallBoxPower);
+    boolean anyChange = chargePower.setValue(wallBoxPower);
     anyChange |= chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
 
     // 1: Nicht angeschlossen

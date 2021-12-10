@@ -59,9 +59,7 @@ public class BatteryDeviceService extends DeviceService {
 
   @Override
   public boolean mapValues(RunningDataDto data) {
-    boolean anyChange = false;
-
-    anyChange |= batteryLoad.setValue(data.getSoc());
+    boolean anyChange = batteryLoad.setValue(data.getSoc());
 
     double pBat = data.getPbat();
     anyChange |= batteryEnergy.setValue(pBat);

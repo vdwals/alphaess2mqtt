@@ -74,11 +74,9 @@ public class InverterDeviceService extends DeviceService {
 
   @Override
   public boolean mapValues(RunningDataDto data) {
-    boolean anyChange = false;
-
     double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
 
-    anyChange |= gridPower.setValue(totalGridPower);
+    boolean anyChange = gridPower.setValue(totalGridPower);
     anyChange |=
         powerConsumption.setValue(
             totalGridPower
@@ -103,8 +101,7 @@ public class InverterDeviceService extends DeviceService {
 
   @Override
   public boolean mapValues(SummeryDto data) {
-    boolean anyChange = false;
-    anyChange |= carbonNum.setValue(data.getCarbonNum());
+    boolean anyChange = carbonNum.setValue(data.getCarbonNum());
     anyChange |= selfConsumption.setValue(getScaledValue(data.getEselfConsumption() * 100));
     anyChange |= selfSufficiency.setValue(getScaledValue(data.getEselfSufficiency() * 100));
     anyChange |= treeNum.setValue(getScaledValue(data.getTreeNum()));

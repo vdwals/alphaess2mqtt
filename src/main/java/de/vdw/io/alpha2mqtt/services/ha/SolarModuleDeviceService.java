@@ -52,8 +52,7 @@ public class SolarModuleDeviceService extends DeviceService {
 
   @Override
   public boolean mapValues(RunningDataDto data) {
-    boolean anyChange = false;
-    anyChange |= pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
+    boolean anyChange = pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
 
     anyChange |= ppv1.setValue(data.getPpv1());
     anyChange |= ppv2.setValue(data.getPpv2());
@@ -65,9 +64,7 @@ public class SolarModuleDeviceService extends DeviceService {
   @Override
   public boolean mapValues(SummeryDto data) {
 
-    boolean anyChange = false;
-
-    anyChange |= pvToday.setValue(data.getEpvtoday());
+    boolean anyChange = pvToday.setValue(data.getEpvtoday());
     anyChange |= pvTotal.setValue(data.getEpvtotal());
 
     anyChange |= startOfToday.setValue(LocalDate.now().atStartOfDay());

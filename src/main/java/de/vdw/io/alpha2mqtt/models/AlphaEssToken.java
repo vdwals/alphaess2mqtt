@@ -29,12 +29,4 @@ public class AlphaEssToken extends Model {
   public String getToken() {
     return getString(COLUMN_TOKEN);
   }
-
-  public LocalDateTime getExpirationTime() {
-    return getTimestamp(COLUMN_EXPIRATION_TIME).toLocalDateTime();
-  }
-
-  public String getRefreshToken() {
-    return getString(COLUMN_REFRESH_TOKEN);
-  }
 }

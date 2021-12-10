@@ -53,9 +53,7 @@ public class RunningDataUpdateService implements Runnable {
     }
     log.debug("Live data received.");
 
-    boolean anyChange = false;
-
-    anyChange |= batteryDeviceService.mapValues(data);
+    boolean anyChange = batteryDeviceService.mapValues(data);
     anyChange |= solarModuleDeviceService.mapValues(data);
     anyChange |= inverterDeviceService.mapValues(data);
     anyChange |= wallboxDeviceService.mapValues(data);

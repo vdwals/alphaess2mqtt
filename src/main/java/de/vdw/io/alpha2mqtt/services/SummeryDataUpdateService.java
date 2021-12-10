@@ -43,9 +43,7 @@ public class SummeryDataUpdateService implements Runnable {
       return;
     }
 
-    boolean anyChange = false;
-
-    anyChange |= inverterDeviceService.mapValues(data);
+    boolean anyChange = inverterDeviceService.mapValues(data);
     anyChange |= solarModuleDeviceService.mapValues(data);
 
     if (anyChange) {
