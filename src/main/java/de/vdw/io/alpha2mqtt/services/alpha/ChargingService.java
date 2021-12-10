@@ -34,15 +34,15 @@ import java.util.Optional;
 @Value
 @Slf4j
 public class ChargingService implements ICommandListener {
-  ItemListService itemListService;
+  SettingService settingService;
   TokenService tokenService;
   WallBoxDeviceService wallboxDeviceService;
 
   public ChargingService(
-      ItemListService itemListService,
+      SettingService settingService,
       TokenService tokenService,
       WallBoxDeviceService wallboxDeviceService) {
-    this.itemListService = itemListService;
+    this.settingService = settingService;
     this.tokenService = tokenService;
     this.wallboxDeviceService = wallboxDeviceService;
   }
@@ -118,13 +118,13 @@ public class ChargingService implements ICommandListener {
       }
     }
 
-    Optional<String> systemId = itemListService.getSystemId();
+    Optional<String> systemId = settingService.getSystemId();
     if (systemId.isEmpty()) {
       log.error("No System Id available.");
       return false;
     }
 
-    SystemDto systemData = itemListService.getSystemSettings();
+    SystemDto systemData = settingService.getSystemSettings();
 
     if (systemData == null) {
       log.error("Could not retrieve system settings.");
@@ -181,7 +181,7 @@ public class ChargingService implements ICommandListener {
     log.debug("Charging mode changed to {}. Response: {}", mode, post.text());
 
     // Validate
-    systemData = itemListService.getSystemSettings();
+    systemData = settingService.getSystemSettings();
 
     return systemData.getChargingmode() == mode.mode;
   }
@@ -298,5 +298,12 @@ public class ChargingService implements ICommandListener {
     MAX(4);
 
     final int mode;
+
+    public static ChargingMode chargingModeByValue(int value) {
+      for (ChargingMode chargingMode : ChargingMode.values()) {
+        if (chargingMode.mode == value) return chargingMode;
+      }
+      return null;
+    }
   }
 }
