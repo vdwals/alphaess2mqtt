@@ -1,13 +1,11 @@
 package de.vdw.io.alpha2mqtt.models.api.charge;
 
 import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
-import lombok.Setter;
-import lombok.Value;
-import lombok.experimental.NonFinal;
+import lombok.Data;
 
 import java.util.List;
 
-@Value
+@Data
 public class SettingDto {
   String sys_sn;
   String ems_version;
@@ -120,21 +118,21 @@ public class SettingDto {
   int ac_tied;
   int soc_50_flag;
   int auto_soccalib_en;
-  @NonFinal @Setter int chargingmode;
-  @NonFinal String chargingpile_sn;
-  @NonFinal String chargingpile_id;
-  @NonFinal int chargingpile_switch;
-  @NonFinal int priority;
-  @NonFinal int time_charge_1;
-  @NonFinal String time_charge_s1;
-  @NonFinal String time_charge_e1;
-  @NonFinal int time_charge_2;
-  @NonFinal String time_charge_s2;
-  @NonFinal String time_charge_e2;
+  int chargingmode;
+  String chargingpile_sn;
+  String chargingpile_id;
+  int chargingpile_switch;
+  int priority;
+  int time_charge_1;
+  String time_charge_s1;
+  String time_charge_e1;
+  int time_charge_2;
+  String time_charge_s2;
+  String time_charge_e2;
   int sts_en = 1;
   int auto_startdg_en = 0;
   int max_gridcharge = 10;
-  @NonFinal @Setter String system_id;
+  String system_id;
   String languageCode = "de-DE";
 
   public void setWallbox(WallboxDto wallboxDto) {
