@@ -80,6 +80,7 @@ public class WallBoxDeviceService extends DeviceService {
             .forceUpdate(true)
             .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
             .deviceClass(BinarySensor.DeviceClass.connectivity)
+            .icon("mdi:car-electric")
             .build();
 
     getDevice().addEntity(pluggedCarState);
@@ -90,6 +91,7 @@ public class WallBoxDeviceService extends DeviceService {
             .name("Wallbox Laderegler")
             .objectId("charger_switch")
             .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_switch"))
+            .icon("mdi:toggle-switch")
             .build();
 
     charger.setValue(OFF);
@@ -105,6 +107,7 @@ public class WallBoxDeviceService extends DeviceService {
             .option(ChargingService.ChargingMode.NORMAL.name())
             .option(ChargingService.ChargingMode.FAST.name())
             .option(ChargingService.ChargingMode.MAX.name())
+            .icon(("mdi:car-select"))
             .build();
     getDevice().addEntity(chargerMode);
   }
