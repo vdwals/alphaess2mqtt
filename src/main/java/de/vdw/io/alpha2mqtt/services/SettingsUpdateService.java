@@ -1,0 +1,56 @@
+package de.vdw.io.alpha2mqtt.services;
+
+import de.vdw.io.alpha2mqtt.models.api.SystemDto;
+import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
+import de.vdw.io.alpha2mqtt.services.alpha.SettingService;
+import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
+import de.vdw.it.hamqtt.HomeAssistantMQTTService;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+@Slf4j
+@Value
+public class SettingsUpdateService implements Runnable {
+
+  WallBoxDeviceService wallboxDeviceService;
+
+  ScheduledExecutorService scheduledExecutorService;
+
+  SettingService settingService;
+
+  ChargingService chargingService;
+
+  HomeAssistantMQTTService mqttService;
+
+  public void init() {
+    long nextRefresh = settingService.getRefreshRate();
+    log.info("Start scheduling settings update in {} seconds", nextRefresh);
+    scheduledExecutorService.scheduleAtFixedRate(this, nextRefresh, nextRefresh, TimeUnit.SECONDS);
+  }
+
+  @Override
+  public void run() {
+    log.info("Update setting data.");
+    SystemDto data = settingService.getData();
+
+    if (data == null) {
+      log.error("No setting data available.");
+      return;
+    }
+    log.debug("Setting data received.");
+
+    boolean anyChange = wallboxDeviceService.mapValues(data);
+
+    if (anyChange) {
+      log.debug("Setting data mapped. Publishing via service.");
+      mqttService.publishValues();
+      log.debug("Setting data updated successfully");
+
+    } else {
+      log.debug("No changes in settings to publish");
+    }
+  }
+}

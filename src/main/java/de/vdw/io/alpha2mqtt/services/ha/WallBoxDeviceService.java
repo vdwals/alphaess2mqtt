@@ -2,6 +2,7 @@ package de.vdw.io.alpha2mqtt.services.ha;
 
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.AbstractAvailabilityEntity;
@@ -109,7 +110,8 @@ public class WallBoxDeviceService extends DeviceService {
   }
 
   @Override
-  public void mapValues(RunningDataDto dataDto) {
+  public boolean mapValues(RunningDataDto dataDto) {
+    boolean anyChange = false;
     double wallBoxPower = dataDto.getEv1_power();
 
     double totalAvailablePower =
@@ -130,8 +132,8 @@ public class WallBoxDeviceService extends DeviceService {
       wallBoxPower -= 2 * Math.abs(totalAvailablePower - wallBoxPower);
     }
 
-    chargePower.setValue(wallBoxPower);
-    chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
+    anyChange |= chargePower.setValue(wallBoxPower);
+    anyChange |= chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
 
     // 1: Nicht angeschlossen
     // 2: Angeschlossen, nicht laden
@@ -142,33 +144,48 @@ public class WallBoxDeviceService extends DeviceService {
 
     switch (dataDto.getEv1_mode()) {
       case 1:
-        charger.setValue(OFF);
-        chargeState.setValue(OFF);
-        plugState.setValue(OFF);
-        pluggedCarState.setValue(OFF);
+        anyChange |= charger.setValue(OFF);
+        anyChange |= chargeState.setValue(OFF);
+        anyChange |= plugState.setValue(OFF);
+        anyChange |= pluggedCarState.setValue(OFF);
         break;
       case 4:
         break;
       case 3:
-        charger.setValue(ON);
-        chargeState.setValue(ON);
-        plugState.setValue(ON);
-        pluggedCarState.setValue(ON);
+        anyChange |= charger.setValue(ON);
+        anyChange |= chargeState.setValue(ON);
+        anyChange |= plugState.setValue(ON);
+        anyChange |= pluggedCarState.setValue(ON);
         break;
       case 2:
       case 5:
-        chargeState.setValue(OFF);
-        plugState.setValue(ON);
-        pluggedCarState.setValue(ON);
+        anyChange |= chargeState.setValue(OFF);
+        anyChange |= plugState.setValue(ON);
+        anyChange |= pluggedCarState.setValue(ON);
         break;
       case 6:
-        chargeState.setValue(OFF);
-        plugState.setValue(ON);
-        pluggedCarState.setValue(OFF);
+        anyChange |= chargeState.setValue(OFF);
+        anyChange |= plugState.setValue(ON);
+        anyChange |= pluggedCarState.setValue(OFF);
         break;
     }
+
+    return anyChange;
   }
 
   @Override
-  public void mapValues(SummeryDto dataDto) {}
+  public boolean mapValues(SummeryDto dataDto) {
+    return false;
+  }
+
+  public boolean mapValues(SystemDto dataDto) {
+    ChargingService.ChargingMode chargingMode =
+        ChargingService.ChargingMode.chargingModeByValue(dataDto.getChargingmode());
+
+    if (chargingMode != null) {
+      return chargerMode.setValue(chargingMode);
+    }
+
+    return false;
+  }
 }

@@ -41,9 +41,18 @@ public class SummeryDataUpdateService implements Runnable {
       return;
     }
 
-    inverterDeviceService.mapValues(data);
-    solarModuleDeviceService.mapValues(data);
+    boolean anyChange = false;
 
-    mqttService.publishValues();
+    anyChange |= inverterDeviceService.mapValues(data);
+    anyChange |= solarModuleDeviceService.mapValues(data);
+
+    if (anyChange) {
+      log.debug("Summary data mapped. Publishing via service.");
+      mqttService.publishValues();
+
+      log.debug("Summary data updated successfully.");
+    } else {
+      log.debug("No summary data updated.");
+    }
   }
 }
