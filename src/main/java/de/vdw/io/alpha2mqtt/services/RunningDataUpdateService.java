@@ -10,6 +10,7 @@ import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -35,9 +36,10 @@ public class RunningDataUpdateService implements Runnable {
   HomeAssistantMQTTService mqttService;
 
   public void init() {
-    long nextRefresh = runningDataService.getRefreshRate();
-    log.info("Start scheduling live data in {} seconds", nextRefresh);
-    scheduledExecutorService.scheduleAtFixedRate(this, nextRefresh, nextRefresh, TimeUnit.SECONDS);
+    long delay = RandomUtils.nextLong(1, 11);
+    log.info("Start scheduling live data in {} seconds", delay);
+    scheduledExecutorService.scheduleAtFixedRate(
+        this, delay, runningDataService.getRefreshRate(), TimeUnit.SECONDS);
   }
 
   @Override

@@ -7,6 +7,7 @@ import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,8 @@ public class SummeryDataUpdateService implements Runnable {
   private final HomeAssistantMQTTService mqttService;
 
   public void init() {
-    log.info("Start scheduling summary data in {} seconds", 10);
+    long delay = RandomUtils.nextLong(1, 11);
+    log.info("Start scheduling summary data in {} seconds", delay);
     scheduledExecutorService.scheduleAtFixedRate(
         this, 10, summeryService.getRefreshRate(), TimeUnit.SECONDS);
   }
