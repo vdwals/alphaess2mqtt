@@ -2,9 +2,10 @@ package de.vdw.io.alpha2mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.services.RunningDataUpdateService;
+import de.vdw.io.alpha2mqtt.services.SettingsUpdateService;
 import de.vdw.io.alpha2mqtt.services.SummeryDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
-import de.vdw.io.alpha2mqtt.services.alpha.ItemListService;
+import de.vdw.io.alpha2mqtt.services.alpha.SettingService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
@@ -85,16 +86,17 @@ public class App {
   }
 
   public void start() {
-    easyDI.getInstance(ItemListService.class).getData();
+    easyDI.getInstance(SettingService.class).getData();
 
     RunningDataUpdateService runningDataUpdateService =
         easyDI.getInstance(RunningDataUpdateService.class);
-
     runningDataUpdateService.init();
 
     SummeryDataUpdateService summeryDataUpdateService =
         easyDI.getInstance(SummeryDataUpdateService.class);
-
     summeryDataUpdateService.init();
+
+    SettingsUpdateService settingUpdateService = easyDI.getInstance(SettingsUpdateService.class);
+    settingUpdateService.init();
   }
 }

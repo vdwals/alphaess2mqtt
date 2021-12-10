@@ -5,9 +5,7 @@ import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.AbstractSensorEntity;
 import de.vdw.it.hamqtt.devices.Device;
-import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import de.vdw.it.hamqtt.devices.sensor.Sensor.DeviceClass;
-import de.vdw.it.hamqtt.devices.sensor.Sensor.SensorBuilder;
+import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -19,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 import static de.vdw.it.hamqtt.devices.Units.KILO_WATT_PER_HOUR;
 import static de.vdw.it.hamqtt.devices.Units.WATT;
-import static de.vdw.it.hamqtt.devices.sensor.Sensor.StateClass.measurement;
 
 @SuppressWarnings("rawtypes")
 @Slf4j
@@ -41,7 +38,7 @@ public abstract class DeviceService {
 
   protected AbstractSensorEntity getPowerSensor(String objectId, String name) {
     AbstractSensorEntity s =
-        getMeasurementSensor(DeviceClass.power, objectId, name)
+        getMeasurementSensor(Sensor.DeviceClass.power, objectId, name)
             .unitOfMeasurement(WATT.getUnit())
             .forceUpdate(true)
             .expireAfter(TimeUnit.SECONDS.toSeconds(30))
@@ -52,11 +49,12 @@ public abstract class DeviceService {
     return s;
   }
 
-  protected SensorBuilder getMeasurementSensor(DeviceClass deviceClass, String id, String name) {
-    return getSensor(deviceClass, id, name).stateClass(measurement);
+  protected Sensor.SensorBuilder getMeasurementSensor(
+      Sensor.DeviceClass deviceClass, String id, String name) {
+    return getSensor(deviceClass, id, name).stateClass(Sensor.StateClass.measurement);
   }
 
-  protected SensorBuilder getSensor(DeviceClass deviceClass, String id, String name) {
+  protected Sensor.SensorBuilder getSensor(Sensor.DeviceClass deviceClass, String id, String name) {
     return Sensor.builder()
         .deviceClass(deviceClass)
         .objectId(id)
@@ -68,12 +66,12 @@ public abstract class DeviceService {
     return NumberUtils.toScaledBigDecimal(value, 3, RoundingMode.HALF_UP);
   }
 
-  protected SensorBuilder getEnergySensor(String objectId, String name) {
-    return getSensor(DeviceClass.energy, objectId, name)
+  protected Sensor.SensorBuilder getEnergySensor(String objectId, String name) {
+    return getSensor(Sensor.DeviceClass.energy, objectId, name)
         .unitOfMeasurement(KILO_WATT_PER_HOUR.getUnit());
   }
 
-  public abstract void mapValues(RunningDataDto dataDto);
+  public abstract boolean mapValues(RunningDataDto dataDto);
 
-  public abstract void mapValues(SummeryDto dataDto);
+  public abstract boolean mapValues(SummeryDto dataDto);
 }

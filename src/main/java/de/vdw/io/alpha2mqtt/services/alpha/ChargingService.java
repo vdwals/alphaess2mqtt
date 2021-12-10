@@ -4,19 +4,21 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
 import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.ICommandListener;
+import de.vdw.it.hamqtt.devices.AbstractCommandEntity;
 import de.vdw.it.hamqtt.devices.Device;
-import de.vdw.it.hamqtt.devices.switches.Switch;
+import de.vdw.it.hamqtt.devices.Payload;
 import de.vdw.it.hamqtt.utils.JsonUtils;
+import de.vdw.it.hamqtt.utils.TopicUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.EnumUtils;
 import org.javalite.activejdbc.Base;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Http;
@@ -28,39 +30,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
-import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
-
 @Singleton
 @Value
 @Slf4j
 public class ChargingService implements ICommandListener {
-  private static final String ON = "ON";
-  private static final String OFF = "OFF";
-  ItemListService itemListService;
+  SettingService settingService;
   TokenService tokenService;
   WallBoxDeviceService wallboxDeviceService;
 
-  Switch charger;
-
   public ChargingService(
-      ItemListService itemListService,
+      SettingService settingService,
       TokenService tokenService,
       WallBoxDeviceService wallboxDeviceService) {
-    this.itemListService = itemListService;
+    this.settingService = settingService;
     this.tokenService = tokenService;
     this.wallboxDeviceService = wallboxDeviceService;
-
-    charger =
-        Switch.builder()
-            .device(wallboxDeviceService.getDevice())
-            .name("charger")
-            .objectId("alphaCharger")
-            .uniqueId(getUniqueId(wallboxDeviceService.getDevice().getNodeId(), "alphaCharger"))
-            .build();
-
-    charger.setValue(OFF);
-
-    wallboxDeviceService.getDevice().addEntity(charger);
   }
 
   private boolean startCharging() {
@@ -125,13 +109,22 @@ public class ChargingService implements ICommandListener {
   }
 
   private boolean setChargingMode(String token, ChargingMode mode) {
-    Optional<String> systemId = itemListService.getSystemId();
+    if (token == null) {
+      token = tokenService.getToken();
+
+      if (token == null) {
+        log.error("No token available");
+        return false;
+      }
+    }
+
+    Optional<String> systemId = settingService.getSystemId();
     if (systemId.isEmpty()) {
       log.error("No System Id available.");
       return false;
     }
 
-    SystemDto systemData = itemListService.getSystemSettings();
+    SystemDto systemData = settingService.getSystemSettings();
 
     if (systemData == null) {
       log.error("Could not retrieve system settings.");
@@ -188,9 +181,16 @@ public class ChargingService implements ICommandListener {
     log.debug("Charging mode changed to {}. Response: {}", mode, post.text());
 
     // Validate
-    systemData = itemListService.getSystemSettings();
+    systemData = settingService.getSystemSettings();
 
-    return systemData.getChargingmode() == mode.mode;
+    boolean modeSet = systemData.getChargingmode() == mode.mode;
+
+    if (modeSet) {
+      // Update value of select entity
+      wallboxDeviceService.getChargerMode().setValue(mode);
+    }
+
+    return modeSet;
   }
 
   private Optional<ChargingDto> getChargingDto() {
@@ -212,7 +212,6 @@ public class ChargingService implements ICommandListener {
                         String sn = battery.getSn();
                         Optional<String> wallBoxSn =
                             battery.getAll(AlphaEssWallbox.class).stream()
-                                .map(wallBox -> (AlphaEssWallbox) wallBox)
                                 .map(AlphaEssWallbox::getSn)
                                 .findFirst();
 
@@ -260,26 +259,42 @@ public class ChargingService implements ICommandListener {
 
     log.debug("Command received: {}", command);
 
-    switch (command) {
-      case ON:
-        if (startCharging()) charger.setValue(ON);
+    AbstractCommandEntity charger = wallboxDeviceService.getCharger();
+    AbstractCommandEntity chargerMode = wallboxDeviceService.getChargerMode();
 
-        break;
+    if (topic.endsWith(TopicUtils.removeRelativeTopic(charger.getCommandTopic()))) {
+      Payload payload = EnumUtils.getEnum(Payload.class, command);
+      if (payload == null) {
+        log.error("Command {} could not be interpreted as expected payload.", command);
+        return;
+      }
+      log.debug("Execute command for charger with payload {}", payload);
 
-      case OFF:
-        if (stopCharging()) charger.setValue(OFF);
-        break;
+      switch (payload) {
+        case ON:
+          if (startCharging()) charger.setValue(payload);
+
+          break;
+
+        case OFF:
+          if (stopCharging()) charger.setValue(payload);
+          break;
+      }
+    } else if (topic.endsWith(TopicUtils.removeRelativeTopic(chargerMode.getCommandTopic()))) {
+      ChargingMode chargingMode = EnumUtils.getEnumIgnoreCase(ChargingMode.class, command);
+      if (chargingMode == null) {
+        log.error("Command {} could not be interpreted as expected chargingMode.", command);
+        return;
+      }
+      log.debug("Execute command for charge mode with chargingMode {}", chargingMode);
+
+      setChargingMode(null, chargingMode);
     }
   }
 
   @Override
   public List<Device> getDevices() {
     return List.of(wallboxDeviceService.getDevice());
-  }
-
-  public void mapValues(RunningDataDto data) {
-    if (data.getEv1_power() > 10) charger.setValue(ON);
-    else charger.setValue(OFF);
   }
 
   @RequiredArgsConstructor
@@ -290,5 +305,12 @@ public class ChargingService implements ICommandListener {
     MAX(4);
 
     final int mode;
+
+    public static ChargingMode chargingModeByValue(int value) {
+      for (ChargingMode chargingMode : ChargingMode.values()) {
+        if (chargingMode.mode == value) return chargingMode;
+      }
+      return null;
+    }
   }
 }

@@ -10,6 +10,7 @@ import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -35,9 +36,10 @@ public class RunningDataUpdateService implements Runnable {
   HomeAssistantMQTTService mqttService;
 
   public void init() {
-    long nextRefresh = runningDataService.getRefreshRate();
-    log.info("Start scheduling live data in {} seconds", nextRefresh);
-    scheduledExecutorService.scheduleAtFixedRate(this, nextRefresh, nextRefresh, TimeUnit.SECONDS);
+    long delay = RandomUtils.nextLong(1, 11);
+    long interval = runningDataService.getRefreshRate();
+    log.info("Start scheduling live data in {} seconds with interval {}", delay, interval);
+    scheduledExecutorService.scheduleAtFixedRate(this, delay, interval, TimeUnit.SECONDS);
   }
 
   @Override
@@ -51,15 +53,18 @@ public class RunningDataUpdateService implements Runnable {
     }
     log.debug("Live data received.");
 
-    batteryDeviceService.mapValues(data);
-    solarModuleDeviceService.mapValues(data);
-    inverterDeviceService.mapValues(data);
-    wallboxDeviceService.mapValues(data);
-    chargingService.mapValues(data);
+    boolean anyChange = batteryDeviceService.mapValues(data);
+    anyChange |= solarModuleDeviceService.mapValues(data);
+    anyChange |= inverterDeviceService.mapValues(data);
+    anyChange |= wallboxDeviceService.mapValues(data);
 
-    log.debug("Live data mapped. Publishing via service.");
-    mqttService.publishValues();
+    if (anyChange) {
+      log.debug("Live data mapped. Publishing via service.");
+      mqttService.publishValues();
 
-    log.debug("Live data updated successfully");
+      log.debug("Live data updated successfully.");
+    } else {
+      log.debug("No live data updated.");
+    }
   }
 }

@@ -2,16 +2,26 @@ package de.vdw.io.alpha2mqtt.services.ha;
 
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.models.api.SystemDto;
+import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
+import de.vdw.io.alpha2mqtt.utils.IdUtils;
+import de.vdw.it.hamqtt.devices.AbstractAvailabilityEntity;
+import de.vdw.it.hamqtt.devices.AbstractCommandEntity;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
-import de.vdw.it.hamqtt.devices.sensor.Sensor;
-import de.vdw.it.hamqtt.devices.switches.Switch;
+import de.vdw.it.hamqtt.devices.entities.BinarySensor;
+import de.vdw.it.hamqtt.devices.entities.Select;
+import de.vdw.it.hamqtt.devices.entities.Sensor;
+import de.vdw.it.hamqtt.devices.entities.Switch;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
+import java.util.concurrent.TimeUnit;
 
 import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
+import static de.vdw.it.hamqtt.devices.Payload.OFF;
+import static de.vdw.it.hamqtt.devices.Payload.ON;
 
 @Singleton
 @Value
@@ -19,10 +29,25 @@ import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 @Slf4j
 public class WallBoxDeviceService extends DeviceService {
 
-  AbstractEntity chargeEnergy, chargePower, switchCharge;
+  AbstractEntity chargeEnergy, chargePower, chargeState, plugState, pluggedCarState;
+  AbstractCommandEntity charger, chargerMode;
 
   public WallBoxDeviceService() {
     super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", "ALP2021040257071");
+
+    chargePower = getPowerSensor("chargePower", "Wallbox Ladeleistung");
+
+    chargeState =
+        BinarySensor.builder()
+            .device(getDevice())
+            .name("Wallbox lädt")
+            .objectId("charging")
+            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "charging"))
+            .expireAfter(TimeUnit.SECONDS.toSeconds(30))
+            .forceUpdate(true)
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
+            .deviceClass(BinarySensor.DeviceClass.battery_charging)
+            .build();
 
     chargeEnergy =
         getEnergySensor("chargeEnergy", "Wallbox Energie geladen")
@@ -31,18 +56,61 @@ public class WallBoxDeviceService extends DeviceService {
 
     getDevice().addEntity(chargeEnergy);
 
-    chargePower = getPowerSensor("chargePower", "Wallbox Ladeleistung");
-
-    switchCharge =
-        Switch.builder()
-            .name("Starte Ladevorgang")
-            .objectId("startCharging")
-            .uniqueId(getUniqueId(getDevice().getNodeId(), "startCharging"))
+    plugState =
+        BinarySensor.builder()
+            .device(getDevice())
+            .name("Wallbox Stecker")
+            .objectId("plug")
+            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "plug"))
+            .expireAfter(TimeUnit.SECONDS.toSeconds(30))
+            .forceUpdate(true)
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
+            .deviceClass(BinarySensor.DeviceClass.plug)
             .build();
+
+    getDevice().addEntity(plugState);
+
+    pluggedCarState =
+        BinarySensor.builder()
+            .device(getDevice())
+            .name("E-Auto")
+            .objectId("ev_car")
+            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "ev_car"))
+            .expireAfter(TimeUnit.SECONDS.toSeconds(30))
+            .forceUpdate(true)
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
+            .deviceClass(BinarySensor.DeviceClass.connectivity)
+            .build();
+
+    getDevice().addEntity(pluggedCarState);
+
+    charger =
+        Switch.builder()
+            .device(getDevice())
+            .name("Wallbox Laderegler")
+            .objectId("charger_switch")
+            .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_switch"))
+            .build();
+
+    charger.setValue(OFF);
+    getDevice().addEntity(charger);
+
+    chargerMode =
+        Select.builder()
+            .device(getDevice())
+            .name("Wallbox Lademodus")
+            .objectId("charger_mode")
+            .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_mode"))
+            .option(ChargingService.ChargingMode.SLOW.name())
+            .option(ChargingService.ChargingMode.NORMAL.name())
+            .option(ChargingService.ChargingMode.FAST.name())
+            .option(ChargingService.ChargingMode.MAX.name())
+            .build();
+    getDevice().addEntity(chargerMode);
   }
 
   @Override
-  public void mapValues(RunningDataDto dataDto) {
+  public boolean mapValues(RunningDataDto dataDto) {
     double wallBoxPower = dataDto.getEv1_power();
 
     double totalAvailablePower =
@@ -63,10 +131,60 @@ public class WallBoxDeviceService extends DeviceService {
       wallBoxPower -= 2 * Math.abs(totalAvailablePower - wallBoxPower);
     }
 
-    chargePower.setValue(wallBoxPower);
-    chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
+    boolean anyChange = chargePower.setValue(wallBoxPower);
+    anyChange |= chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
+
+    // 1: Nicht angeschlossen
+    // 2: Angeschlossen, nicht laden
+    // 3: Laden
+    // 4:
+    // 5: Warten auf Antwort des E-Autos (EV)
+    // 6:
+
+    switch (dataDto.getEv1_mode()) {
+      case 1:
+        anyChange |= charger.setValue(OFF);
+        anyChange |= chargeState.setValue(OFF);
+        anyChange |= plugState.setValue(OFF);
+        anyChange |= pluggedCarState.setValue(OFF);
+        break;
+      case 4:
+        break;
+      case 3:
+        anyChange |= charger.setValue(ON);
+        anyChange |= chargeState.setValue(ON);
+        anyChange |= plugState.setValue(ON);
+        anyChange |= pluggedCarState.setValue(ON);
+        break;
+      case 2:
+      case 5:
+        anyChange |= chargeState.setValue(OFF);
+        anyChange |= plugState.setValue(ON);
+        anyChange |= pluggedCarState.setValue(ON);
+        break;
+      case 6:
+        anyChange |= chargeState.setValue(OFF);
+        anyChange |= plugState.setValue(ON);
+        anyChange |= pluggedCarState.setValue(OFF);
+        break;
+    }
+
+    return anyChange;
   }
 
   @Override
-  public void mapValues(SummeryDto dataDto) {}
+  public boolean mapValues(SummeryDto dataDto) {
+    return false;
+  }
+
+  public boolean mapValues(SystemDto dataDto) {
+    ChargingService.ChargingMode chargingMode =
+        ChargingService.ChargingMode.chargingModeByValue(dataDto.getChargingmode());
+
+    if (chargingMode != null) {
+      return chargerMode.setValue(chargingMode);
+    }
+
+    return false;
+  }
 }

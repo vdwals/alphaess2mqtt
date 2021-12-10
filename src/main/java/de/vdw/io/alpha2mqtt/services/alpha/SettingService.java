@@ -17,13 +17,12 @@ import org.javalite.http.Http;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Slf4j
-public class ItemListService extends AlphaService<SystemDto> {
+public class SettingService extends AlphaService<SystemDto> {
 
-  public ItemListService(ObjectMapper objectMapper, TokenService tokenService) {
+  public SettingService(ObjectMapper objectMapper, TokenService tokenService) {
     super(objectMapper, tokenService);
   }
 
@@ -40,49 +39,44 @@ public class ItemListService extends AlphaService<SystemDto> {
   protected SystemDto requestNewData(String token, LocalDateTime now) {
     log.info("Load wallbox information.");
 
-    Map<String, AlphaEssBattery> settingsUrl =
+    String url = Base.withDb(() -> AlphaEssLoadJob.getSettingsJob().getUrl());
+
+    if (url == null) {
+      log.error("No Settings url available");
+      return null;
+    }
+
+    Optional<AlphaEssBattery> alphaEssBattery =
         Base.withDb(
-            () -> {
-              String url = AlphaEssLoadJob.getSettingsJob().getUrl();
-              return AlphaEssBattery.findAll().stream()
-                  .map(model -> (AlphaEssBattery) model)
-                  .collect(
-                      Collectors.toMap(
-                          battery -> String.format(url, battery.getSystemId()),
-                          battery -> battery));
-            });
+            () ->
+                AlphaEssBattery.findAll().stream()
+                    .map(model -> (AlphaEssBattery) model)
+                    .findFirst());
 
-    if (settingsUrl.isEmpty()) return null;
+    if (alphaEssBattery.isEmpty()) {
+      log.error("No Battery found");
+      return null;
+    }
 
-    Map<AlphaEssBattery, List<WallboxDto>> batteryWallBoxMap =
-        settingsUrl.entrySet().stream()
-            .map(
-                entry -> {
-                  String url = entry.getKey();
-                  SystemDto systemResponseDto = getResponse(token, url);
+    AlphaEssBattery battery = alphaEssBattery.get();
+    url = String.format(url, battery.getSystemId());
 
-                  if (systemResponseDto == null
-                      || systemResponseDto.getCharging_pile_list() == null) return null;
+    SystemDto systemResponseDto = getResponse(token, url);
 
-                  return new AbstractMap.SimpleEntry<>(
-                      entry.getValue(), systemResponseDto.getCharging_pile_list());
-                })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    if (systemResponseDto == null) {
+      log.error("No settings received.");
+      return null;
+    }
 
     Base.withDb(
         () -> {
-          for (Map.Entry<AlphaEssBattery, List<WallboxDto>> entry : batteryWallBoxMap.entrySet()) {
-            AlphaEssBattery battery = entry.getKey();
-
-            for (WallboxDto wallboxDto : entry.getValue()) {
-              AlphaEssWallbox.create(battery, wallboxDto.getChargingpile_sn());
-            }
+          for (WallboxDto wallboxDto : systemResponseDto.getCharging_pile_list()) {
+            AlphaEssWallbox.create(battery, wallboxDto.getChargingpile_sn());
           }
           return null;
         });
 
-    return null;
+    return systemResponseDto;
   }
 
   private SystemDto getResponse(String token, String url) {
@@ -102,7 +96,7 @@ public class ItemListService extends AlphaService<SystemDto> {
       ResponseDto<SystemDto> systemResponseDto =
           getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
 
-      log.debug("Itemlist response: {}", systemResponseDto);
+      log.debug("Settings response: {}", systemResponseDto);
 
       return systemResponseDto.getData();
 

@@ -23,6 +23,7 @@ public abstract class AlphaService<P> {
   public abstract long getRefreshRate();
 
   public P getData() {
+    log.debug("Get token from service.");
     String token = tokenService.getToken();
 
     if (token == null) {
@@ -30,6 +31,7 @@ public abstract class AlphaService<P> {
       return null;
     }
 
+    log.debug("Request data from API");
     P response = requestNewData(token, LocalDateTime.now());
 
     if (response == null) log.error("No response available.");

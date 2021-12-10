@@ -7,6 +7,7 @@ import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -26,9 +27,10 @@ public class SummeryDataUpdateService implements Runnable {
   private final HomeAssistantMQTTService mqttService;
 
   public void init() {
-    log.info("Start scheduling summary data in {} seconds", 10);
-    scheduledExecutorService.scheduleAtFixedRate(
-        this, 10, summeryService.getRefreshRate(), TimeUnit.SECONDS);
+    long delay = RandomUtils.nextLong(1, 11);
+    long interval = summeryService.getRefreshRate();
+    log.info("Start scheduling summary data in {} seconds with interval {}", delay, interval);
+    scheduledExecutorService.scheduleAtFixedRate(this, delay, interval, TimeUnit.SECONDS);
   }
 
   @Override
@@ -41,9 +43,16 @@ public class SummeryDataUpdateService implements Runnable {
       return;
     }
 
-    inverterDeviceService.mapValues(data);
-    solarModuleDeviceService.mapValues(data);
+    boolean anyChange = inverterDeviceService.mapValues(data);
+    anyChange |= solarModuleDeviceService.mapValues(data);
 
-    mqttService.publishValues();
+    if (anyChange) {
+      log.debug("Summary data mapped. Publishing via service.");
+      mqttService.publishValues();
+
+      log.debug("Summary data updated successfully.");
+    } else {
+      log.debug("No summary data updated.");
+    }
   }
 }

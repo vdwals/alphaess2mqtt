@@ -3,7 +3,7 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
-import de.vdw.it.hamqtt.devices.sensor.Sensor;
+import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -73,30 +73,38 @@ public class InverterDeviceService extends DeviceService {
   }
 
   @Override
-  public void mapValues(RunningDataDto data) {
+  public boolean mapValues(RunningDataDto data) {
     double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
 
-    gridPower.setValue(totalGridPower);
-    powerConsumption.setValue(
-        totalGridPower + data.getPpv1() + data.getPpv2() + data.getPmeter_dc() + data.getPbat());
+    boolean anyChange = gridPower.setValue(totalGridPower);
+    anyChange |=
+        powerConsumption.setValue(
+            totalGridPower
+                + data.getPpv1()
+                + data.getPpv2()
+                + data.getPmeter_dc()
+                + data.getPbat());
 
     double gridIn = totalGridPower < 0 ? 0 : totalGridPower;
-    gridPowerIn.setValue(gridIn);
+    anyChange |= gridPowerIn.setValue(gridIn);
     double gridOut = totalGridPower < 0 ? Math.abs(totalGridPower) : 0;
-    gridPowerOut.setValue(gridOut);
+    anyChange |= gridPowerOut.setValue(gridOut);
 
     double pBat = data.getPbat();
     double batteryIn = pBat > 0 ? 0 : Math.abs(pBat);
-    vGridPowerOut.setValue(batteryIn + gridOut);
+    anyChange |= vGridPowerOut.setValue(batteryIn + gridOut);
     double batteryOut = pBat > 0 ? pBat : 0;
-    vGridPowerIn.setValue(batteryOut + gridIn);
+    anyChange |= vGridPowerIn.setValue(batteryOut + gridIn);
+
+    return anyChange;
   }
 
   @Override
-  public void mapValues(SummeryDto data) {
-    carbonNum.setValue(data.getCarbonNum());
-    selfConsumption.setValue(getScaledValue(data.getEselfConsumption() * 100));
-    selfSufficiency.setValue(getScaledValue(data.getEselfSufficiency() * 100));
-    treeNum.setValue(getScaledValue(data.getTreeNum()));
+  public boolean mapValues(SummeryDto data) {
+    boolean anyChange = carbonNum.setValue(data.getCarbonNum());
+    anyChange |= selfConsumption.setValue(getScaledValue(data.getEselfConsumption() * 100));
+    anyChange |= selfSufficiency.setValue(getScaledValue(data.getEselfSufficiency() * 100));
+    anyChange |= treeNum.setValue(getScaledValue(data.getTreeNum()));
+    return anyChange;
   }
 }

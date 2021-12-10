@@ -26,10 +26,6 @@ public class AlphaEssLoadJob extends Model {
     return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), SUMMERY);
   }
 
-  public static AlphaEssLoadJob getTicsJob() {
-    return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), DAY);
-  }
-
   public static AlphaEssLoadJob getSecondDataJob() {
     return findFirst(String.format(LOWER_LIKE_CONCAT_LOWER, COLUMN_URL), SECOND);
   }
