@@ -81,11 +81,16 @@ public class ChargingService implements ICommandListener {
     // Set charging mode to max.
     boolean chargingModeSet = setChargingMode(chargingMode);
 
-    if (!chargingModeSet) return false;
+    if (!chargingModeSet) {
+      log.error("Charging mode not set");
+      return false;
+    }
 
     // Post charging command.
-    Post post =
-        RequestUtils.addPostHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
+    String payload = JsonHelper.toJsonString(chargingDto);
+    log.debug("Calling charging url {}", url);
+    log.trace("With payload: {}", payload);
+    Post post = RequestUtils.addPostHeader(Http.post(url, payload), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(
@@ -95,17 +100,21 @@ public class ChargingService implements ICommandListener {
       return false;
     }
 
-    log.debug("Start Charging response: {}", post.responseMessage());
+    log.debug("Charging url called successfully");
+    log.trace("Charging url post call response: {}", post.responseMessage());
     return true;
   }
 
   private boolean setChargingMode(ChargingMode mode) {
+    log.debug("Setting charging mode to {}", mode);
 
+    log.debug("Retrieve settingsDto.");
     SettingDto settingDto = settingService.getSettingDto();
 
     // Set mode
     settingDto.setChargingmode(mode.mode);
 
+    log.debug("Set updated settings.");
     SystemDto systemDto = settingService.updateSetting(settingDto);
 
     boolean modeSet = systemDto.getChargingmode() == mode.mode;
@@ -113,6 +122,10 @@ public class ChargingService implements ICommandListener {
     if (modeSet) {
       // Update value of select entity
       wallboxDeviceService.getChargerMode().setValue(mode);
+      log.debug("Charging mode updated successfully");
+    } else {
+      log.debug(
+          "Charging mode not changed. Expected: {}, Actual: {}", mode, systemDto.getChargingmode());
     }
 
     return modeSet;
@@ -183,6 +196,7 @@ public class ChargingService implements ICommandListener {
     String command = new String(bytes, StandardCharsets.UTF_8);
 
     log.debug("Command received: {}", command);
+    log.trace("On topic: {}", topic);
 
     AbstractCommandEntity charger = wallboxDeviceService.getCharger();
     AbstractCommandEntity chargerMode = wallboxDeviceService.getChargerMode();

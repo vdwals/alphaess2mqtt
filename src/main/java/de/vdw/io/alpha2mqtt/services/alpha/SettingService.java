@@ -32,6 +32,7 @@ public class SettingService extends AlphaService<SystemDto> {
   }
 
   public SettingDto getSettingDto() {
+    log.debug("Build settings DTO.");
     Optional<String> systemId =
         Base.withDb(
             () ->
@@ -52,6 +53,7 @@ public class SettingService extends AlphaService<SystemDto> {
       return null;
     }
 
+    log.debug("Build system settings.");
     SettingDto settingDto;
     try {
       // Copy system from response to setting for request.
@@ -90,7 +92,8 @@ public class SettingService extends AlphaService<SystemDto> {
 
     String setting = JsonHelper.toJsonString(settingDto);
 
-    log.debug("Posting charging mode request: {}", setting);
+    log.debug("Posting charging mode request.");
+    log.trace("Request: {}", setting);
 
     Post post = RequestUtils.addPostHeader(Http.post(url, setting), token);
 
@@ -102,7 +105,8 @@ public class SettingService extends AlphaService<SystemDto> {
       return null;
     }
 
-    log.debug("Settings changed to {}. Response: {}", setting, post.text());
+    log.debug("Settings changed to {}.", setting);
+    log.trace("Response: {}", setting, post.text());
 
     return getSystemSettings();
   }
@@ -168,7 +172,7 @@ public class SettingService extends AlphaService<SystemDto> {
       ResponseDto<SystemDto> systemResponseDto =
           getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
 
-      log.debug("Settings response: {}", systemResponseDto);
+      log.trace("Settings response: {}", systemResponseDto);
 
       return systemResponseDto.getData();
 
@@ -186,7 +190,7 @@ public class SettingService extends AlphaService<SystemDto> {
       return null;
     }
 
-    log.info("Load wallbox information.");
+    log.info("Load system settings information.");
     Optional<String> settingsUrl =
         Base.withDb(
             () -> {
@@ -197,7 +201,10 @@ public class SettingService extends AlphaService<SystemDto> {
                   .findFirst();
             });
 
-    if (settingsUrl.isEmpty()) return null;
+    if (settingsUrl.isEmpty()) {
+      log.error("No settings url available");
+      return null;
+    }
 
     String url = settingsUrl.get();
 
