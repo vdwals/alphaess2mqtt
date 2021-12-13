@@ -81,7 +81,7 @@ public class BatteryDeviceService extends DeviceService {
   }
 
   @Override
-  public boolean mapValues(RunningDataDto data) {
+  public void mapValues(RunningDataDto data) {
     batteryLoad.setValue(data.getSoc());
 
     double pBat = data.getPbat();
@@ -90,8 +90,6 @@ public class BatteryDeviceService extends DeviceService {
     batteryOutput.setValue(pBat > 0 ? pBat : 0);
 
     batteryLoadEnergy.setValue(getScaledValue(data.getSoc() * capacity * 1000 / 100));
-
-    return true;
   }
 
   @Override

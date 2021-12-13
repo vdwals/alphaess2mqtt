@@ -73,7 +73,7 @@ public class InverterDeviceService extends DeviceService {
   }
 
   @Override
-  public boolean mapValues(RunningDataDto data) {
+  public void mapValues(RunningDataDto data) {
     double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
 
     gridPower.setValue(totalGridPower);
@@ -90,8 +90,6 @@ public class InverterDeviceService extends DeviceService {
     vGridPowerOut.setValue(batteryIn + gridOut);
     double batteryOut = pBat > 0 ? pBat : 0;
     vGridPowerIn.setValue(batteryOut + gridIn);
-
-    return true;
   }
 
   @Override

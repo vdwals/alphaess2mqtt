@@ -16,6 +16,7 @@ import eu.lestard.easydi.EasyDI;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javalite.activejdbc.connection_config.DBConfiguration;
 
 import java.util.Map;
@@ -43,7 +44,7 @@ public class App {
 
   EasyDI easyDI;
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws MqttException {
     log.info("Load DB Settings");
     DBConfiguration.loadConfiguration("/database.properties");
 

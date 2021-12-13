@@ -53,18 +53,14 @@ public class RunningDataUpdateService implements Runnable {
     }
     log.debug("Live data received.");
 
-    boolean anyChange = batteryDeviceService.mapValues(data);
-    anyChange |= solarModuleDeviceService.mapValues(data);
-    anyChange |= inverterDeviceService.mapValues(data);
-    anyChange |= wallboxDeviceService.mapValues(data);
+    batteryDeviceService.mapValues(data);
+    solarModuleDeviceService.mapValues(data);
+    inverterDeviceService.mapValues(data);
+    wallboxDeviceService.mapValues(data);
 
-    if (anyChange) {
-      log.debug("Live data mapped. Publishing via service.");
-      mqttService.publishValues();
+    log.debug("Live data mapped. Publishing via service.");
+    mqttService.publishValues();
 
-      log.debug("Live data updated successfully.");
-    } else {
-      log.debug("No live data updated.");
-    }
+    log.debug("Live data updated successfully.");
   }
 }

@@ -112,7 +112,7 @@ public class WallBoxDeviceService extends DeviceService {
   }
 
   @Override
-  public boolean mapValues(RunningDataDto dataDto) {
+  public void mapValues(RunningDataDto dataDto) {
     double wallBoxPower = dataDto.getEv1_power();
 
     double totalAvailablePower =
@@ -169,8 +169,6 @@ public class WallBoxDeviceService extends DeviceService {
         pluggedCarState.setValue(OFF);
         break;
     }
-
-    return true;
   }
 
   @Override

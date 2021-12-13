@@ -71,7 +71,7 @@ public abstract class DeviceService {
         .unitOfMeasurement(KILO_WATT_PER_HOUR.getUnit());
   }
 
-  public abstract boolean mapValues(RunningDataDto dataDto);
+  public abstract void mapValues(RunningDataDto dataDto);
 
   public abstract boolean mapValues(SummeryDto dataDto);
 }
