@@ -1,5 +1,6 @@
 package de.vdw.io.alpha2mqtt.services.alpha;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
@@ -8,11 +9,15 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
+import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
+import de.vdw.it.hamqtt.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
+import org.javalite.common.JsonHelper;
 import org.javalite.http.Get;
 import org.javalite.http.Http;
+import org.javalite.http.Post;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -26,13 +31,84 @@ public class SettingService extends AlphaService<SystemDto> {
     super(objectMapper, tokenService);
   }
 
-  public Optional<String> getSystemId() {
-    return Base.withDb(
-        () ->
-            AlphaEssBattery.findAll().stream()
-                .map(model -> (AlphaEssBattery) model)
-                .map(AlphaEssBattery::getSystemId)
-                .findFirst());
+  public SettingDto getSettingDto() {
+    log.debug("Build settings DTO.");
+    Optional<String> systemId =
+        Base.withDb(
+            () ->
+                AlphaEssBattery.findAll().stream()
+                    .map(model -> (AlphaEssBattery) model)
+                    .map(AlphaEssBattery::getSystemId)
+                    .findFirst());
+
+    if (systemId.isEmpty()) {
+      log.error("No System Id available.");
+      return null;
+    }
+
+    SystemDto systemData = getSystemSettings();
+
+    if (systemData == null) {
+      log.error("Could not retrieve system settings.");
+      return null;
+    }
+
+    log.debug("Build system settings.");
+    SettingDto settingDto;
+    try {
+      // Copy system from response to setting for request.
+      String systemString = JsonUtils.jsonMapper.writeValueAsString(systemData);
+
+      settingDto = JsonUtils.jsonMapper.readValue(systemString, SettingDto.class);
+    } catch (JsonProcessingException e) {
+      log.error(e.getMessage(), e);
+      return null;
+    }
+
+    // Add wallbox values
+    settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
+
+    // Set system id
+    settingDto.setSystem_id(systemId.get());
+
+    return settingDto;
+  }
+
+  public SystemDto updateSetting(SettingDto settingDto) {
+    String token = tokenService.getToken();
+
+    String url =
+        Base.withDb(
+            () -> {
+              AlphaEssLoadJob alphaEssLoadJob = AlphaEssLoadJob.setSettingsJob();
+
+              if (alphaEssLoadJob == null) {
+                log.error("No Settings set job found");
+                return null;
+              }
+
+              return alphaEssLoadJob.getUrl();
+            });
+
+    String setting = JsonHelper.toJsonString(settingDto);
+
+    log.debug("Posting charging mode request.");
+    log.trace("Request: {}", setting);
+
+    Post post = RequestUtils.addPostHeader(Http.post(url, setting), token);
+
+    if (post.responseCode() != HttpURLConnection.HTTP_OK) {
+      log.error(
+          "Charging mode not changed. Code: {}, Message: {}",
+          post.responseCode(),
+          post.responseMessage());
+      return null;
+    }
+
+    log.debug("Settings changed to {}.", setting);
+    log.trace("Response: {}", post.text());
+
+    return getSystemSettings();
   }
 
   @Override
@@ -96,7 +172,7 @@ public class SettingService extends AlphaService<SystemDto> {
       ResponseDto<SystemDto> systemResponseDto =
           getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
 
-      log.debug("Settings response: {}", systemResponseDto);
+      log.trace("Settings response: {}", systemResponseDto);
 
       return systemResponseDto.getData();
 
@@ -114,7 +190,7 @@ public class SettingService extends AlphaService<SystemDto> {
       return null;
     }
 
-    log.info("Load wallbox information.");
+    log.info("Load system settings information.");
     Optional<String> settingsUrl =
         Base.withDb(
             () -> {
@@ -125,7 +201,10 @@ public class SettingService extends AlphaService<SystemDto> {
                   .findFirst();
             });
 
-    if (settingsUrl.isEmpty()) return null;
+    if (settingsUrl.isEmpty()) {
+      log.error("No settings url available");
+      return null;
+    }
 
     String url = settingsUrl.get();
 

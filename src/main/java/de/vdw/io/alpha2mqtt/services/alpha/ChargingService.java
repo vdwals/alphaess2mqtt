@@ -1,6 +1,5 @@
 package de.vdw.io.alpha2mqtt.services.alpha;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
@@ -9,11 +8,11 @@ import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
 import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
+import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import de.vdw.it.hamqtt.ICommandListener;
 import de.vdw.it.hamqtt.devices.AbstractCommandEntity;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.Payload;
-import de.vdw.it.hamqtt.utils.JsonUtils;
 import de.vdw.it.hamqtt.utils.TopicUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -37,15 +36,7 @@ public class ChargingService implements ICommandListener {
   SettingService settingService;
   TokenService tokenService;
   WallBoxDeviceService wallboxDeviceService;
-
-  public ChargingService(
-      SettingService settingService,
-      TokenService tokenService,
-      WallBoxDeviceService wallboxDeviceService) {
-    this.settingService = settingService;
-    this.tokenService = tokenService;
-    this.wallboxDeviceService = wallboxDeviceService;
-  }
+  HomeAssistantMQTTService mqttService;
 
   private boolean startCharging() {
     // Get url for charging start job.
@@ -88,13 +79,18 @@ public class ChargingService implements ICommandListener {
     log.debug("System settings received: {}", chargingDto.get());
 
     // Set charging mode to max.
-    boolean chargingModeSet = setChargingMode(token, chargingMode);
+    boolean chargingModeSet = setChargingMode(chargingMode);
 
-    if (!chargingModeSet) return false;
+    if (!chargingModeSet) {
+      log.error("Charging mode not set");
+      return false;
+    }
 
     // Post charging command.
-    Post post =
-        RequestUtils.addPostHeader(Http.post(url, JsonHelper.toJsonString(chargingDto)), token);
+    String payload = JsonHelper.toJsonString(chargingDto);
+    log.debug("Calling charging url {}", url);
+    log.trace("With payload: {}", payload);
+    Post post = RequestUtils.addPostHeader(Http.post(url, payload), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(
@@ -104,90 +100,32 @@ public class ChargingService implements ICommandListener {
       return false;
     }
 
-    log.debug("Start Charging response: {}", post.responseMessage());
+    log.debug("Charging url called successfully");
+    log.trace("Charging url post call response: {}", post.responseMessage());
     return true;
   }
 
-  private boolean setChargingMode(String token, ChargingMode mode) {
-    if (token == null) {
-      token = tokenService.getToken();
+  private boolean setChargingMode(ChargingMode mode) {
+    log.debug("Setting charging mode to {}", mode);
 
-      if (token == null) {
-        log.error("No token available");
-        return false;
-      }
-    }
+    log.debug("Retrieve settingsDto.");
+    SettingDto settingDto = settingService.getSettingDto();
 
-    Optional<String> systemId = settingService.getSystemId();
-    if (systemId.isEmpty()) {
-      log.error("No System Id available.");
-      return false;
-    }
-
-    SystemDto systemData = settingService.getSystemSettings();
-
-    if (systemData == null) {
-      log.error("Could not retrieve system settings.");
-      return false;
-    }
-
-    String url =
-        Base.withDb(
-            () -> {
-              AlphaEssLoadJob alphaEssLoadJob = AlphaEssLoadJob.setSettingsJob();
-
-              if (alphaEssLoadJob == null) {
-                log.error("No Settings set job found");
-                return null;
-              }
-
-              return alphaEssLoadJob.getUrl();
-            });
-
-    SettingDto settingDto;
-    try {
-      // Copy system from response to setting for request.
-      String systemString = JsonUtils.jsonMapper.writeValueAsString(systemData);
-
-      settingDto = JsonUtils.jsonMapper.readValue(systemString, SettingDto.class);
-    } catch (JsonProcessingException e) {
-      log.error(e.getMessage(), e);
-      return false;
-    }
-
-    // Adjust mode.
+    // Set mode
     settingDto.setChargingmode(mode.mode);
 
-    // Add wallbox values
-    settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
+    log.debug("Set updated settings.");
+    SystemDto systemDto = settingService.updateSetting(settingDto);
 
-    // Set system id
-    settingDto.setSystem_id(systemId.get());
-
-    String setting = JsonHelper.toJsonString(settingDto);
-
-    log.debug("Posting charging mode request: {}", setting);
-
-    Post post = RequestUtils.addPostHeader(Http.post(url, setting), token);
-
-    if (post.responseCode() != HttpURLConnection.HTTP_OK) {
-      log.error(
-          "Charging mode not changed. Code: {}, Message: {}",
-          post.responseCode(),
-          post.responseMessage());
-      return false;
-    }
-
-    log.debug("Charging mode changed to {}. Response: {}", mode, post.text());
-
-    // Validate
-    systemData = settingService.getSystemSettings();
-
-    boolean modeSet = systemData.getChargingmode() == mode.mode;
+    boolean modeSet = systemDto.getChargingmode() == mode.mode;
 
     if (modeSet) {
       // Update value of select entity
       wallboxDeviceService.getChargerMode().setValue(mode);
+      log.debug("Charging mode updated successfully");
+    } else {
+      log.debug(
+          "Charging mode not changed. Expected: {}, Actual: {}", mode, systemDto.getChargingmode());
     }
 
     return modeSet;
@@ -258,9 +196,12 @@ public class ChargingService implements ICommandListener {
     String command = new String(bytes, StandardCharsets.UTF_8);
 
     log.debug("Command received: {}", command);
+    log.trace("On topic: {}", topic);
 
     AbstractCommandEntity charger = wallboxDeviceService.getCharger();
     AbstractCommandEntity chargerMode = wallboxDeviceService.getChargerMode();
+
+    boolean anyChange = false;
 
     if (topic.endsWith(TopicUtils.removeRelativeTopic(charger.getCommandTopic()))) {
       Payload payload = EnumUtils.getEnum(Payload.class, command);
@@ -272,12 +213,15 @@ public class ChargingService implements ICommandListener {
 
       switch (payload) {
         case ON:
-          if (startCharging()) charger.setValue(payload);
-
+          if (startCharging()) {
+            anyChange = charger.setValue(payload);
+          }
           break;
 
         case OFF:
-          if (stopCharging()) charger.setValue(payload);
+          if (stopCharging()) {
+            anyChange = charger.setValue(payload);
+          }
           break;
       }
     } else if (topic.endsWith(TopicUtils.removeRelativeTopic(chargerMode.getCommandTopic()))) {
@@ -288,7 +232,13 @@ public class ChargingService implements ICommandListener {
       }
       log.debug("Execute command for charge mode with chargingMode {}", chargingMode);
 
-      setChargingMode(null, chargingMode);
+      setChargingMode(chargingMode);
+      anyChange = true;
+    }
+
+    // Publish updated states
+    if (anyChange) {
+      mqttService.publishValues();
     }
   }
 
