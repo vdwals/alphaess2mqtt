@@ -76,27 +76,22 @@ public class InverterDeviceService extends DeviceService {
   public boolean mapValues(RunningDataDto data) {
     double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
 
-    boolean anyChange = gridPower.setValue(totalGridPower);
-    anyChange |=
-        powerConsumption.setValue(
-            totalGridPower
-                + data.getPpv1()
-                + data.getPpv2()
-                + data.getPmeter_dc()
-                + data.getPbat());
+    gridPower.setValue(totalGridPower);
+    powerConsumption.setValue(
+        totalGridPower + data.getPpv1() + data.getPpv2() + data.getPmeter_dc() + data.getPbat());
 
     double gridIn = totalGridPower < 0 ? 0 : totalGridPower;
-    anyChange |= gridPowerIn.setValue(gridIn);
+    gridPowerIn.setValue(gridIn);
     double gridOut = totalGridPower < 0 ? Math.abs(totalGridPower) : 0;
-    anyChange |= gridPowerOut.setValue(gridOut);
+    gridPowerOut.setValue(gridOut);
 
     double pBat = data.getPbat();
     double batteryIn = pBat > 0 ? 0 : Math.abs(pBat);
-    anyChange |= vGridPowerOut.setValue(batteryIn + gridOut);
+    vGridPowerOut.setValue(batteryIn + gridOut);
     double batteryOut = pBat > 0 ? pBat : 0;
-    anyChange |= vGridPowerIn.setValue(batteryOut + gridIn);
+    vGridPowerIn.setValue(batteryOut + gridIn);
 
-    return anyChange;
+    return true;
   }
 
   @Override

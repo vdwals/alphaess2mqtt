@@ -133,8 +133,8 @@ public class WallBoxDeviceService extends DeviceService {
       wallBoxPower -= 2 * Math.abs(totalAvailablePower - wallBoxPower);
     }
 
-    boolean anyChange = chargePower.setValue(wallBoxPower);
-    anyChange |= chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
+    chargePower.setValue(wallBoxPower);
+    chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
 
     // 1: Nicht angeschlossen
     // 2: Angeschlossen, nicht laden
@@ -145,32 +145,32 @@ public class WallBoxDeviceService extends DeviceService {
 
     switch (dataDto.getEv1_mode()) {
       case 1:
-        anyChange |= charger.setValue(OFF);
-        anyChange |= chargeState.setValue(OFF);
-        anyChange |= plugState.setValue(OFF);
-        anyChange |= pluggedCarState.setValue(OFF);
+        charger.setValue(OFF);
+        chargeState.setValue(OFF);
+        plugState.setValue(OFF);
+        pluggedCarState.setValue(OFF);
         break;
       case 3:
-        anyChange |= charger.setValue(ON);
-        anyChange |= chargeState.setValue(ON);
-        anyChange |= plugState.setValue(ON);
-        anyChange |= pluggedCarState.setValue(ON);
+        charger.setValue(ON);
+        chargeState.setValue(ON);
+        plugState.setValue(ON);
+        pluggedCarState.setValue(ON);
         break;
       case 2:
       case 4:
       case 5:
-        anyChange |= chargeState.setValue(OFF);
-        anyChange |= plugState.setValue(ON);
-        anyChange |= pluggedCarState.setValue(ON);
+        chargeState.setValue(OFF);
+        plugState.setValue(ON);
+        pluggedCarState.setValue(ON);
         break;
       case 6:
-        anyChange |= chargeState.setValue(OFF);
-        anyChange |= plugState.setValue(ON);
-        anyChange |= pluggedCarState.setValue(OFF);
+        chargeState.setValue(OFF);
+        plugState.setValue(ON);
+        pluggedCarState.setValue(OFF);
         break;
     }
 
-    return anyChange;
+    return true;
   }
 
   @Override

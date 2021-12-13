@@ -52,13 +52,13 @@ public class SolarModuleDeviceService extends DeviceService {
 
   @Override
   public boolean mapValues(RunningDataDto data) {
-    boolean anyChange = pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
+    pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
 
-    anyChange |= ppv1.setValue(data.getPpv1());
-    anyChange |= ppv2.setValue(data.getPpv2());
+    ppv1.setValue(data.getPpv1());
+    ppv2.setValue(data.getPpv2());
 
-    anyChange |= pMeterDc.setValue(data.getPmeter_dc());
-    return anyChange;
+    pMeterDc.setValue(data.getPmeter_dc());
+    return true;
   }
 
   @Override
