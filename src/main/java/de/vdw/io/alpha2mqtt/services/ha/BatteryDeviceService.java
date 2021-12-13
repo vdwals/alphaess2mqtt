@@ -3,7 +3,11 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.models.api.SystemDto;
+import de.vdw.io.alpha2mqtt.utils.IdUtils;
+import de.vdw.it.hamqtt.devices.AbstractAvailabilityEntity;
 import de.vdw.it.hamqtt.devices.AbstractEntity;
+import de.vdw.it.hamqtt.devices.entities.Number;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -20,7 +24,12 @@ import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
 @EqualsAndHashCode(callSuper = true)
 public class BatteryDeviceService extends DeviceService {
 
-  AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput, batteryLoadEnergy;
+  AbstractEntity batteryLoad,
+      batteryEnergy,
+      batteryInput,
+      batteryOutput,
+      batteryLoadEnergy,
+      useCapacity;
 
   double capacity;
 
@@ -43,6 +52,18 @@ public class BatteryDeviceService extends DeviceService {
             .stateClass(Sensor.StateClass.measurement)
             .build();
     getDevice().addEntity(batteryLoadEnergy);
+
+    useCapacity =
+        Number.builder()
+            .max(100)
+            .min(1)
+            .device(getDevice())
+            .name("Batteriereserve für Notstrom")
+            .objectId("bat_use_cap")
+            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "bat_use_cap"))
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.system)
+            .step(1)
+            .build();
   }
 
   private static AlphaEssBattery getBattery() {
@@ -74,5 +95,9 @@ public class BatteryDeviceService extends DeviceService {
   @Override
   public boolean mapValues(SummeryDto dataDto) {
     return false;
+  }
+
+  public boolean mapValues(SystemDto data) {
+    return useCapacity.setValue(data.getBat_use_cap());
   }
 }

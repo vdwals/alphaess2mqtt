@@ -3,6 +3,7 @@ package de.vdw.io.alpha2mqtt.services;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
 import de.vdw.io.alpha2mqtt.services.alpha.SettingService;
+import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.Value;
@@ -17,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 public class SettingsUpdateService implements Runnable {
 
   WallBoxDeviceService wallboxDeviceService;
+
+  BatteryDeviceService batteryDeviceService;
 
   ScheduledExecutorService scheduledExecutorService;
 
@@ -45,6 +48,8 @@ public class SettingsUpdateService implements Runnable {
     log.debug("Setting data received.");
 
     boolean anyChange = wallboxDeviceService.mapValues(data);
+
+    anyChange |= batteryDeviceService.mapValues(data);
 
     if (anyChange) {
       log.debug("Setting data mapped. Publishing via service.");
