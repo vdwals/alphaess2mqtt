@@ -65,7 +65,7 @@ public class RunningDataService extends AlphaService<RunningDataDto> {
       ResponseDto<RunningDataDto> runningDataResponseDto =
           getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
 
-      log.debug("Response: {}", runningDataResponseDto);
+      log.trace("Response: {}", runningDataResponseDto);
 
       return runningDataResponseDto.getData();
 

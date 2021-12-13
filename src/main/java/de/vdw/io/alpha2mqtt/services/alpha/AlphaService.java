@@ -34,8 +34,12 @@ public abstract class AlphaService<P> {
     log.debug("Request data from API");
     P response = requestNewData(token, LocalDateTime.now());
 
-    if (response == null) log.error("No response available.");
-    else log.debug("Response: {}", JsonHelper.toJsonString(response, true));
+    if (response == null) {
+      log.error("No response available.");
+    } else {
+      log.debug("Response received.");
+      log.trace("Response: {}", JsonHelper.toJsonString(response, true));
+    }
 
     return response;
   }

@@ -72,6 +72,8 @@ public class SummeryService extends AlphaService<SummeryDto> {
       ResponseDto<SummeryDto> summaryResponseDto =
           getObjectMapper().readValue(summaryResponse, new TypeReference<>() {});
 
+      log.trace("Response: {}", summaryResponseDto);
+
       return summaryResponseDto.getData();
 
     } catch (IOException e) {

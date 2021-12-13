@@ -72,7 +72,7 @@ public class TokenService {
         ResponseDto<TokenDto> loginResponseDto =
             objectMapper.readValue(loginResponse, new TypeReference<>() {});
 
-        log.debug("Login response: {}", loginResponse);
+        log.trace("Login response: {}", loginResponse);
 
         TokenDto tokenDto = loginResponseDto.getData();
 
