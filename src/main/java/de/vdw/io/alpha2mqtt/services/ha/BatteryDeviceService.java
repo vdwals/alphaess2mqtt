@@ -12,6 +12,7 @@ import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.javalite.activejdbc.Base;
 
 import javax.inject.Singleton;
@@ -99,6 +100,10 @@ public class BatteryDeviceService extends DeviceService {
   }
 
   public boolean mapValues(SystemDto data) {
-    return useCapacity.setValue(data.getBat_use_cap());
+    if (!NumberUtils.isCreatable(data.getBat_use_cap())) {
+      return false;
+    }
+
+    return useCapacity.setValue(NumberUtils.createNumber(data.getBat_use_cap()));
   }
 }
