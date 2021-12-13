@@ -64,6 +64,7 @@ public class BatteryDeviceService extends DeviceService {
             .entityCategory(AbstractAvailabilityEntity.EntityCategory.system)
             .step(1)
             .build();
+    getDevice().addEntity(useCapacity);
   }
 
   private static AlphaEssBattery getBattery() {
