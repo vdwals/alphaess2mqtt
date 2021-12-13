@@ -214,13 +214,13 @@ public class ChargingService implements ICommandListener {
       switch (payload) {
         case ON:
           if (startCharging()) {
-            anyChange |= charger.setValue(payload);
+            anyChange = charger.setValue(payload);
           }
           break;
 
         case OFF:
           if (stopCharging()) {
-            anyChange |= charger.setValue(payload);
+            anyChange = charger.setValue(payload);
           }
           break;
       }

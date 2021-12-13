@@ -45,19 +45,11 @@
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
-                            <artifactId>picocli-codegen</artifactId>
-                            <groupId>info.picocli</groupId>
-                            <version>4.6.1</version>
-                        </path>
-                        <path>
                             <artifactId>lombok</artifactId>
                             <groupId>org.projectlombok</groupId>
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
-                    <compilerArgs>
-                        <arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
-                    </compilerArgs>
                     <release>${java.version}</release>
                 </configuration>
                 <groupId>org.apache.maven.plugins</groupId>

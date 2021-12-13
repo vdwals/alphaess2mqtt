@@ -106,7 +106,7 @@ public class SettingService extends AlphaService<SystemDto> {
     }
 
     log.debug("Settings changed to {}.", setting);
-    log.trace("Response: {}", setting, post.text());
+    log.trace("Response: {}", post.text());
 
     return getSystemSettings();
   }
