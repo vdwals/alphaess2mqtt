@@ -62,7 +62,7 @@ public class BatteryDeviceService extends DeviceService {
             .name("Batteriereserve für Notstrom")
             .objectId("bat_use_cap")
             .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "bat_use_cap"))
-            .entityCategory(AbstractAvailabilityEntity.EntityCategory.system)
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.config)
             .step(1)
             .build();
     getDevice().addEntity(useCapacity);

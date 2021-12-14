@@ -3,6 +3,7 @@ package de.vdw.io.alpha2mqtt.services.alpha;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
@@ -21,6 +22,7 @@ import org.javalite.http.Post;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -95,7 +97,14 @@ public class SettingService extends AlphaService<SystemDto> {
     log.debug("Posting charging mode request.");
     log.trace("Request: {}", setting);
 
-    Post post = RequestUtils.addPostHeader(Http.post(url, setting), token);
+    Post post =
+        RequestUtils.addPostHeader(
+            Http.post(
+                url,
+                setting.getBytes(StandardCharsets.UTF_8),
+                (int) Constants.TIMEOUT,
+                (int) Constants.TIMEOUT),
+            token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(
@@ -156,7 +165,9 @@ public class SettingService extends AlphaService<SystemDto> {
   }
 
   private SystemDto getResponse(String token, String url) {
-    Get dataGet = RequestUtils.addHeader(Http.get(url), token);
+    Get dataGet =
+        RequestUtils.addHeader(
+            Http.get(url, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
 
     if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(

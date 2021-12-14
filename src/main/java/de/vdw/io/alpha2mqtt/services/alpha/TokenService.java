@@ -19,6 +19,7 @@ import org.javalite.http.Post;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -56,7 +57,11 @@ public class TokenService {
       String settings = JsonHelper.toJsonString(settingMap);
 
       Post loginPost =
-          Http.post(url, settings)
+          Http.post(
+                  url,
+                  settings.getBytes(StandardCharsets.UTF_8),
+                  (int) Constants.TIMEOUT,
+                  (int) Constants.TIMEOUT)
               .header("Accept", Constants.APPLICATION_JSON)
               .header("Content-Type", Constants.APPLICATION_JSON);
 

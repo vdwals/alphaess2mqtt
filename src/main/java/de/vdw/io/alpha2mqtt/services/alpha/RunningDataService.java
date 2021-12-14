@@ -2,6 +2,7 @@ package de.vdw.io.alpha2mqtt.services.alpha;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
@@ -50,7 +51,9 @@ public class RunningDataService extends AlphaService<RunningDataDto> {
       return null;
     }
 
-    Get dataGet = RequestUtils.addHeader(Http.get(url), token);
+    Get dataGet =
+        RequestUtils.addHeader(
+            Http.get(url, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
     if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(
           "Unexpected response code while receiving live data {}: {}",

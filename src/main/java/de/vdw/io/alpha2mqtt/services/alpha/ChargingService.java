@@ -1,5 +1,6 @@
 package de.vdw.io.alpha2mqtt.services.alpha;
 
+import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
 import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
@@ -90,7 +91,14 @@ public class ChargingService implements ICommandListener {
     String payload = JsonHelper.toJsonString(chargingDto);
     log.debug("Calling charging url {}", url);
     log.trace("With payload: {}", payload);
-    Post post = RequestUtils.addPostHeader(Http.post(url, payload), token);
+    Post post =
+        RequestUtils.addPostHeader(
+            Http.post(
+                url,
+                payload.getBytes(StandardCharsets.UTF_8),
+                (int) Constants.TIMEOUT,
+                (int) Constants.TIMEOUT),
+            token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error(

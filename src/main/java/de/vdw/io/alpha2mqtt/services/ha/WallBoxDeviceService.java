@@ -1,5 +1,6 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
+import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
@@ -17,7 +18,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
-import java.util.concurrent.TimeUnit;
 
 import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 import static de.vdw.it.hamqtt.devices.Payload.OFF;
@@ -45,44 +45,14 @@ public class WallBoxDeviceService extends DeviceService {
     getDevice().addEntity(chargeEnergy);
 
     chargeState =
-        BinarySensor.builder()
-            .device(getDevice())
-            .name("Ladestatus")
-            .objectId("charging")
-            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "charging"))
-            .expireAfter(TimeUnit.SECONDS.toSeconds(30))
-            .forceUpdate(true)
-            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
-            .deviceClass(BinarySensor.DeviceClass.battery_charging)
-            .build();
-    getDevice().addEntity(chargeState);
+        buildBinarySensor(
+            "Ladestatus", "charging", BinarySensor.DeviceClass.battery_charging, null);
 
-    plugState =
-        BinarySensor.builder()
-            .device(getDevice())
-            .name("Steckerzustand")
-            .objectId("plug")
-            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "plug"))
-            .expireAfter(TimeUnit.SECONDS.toSeconds(30))
-            .forceUpdate(true)
-            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
-            .deviceClass(BinarySensor.DeviceClass.plug)
-            .build();
-    getDevice().addEntity(plugState);
+    plugState = buildBinarySensor("Steckerzustand", "plug", BinarySensor.DeviceClass.plug, null);
 
     pluggedCarState =
-        BinarySensor.builder()
-            .device(getDevice())
-            .name("E-Auto Zustand")
-            .objectId("ev_car")
-            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "ev_car"))
-            .expireAfter(TimeUnit.SECONDS.toSeconds(30))
-            .forceUpdate(true)
-            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
-            .deviceClass(BinarySensor.DeviceClass.connectivity)
-            .icon("mdi:car-electric")
-            .build();
-    getDevice().addEntity(pluggedCarState);
+        buildBinarySensor(
+            "E-Auto Zustand", "ev_car", BinarySensor.DeviceClass.connectivity, "mdi:car-electric");
 
     charger =
         Switch.builder()
@@ -109,6 +79,24 @@ public class WallBoxDeviceService extends DeviceService {
             .icon(("mdi:car-select"))
             .build();
     getDevice().addEntity(chargerMode);
+  }
+
+  private AbstractEntity buildBinarySensor(
+      String name, String id, BinarySensor.DeviceClass deviceClass, String icon) {
+    final AbstractEntity binarySensor =
+        BinarySensor.builder()
+            .device(getDevice())
+            .name(name)
+            .objectId(id)
+            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), id))
+            .expireAfter(Constants.TIMEOUT)
+            .forceUpdate(true)
+            .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
+            .deviceClass(deviceClass)
+            .icon(icon)
+            .build();
+    getDevice().addEntity(binarySensor);
+    return binarySensor;
   }
 
   @Override
