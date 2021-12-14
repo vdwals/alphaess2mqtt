@@ -9,6 +9,7 @@ import de.vdw.io.alpha2mqtt.models.AlphaEssToken;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.TokenDto;
 import lombok.RequiredArgsConstructor;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.javalite.activejdbc.Base;
 import org.javalite.common.JsonHelper;
@@ -31,6 +32,7 @@ public class TokenService {
 
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+  @Synchronized
   public String getToken() {
     log.debug("Get token from db.");
     AlphaEssToken currentToken = Base.withDb(AlphaEssToken::findCurrentToken);
