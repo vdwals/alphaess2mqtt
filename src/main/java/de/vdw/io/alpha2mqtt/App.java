@@ -13,20 +13,66 @@ import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import de.vdw.it.hamqtt.utils.ServiceFactory;
 import eu.lestard.easydi.EasyDI;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.javalite.activejdbc.connection_config.ConnectionJdbcConfig;
 import org.javalite.activejdbc.connection_config.DBConfiguration;
-
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 @Slf4j
 @RequiredArgsConstructor
 @Value
 public class App {
+
+  public static void main(String[] args) {
+    Map<String, String> environmentVariables = System.getenv();
+
+    log.info("Init database connection");
+    ConnectionJdbcConfig connectionConfig =
+        new ConnectionJdbcConfig(environmentVariables.get("ACTIVEJDBC.DRIVER"),
+            environmentVariables.get("ACTIVEJDBC.URL"),
+            environmentVariables.get("ACTIVEJDBC.USER"),
+            environmentVariables.get("ACTIVEJDBC.PASSWORD"));
+    connectionConfig.setEnvironment("development");
+    DBConfiguration.addConnectionConfig(connectionConfig);
+
+
+    EasyDI ed = new EasyDI();
+    ed.bindInstance(EasyDI.class, ed);
+
+    ed.markAsSingleton(ObjectMapper.class);
+    ed.bindProvider(ObjectMapper.class, ObjectMapper::new);
+
+    ed.markAsSingleton(HomeAssistantMQTTService.class);
+    ed.bindProvider(HomeAssistantMQTTService.class, () -> {
+      log.info("Connect to MQTT-Broker");
+      try {
+        return ServiceFactory.createHomeAssistantMQTTService(environmentVariables.get("MQTT_HOST"),
+            environmentVariables.get("MQTT_PORT"),
+            environmentVariables.get("MQTT_USERNAME"),
+            environmentVariables.get("MQTT_PASSWORD")
+                .toCharArray(),
+            "alpha_energy",
+            environmentVariables.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
+            "Alpha ESS Proxy");
+      } catch (MqttException e) {
+        log.error(e.getMessage(), e);
+        return null;
+      }
+    });
+
+    ed.markAsSingleton(ScheduledExecutorService.class);
+    ed.bindProvider(ScheduledExecutorService.class, Executors::newSingleThreadScheduledExecutor);
+
+    App app = ed.getInstance(App.class);
+
+    app.init();
+    app.start();
+  }
 
   BatteryDeviceService batteryDeviceService;
 
@@ -44,60 +90,33 @@ public class App {
 
   EasyDI easyDI;
 
-  public static void main(String[] args) throws MqttException {
-    log.info("Load DB Settings");
-    DBConfiguration.loadConfiguration("/database.properties");
-
-    log.info("Connect to MQTT-Broker");
-    Map<String, String> environmentVariables = System.getenv();
-
-    HomeAssistantMQTTService mqttService =
-        ServiceFactory.createHomeAssistantMQTTService(
-            environmentVariables.get("MQTT_HOST"),
-            environmentVariables.get("MQTT_PORT"),
-            environmentVariables.get("MQTT_USERNAME"),
-            environmentVariables.get("MQTT_PASSWORD").toCharArray(),
-            "alpha_energy",
-            environmentVariables.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
-            "Alpha ESS Proxy");
-
-    EasyDI ed = new EasyDI();
-    ed.bindInstance(ObjectMapper.class, new ObjectMapper());
-    ed.bindInstance(HomeAssistantMQTTService.class, mqttService);
-    ed.bindInstance(ScheduledExecutorService.class, Executors.newSingleThreadScheduledExecutor());
-    ed.bindInstance(EasyDI.class, ed);
-
-    App app = ed.getInstance(App.class);
-
-    app.init();
-    app.start();
-  }
-
   public void init() {
-    mqttService.connect();
+    this.mqttService.connect();
 
-    mqttService.addDevice(batteryDeviceService.getDevice());
-    mqttService.addDevice(solarModuleDeviceService.getDevice());
-    mqttService.addDevice(inverterDeviceService.getDevice());
-    mqttService.addDevice(wallboxDeviceService.getDevice());
+    this.mqttService.addDevice(this.batteryDeviceService.getDevice());
+    this.mqttService.addDevice(this.solarModuleDeviceService.getDevice());
+    this.mqttService.addDevice(this.inverterDeviceService.getDevice());
+    this.mqttService.addDevice(this.wallboxDeviceService.getDevice());
 
-    mqttService.addCommandListener(chargingService);
+    this.mqttService.addCommandListener(this.chargingService);
 
-    mqttService.publishConfigs();
+    this.mqttService.publishConfigs();
   }
 
   public void start() {
-    easyDI.getInstance(SettingService.class).getData();
+    this.easyDI.getInstance(SettingService.class)
+        .getData();
 
     RunningDataUpdateService runningDataUpdateService =
-        easyDI.getInstance(RunningDataUpdateService.class);
+        this.easyDI.getInstance(RunningDataUpdateService.class);
     runningDataUpdateService.init();
 
     SummeryDataUpdateService summeryDataUpdateService =
-        easyDI.getInstance(SummeryDataUpdateService.class);
+        this.easyDI.getInstance(SummeryDataUpdateService.class);
     summeryDataUpdateService.init();
 
-    SettingsUpdateService settingUpdateService = easyDI.getInstance(SettingsUpdateService.class);
+    SettingsUpdateService settingUpdateService =
+        this.easyDI.getInstance(SettingsUpdateService.class);
     settingUpdateService.init();
   }
 }

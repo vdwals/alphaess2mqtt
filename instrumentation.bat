@@ -1,0 +1,1 @@
+mvn activejdbc-instrumentation:instrument
