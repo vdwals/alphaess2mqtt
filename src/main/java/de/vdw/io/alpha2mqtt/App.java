@@ -28,7 +28,7 @@ import org.javalite.activejdbc.connection_config.DBConfiguration;
 @Value
 public class App {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws MqttException {
     Map<String, String> environmentVariables = System.getenv();
 
     log.info("Init database connection");
@@ -44,14 +44,11 @@ public class App {
     EasyDI ed = new EasyDI();
     ed.bindInstance(EasyDI.class, ed);
 
-    ed.markAsSingleton(ObjectMapper.class);
-    ed.bindProvider(ObjectMapper.class, ObjectMapper::new);
+    ed.bindInstance(ObjectMapper.class, new ObjectMapper());
 
-    ed.markAsSingleton(HomeAssistantMQTTService.class);
-    ed.bindProvider(HomeAssistantMQTTService.class, () -> {
-      log.info("Connect to MQTT-Broker");
-      try {
-        return ServiceFactory.createHomeAssistantMQTTService(environmentVariables.get("MQTT_HOST"),
+    log.info("Connect to MQTT-Broker");
+    HomeAssistantMQTTService homeAssistantMQTTService =
+        ServiceFactory.createHomeAssistantMQTTService(environmentVariables.get("MQTT_HOST"),
             environmentVariables.get("MQTT_PORT"),
             environmentVariables.get("MQTT_USERNAME"),
             environmentVariables.get("MQTT_PASSWORD")
@@ -59,14 +56,10 @@ public class App {
             "alpha_energy",
             environmentVariables.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
             "Alpha ESS Proxy");
-      } catch (MqttException e) {
-        log.error(e.getMessage(), e);
-        return null;
-      }
-    });
 
-    ed.markAsSingleton(ScheduledExecutorService.class);
-    ed.bindProvider(ScheduledExecutorService.class, Executors::newSingleThreadScheduledExecutor);
+    ed.bindInstance(HomeAssistantMQTTService.class, homeAssistantMQTTService);
+
+    ed.bindInstance(ScheduledExecutorService.class, Executors.newSingleThreadScheduledExecutor());
 
     App app = ed.getInstance(App.class);
 
