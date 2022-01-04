@@ -33,13 +33,13 @@ public class App {
 
     log.info("Init database connection");
     ConnectionJdbcConfig connectionConfig =
-        new ConnectionJdbcConfig(environmentVariables.get("ACTIVEJDBC.DRIVER"),
+        new ConnectionJdbcConfig(
+            environmentVariables.get("ACTIVEJDBC.DRIVER"),
             environmentVariables.get("ACTIVEJDBC.URL"),
             environmentVariables.get("ACTIVEJDBC.USER"),
             environmentVariables.get("ACTIVEJDBC.PASSWORD"));
     connectionConfig.setEnvironment("development");
     DBConfiguration.addConnectionConfig(connectionConfig);
-
 
     EasyDI ed = new EasyDI();
     ed.bindInstance(EasyDI.class, ed);
@@ -48,11 +48,11 @@ public class App {
 
     log.info("Connect to MQTT-Broker");
     HomeAssistantMQTTService homeAssistantMQTTService =
-        ServiceFactory.createHomeAssistantMQTTService(environmentVariables.get("MQTT_HOST"),
+        ServiceFactory.createHomeAssistantMQTTService(
+            environmentVariables.get("MQTT_HOST"),
             environmentVariables.get("MQTT_PORT"),
             environmentVariables.get("MQTT_USERNAME"),
-            environmentVariables.get("MQTT_PASSWORD")
-                .toCharArray(),
+            environmentVariables.get("MQTT_PASSWORD").toCharArray(),
             "alpha_energy",
             environmentVariables.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
             "Alpha ESS Proxy");
@@ -97,8 +97,7 @@ public class App {
   }
 
   public void start() {
-    this.easyDI.getInstance(SettingService.class)
-        .getData();
+    this.easyDI.getInstance(SettingService.class).getData();
 
     RunningDataUpdateService runningDataUpdateService =
         this.easyDI.getInstance(RunningDataUpdateService.class);
