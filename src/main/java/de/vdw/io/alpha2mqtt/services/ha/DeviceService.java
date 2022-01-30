@@ -41,7 +41,7 @@ public abstract class DeviceService {
         getMeasurementSensor(Sensor.DeviceClass.power, objectId, name)
             .unitOfMeasurement(WATT.getUnit())
             .forceUpdate(true)
-            .expireAfter(Constants.TIMEOUT)
+            .expireAfter(Constants.EXPIRE)
             .build();
 
     getDevice().addEntity(s);

@@ -7,12 +7,10 @@ import de.vdw.it.hamqtt.devices.entities.RawEntity;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
 import java.time.LocalDate;
 
-@Slf4j
 @Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)

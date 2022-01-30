@@ -6,14 +6,12 @@ import de.vdw.it.hamqtt.devices.entities.AbstractEntity;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
 
 import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 
-@Slf4j
 @Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)

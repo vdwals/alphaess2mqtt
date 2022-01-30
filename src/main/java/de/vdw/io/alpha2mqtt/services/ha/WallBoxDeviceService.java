@@ -86,7 +86,7 @@ public class WallBoxDeviceService extends DeviceService {
         .name(name)
         .objectId(id)
         .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), id))
-        .expireAfter(Constants.TIMEOUT)
+        .expireAfter(Constants.EXPIRE)
         .forceUpdate(true)
         .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
         .deviceClass(deviceClass)
