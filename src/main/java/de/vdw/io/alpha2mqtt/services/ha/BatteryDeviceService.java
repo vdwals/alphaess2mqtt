@@ -9,6 +9,7 @@ import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
+import de.vdw.it.hamqtt.devices.Units;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity;
 import de.vdw.it.hamqtt.devices.entities.AbstractEntity;
 import de.vdw.it.hamqtt.devices.entities.Number;
@@ -42,8 +43,8 @@ public class BatteryDeviceService extends DeviceService {
 
     capacity = getBattery().getUsableCapacity();
 
-    batteryLoad = getMeasurementSensor(Sensor.DeviceClass.battery, "soc", "Batterie Ladung %")
-        .forceUpdate(true).build();
+    batteryLoad = getMeasurementSensor(Sensor.DeviceClass.battery, "pv_soc", "Batterie Ladung")
+        .unitOfMeasurement(Units.PERCENT.getUnit()).forceUpdate(true).build();
     getDevice().addEntity(batteryLoad);
 
     batteryEnergy = getPowerSensor("pBat", "Batterie Leistung");
