@@ -1,5 +1,9 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
+import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
+import javax.inject.Singleton;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.javalite.activejdbc.Base;
 import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
@@ -12,12 +16,6 @@ import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.math.NumberUtils;
-import org.javalite.activejdbc.Base;
-
-import javax.inject.Singleton;
-
-import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
 
 @Slf4j
 @Singleton
@@ -25,12 +23,17 @@ import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
 @EqualsAndHashCode(callSuper = true)
 public class BatteryDeviceService extends DeviceService {
 
-  AbstractEntity batteryLoad,
-      batteryEnergy,
-      batteryInput,
-      batteryOutput,
-      batteryLoadEnergy,
-      useCapacity;
+  private static AlphaEssBattery getBattery() {
+    return Base.withDb(() -> {
+      log.info("Load and init batteries");
+
+      return AlphaEssBattery.findAll().stream().map(batteryModel -> (AlphaEssBattery) batteryModel)
+          .findFirst().orElseThrow();
+    });
+  }
+
+  AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput, batteryLoadEnergy,
+  useCapacity;
 
   double capacity;
 
@@ -39,45 +42,24 @@ public class BatteryDeviceService extends DeviceService {
 
     capacity = getBattery().getUsableCapacity();
 
-    batteryLoad =
-        getMeasurementSensor(Sensor.DeviceClass.battery, "soc", "Batterie Ladung %").build();
+    batteryLoad = getMeasurementSensor(Sensor.DeviceClass.battery, "soc", "Batterie Ladung %")
+        .forceUpdate(true).build();
     getDevice().addEntity(batteryLoad);
 
     batteryEnergy = getPowerSensor("pBat", "Batterie Leistung");
     batteryInput = getPowerSensor("pBatIn", "Batterie Lade-Leistung");
     batteryOutput = getPowerSensor("pBatOut", "Batterie Entlade-Leistung");
 
-    batteryLoadEnergy =
-        getSensor(Sensor.DeviceClass.energy, "pBatLoad", "Batterie Ladung (Wh)")
-            .unitOfMeasurement(WATT_PER_HOUR.getUnit())
-            .stateClass(Sensor.StateClass.measurement)
-            .build();
+    batteryLoadEnergy = getSensor(Sensor.DeviceClass.energy, "pBatLoad", "Batterie Ladung (Wh)")
+        .unitOfMeasurement(WATT_PER_HOUR.getUnit()).stateClass(Sensor.StateClass.measurement)
+        .build();
     getDevice().addEntity(batteryLoadEnergy);
 
-    useCapacity =
-        Number.builder()
-            .max(100)
-            .min(1)
-            .device(getDevice())
-            .name("Batteriereserve für Notstrom")
-            .objectId("bat_use_cap")
-            .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "bat_use_cap"))
-            .entityCategory(AbstractAvailabilityEntity.EntityCategory.config)
-            .step(1)
-            .build();
+    useCapacity = Number.builder().max(100).min(1).device(getDevice())
+        .name("Batteriereserve für Notstrom").objectId("bat_use_cap")
+        .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "bat_use_cap"))
+        .entityCategory(AbstractAvailabilityEntity.EntityCategory.config).step(1).build();
     getDevice().addEntity(useCapacity);
-  }
-
-  private static AlphaEssBattery getBattery() {
-    return Base.withDb(
-        () -> {
-          log.info("Load and init batteries");
-
-          return AlphaEssBattery.findAll().stream()
-              .map(batteryModel -> (AlphaEssBattery) batteryModel)
-              .findFirst()
-              .orElseThrow();
-        });
   }
 
   @Override
