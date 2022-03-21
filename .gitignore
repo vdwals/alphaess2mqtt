@@ -1,6 +1,7 @@
-*.json
 .idea/
 target/
 *.lck
 dependency-reduced-pom.xml
 *.orig
+Instrument.launch
+app.properties
