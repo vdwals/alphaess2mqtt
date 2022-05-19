@@ -1,5 +1,8 @@
 package de.vdw.io.alpha2mqtt.services;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.RandomUtils;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
 import de.vdw.io.alpha2mqtt.services.alpha.SettingService;
@@ -8,10 +11,6 @@ import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomUtils;
-
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Value
@@ -61,3 +60,4 @@ public class SettingsUpdateService implements Runnable {
     }
   }
 }
+

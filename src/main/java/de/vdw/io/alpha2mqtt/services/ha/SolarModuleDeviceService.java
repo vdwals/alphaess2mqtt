@@ -1,5 +1,7 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
+import java.time.LocalDate;
+import javax.inject.Singleton;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.it.hamqtt.devices.entities.AbstractEntity;
@@ -7,9 +9,6 @@ import de.vdw.it.hamqtt.devices.entities.RawEntity;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-
-import javax.inject.Singleton;
-import java.time.LocalDate;
 
 @Singleton
 @Value
@@ -33,19 +32,20 @@ public class SolarModuleDeviceService extends DeviceService {
 
     pvToday =
         getEnergySensor("pvToday", "PV Energie Heute")
-            .stateClass(Sensor.StateClass.total)
-            .lastResetValueTemplate(String.format("{{ value_json.%s }}", START_OF_DAY))
-            .build();
+        .stateClass(Sensor.StateClass.total)
+        .lastResetValueTemplate(String.format("{{ value_json.%s }}", START_OF_DAY))
+        .build();
     getDevice().addEntity(pvToday);
 
     pvTotal =
         getEnergySensor("pvTotal", "PV Energie Gesamt")
-            .stateClass(Sensor.StateClass.total_increasing)
-            .build();
+        .stateClass(Sensor.StateClass.total_increasing)
+        .build();
     getDevice().addEntity(pvTotal);
 
     startOfToday =
         RawEntity.builder().objectId(START_OF_DAY).className(pvToday.getClassName()).build();
+    getDevice().addEntity(startOfToday);
   }
 
   @Override
