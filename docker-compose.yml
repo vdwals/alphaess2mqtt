@@ -14,6 +14,7 @@ services:
       MQTT_HOST: host
       MQTT_PASSWORD: password
       #      MQTT_DISCOVERY_TOPIC: test
+      #      MQTT_PROTOCOLL: mqtt
       MQTT_USERNAME: username
       MQTT_PORT: port
       ACTIVEJDBC.URL: url

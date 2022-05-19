@@ -1,5 +1,11 @@
 package de.vdw.io.alpha2mqtt;
 
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.javalite.activejdbc.connection_config.ConnectionJdbcConfig;
+import org.javalite.activejdbc.connection_config.DBConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.services.RunningDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.SettingsUpdateService;
@@ -13,15 +19,9 @@ import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import de.vdw.it.hamqtt.utils.ServiceFactory;
 import eu.lestard.easydi.EasyDI;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.javalite.activejdbc.connection_config.ConnectionJdbcConfig;
-import org.javalite.activejdbc.connection_config.DBConfiguration;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -55,7 +55,7 @@ public class App {
             environmentVariables.get("MQTT_PASSWORD").toCharArray(),
             "alpha_energy",
             environmentVariables.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
-            "Alpha ESS Proxy");
+            "Alpha ESS Proxy", environmentVariables.getOrDefault("MQTT_PROTOCOLL", "tcp"));
 
     ed.bindInstance(HomeAssistantMQTTService.class, homeAssistantMQTTService);
 
