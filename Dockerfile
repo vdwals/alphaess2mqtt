@@ -6,7 +6,7 @@ RUN git clone https://bitbucket.org/vdwals/hamqtt.git . \
     && git checkout bugfix/fixed_parameter_sending
 
 # Build application
-FROM arm32v7/maven:3-eclipse-temurin-17 as builder
+FROM arm32v7/maven:3-eclipse-temurin-16 as builder
 WORKDIR /hamqtt
 COPY --from=clone /hamqtt .
 RUN mvn install
