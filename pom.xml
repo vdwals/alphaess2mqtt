@@ -20,19 +20,6 @@
 						</goals>
 						<configuration>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>**/Log4j2Plugins.dat</exclude>
-									</excludes>
-								</filter>
-							</filters>
-							<artifactSet>
-								<excludes>
-									<exclude>log4j:log4j:jar:</exclude>
-								</excludes>
-							</artifactSet>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>de.vdw.io.alpha2mqtt.App</mainClass>

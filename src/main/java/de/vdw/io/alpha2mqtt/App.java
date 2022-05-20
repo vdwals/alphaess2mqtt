@@ -25,8 +25,8 @@ public class App {
   public static void main(String[] args) throws MqttException {
     Map<String, String> environmentVariables = System.getenv();
 
-    Credentials c = new Credentials(environmentVariables.get("ALPHA_USERNAME"),
-        environmentVariables.get("ALPHA_PASSWORD"));
+    Credentials c = new Credentials(environmentVariables.get("ALPHA.USERNAME"),
+        environmentVariables.get("ALPHA.PASSWORD"));
 
     EasyDI ed = new EasyDI();
     ed.bindInstance(EasyDI.class, ed);
@@ -36,11 +36,11 @@ public class App {
 
     log.info("Connect to MQTT-Broker");
     HomeAssistantMQTTService homeAssistantMQTTService = de.vdw.it.hamqtt.utils.ServiceFactory
-        .createHomeAssistantMQTTService(environmentVariables.get("MQTT_HOST"),
-            environmentVariables.get("MQTT_PORT"), environmentVariables.get("MQTT_USERNAME"),
-            environmentVariables.get("MQTT_PASSWORD").toCharArray(), "alpha_energy",
-            environmentVariables.getOrDefault("MQTT_DISCOVERY_TOPIC", "homeassistant"),
-            "Alpha ESS Proxy", environmentVariables.getOrDefault("MQTT_PROTOCOLL", "tcp"));
+        .createHomeAssistantMQTTService(environmentVariables.get("MQTT.HOST"),
+            environmentVariables.get("MQTT.PORT"), environmentVariables.get("MQTT.USERNAME"),
+            environmentVariables.get("MQTT.PASSWORD").toCharArray(), "alpha_energy",
+            environmentVariables.getOrDefault("MQTT.DISCOVERY_TOPIC", "homeassistant"),
+            "Alpha ESS Proxy", environmentVariables.getOrDefault("MQTT.PROTOCOLL", "tcp"));
 
     ed.bindInstance(HomeAssistantMQTTService.class, homeAssistantMQTTService);
 
