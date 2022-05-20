@@ -1,26 +1,20 @@
-package de.vdw.io.alpha2mqtt.services.alpha;
+package de.vdw.io.alpha2mqtt.services.alpha.get;
 
+import java.time.LocalDateTime;
+import org.javalite.common.JsonHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.javalite.common.JsonHelper;
-
-import javax.inject.Singleton;
-import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
-@Singleton
 @Slf4j
 public abstract class AlphaService<P> {
 
-  @Getter private final ObjectMapper objectMapper;
+  @Getter
+  private final ObjectMapper objectMapper;
 
   protected final TokenService tokenService;
-
-  protected abstract P requestNewData(String token, LocalDateTime now);
-
-  public abstract long getRefreshRate();
 
   public P getData() {
     log.debug("Get token from service.");
@@ -43,4 +37,8 @@ public abstract class AlphaService<P> {
 
     return response;
   }
+
+  public abstract long getRefreshRate();
+
+  protected abstract P requestNewData(String token, LocalDateTime now);
 }

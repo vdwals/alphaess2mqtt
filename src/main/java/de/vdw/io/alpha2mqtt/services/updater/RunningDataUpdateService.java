@@ -1,37 +1,33 @@
-package de.vdw.io.alpha2mqtt.services;
+package de.vdw.io.alpha2mqtt.services.updater;
 
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
-import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
-import de.vdw.io.alpha2mqtt.services.alpha.RunningDataService;
-import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
-import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
-import de.vdw.io.alpha2mqtt.services.ha.SolarModuleDeviceService;
-import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
-import de.vdw.it.hamqtt.HomeAssistantMQTTService;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomUtils;
-
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.RandomUtils;
+import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.services.alpha.get.RunningDataService;
+import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
+import de.vdw.it.hamqtt.HomeAssistantMQTTService;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
-public class RunningDataUpdateService implements Runnable {
+@RequiredArgsConstructor
+public class RunningDataUpdateService implements Updater {
 
   BatteryDeviceService batteryDeviceService;
 
-  SolarModuleDeviceService solarModuleDeviceService;
-
   InverterDeviceService inverterDeviceService;
 
-  WallBoxDeviceService wallboxDeviceService;
+  List<WallBoxDeviceService> wallboxDeviceServices;
 
   ScheduledExecutorService scheduledExecutorService;
 
   RunningDataService runningDataService;
-
-  ChargingService chargingService;
 
   HomeAssistantMQTTService mqttService;
 
@@ -54,9 +50,8 @@ public class RunningDataUpdateService implements Runnable {
     log.debug("Live data received.");
 
     batteryDeviceService.mapValues(data);
-    solarModuleDeviceService.mapValues(data);
     inverterDeviceService.mapValues(data);
-    wallboxDeviceService.mapValues(data);
+    wallboxDeviceServices.forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
 
     log.debug("Live data mapped. Publishing via service.");
     mqttService.publishValues();

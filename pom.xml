@@ -57,51 +57,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<version>${maven-compiler-plugin.version}</version>
 			</plugin>
-			<plugin>
-				<artifactId>activejdbc-instrumentation</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>instrument</goal>
-						</goals>
-						<phase>process-classes</phase>
-					</execution>
-				</executions>
-				<groupId>org.javalite</groupId>
-				<version>${javalite.version}</version>
-			</plugin>
 		</plugins>
-		<pluginManagement>
-			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>org.javalite</groupId>
-										<artifactId>
-											activejdbc-instrumentation
-										</artifactId>
-										<version>${javalite.version}</version>
-										<goals>
-											<goal>instrument</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore></ignore>
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 	</build>
 	<dependencies>
 		<dependency>
@@ -110,25 +66,10 @@
 			<version>${easy-di.version}</version>
 		</dependency>
 		<dependency>
-			<artifactId>activejdbc</artifactId>
-			<groupId>org.javalite</groupId>
-			<version>${javalite.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>mariadb-java-client</artifactId>
-			<groupId>org.mariadb.jdbc</groupId>
-			<version>${mariadb-java-client.version}</version>
-		</dependency>
-		<dependency>
 			<artifactId>lombok</artifactId>
 			<groupId>org.projectlombok</groupId>
 			<scope>provided</scope>
 			<version>${lombok.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>ehcache</artifactId>
-			<groupId>net.sf.ehcache</groupId>
-			<version>${ehcache.version}</version>
 		</dependency>
 		<dependency>
 			<artifactId>commons-lang3</artifactId>
@@ -150,12 +91,9 @@
 	<properties>
 		<apache-commons.version>3.12.0</apache-commons.version>
 		<easy-di.version>0.6.0</easy-di.version>
-		<ehcache.version>2.10.9.2</ehcache.version>
 		<hamqtt.version>3.3.1</hamqtt.version>
 		<java.version>16</java.version>
-		<javalite.version>3.1-j11</javalite.version>
 		<lombok.version>1.18.24</lombok.version>
-		<mariadb-java-client.version>3.0.4</mariadb-java-client.version>
 		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
 		<mqtt.version>1.2.5</mqtt.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

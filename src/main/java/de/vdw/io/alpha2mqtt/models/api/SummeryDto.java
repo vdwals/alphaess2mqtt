@@ -3,7 +3,7 @@ package de.vdw.io.alpha2mqtt.models.api;
 import lombok.Value;
 
 @Value
-public class SummeryDto {
+public class SummeryDto implements DataDto {
   double CarbonNum, ToalIncome, TodayIncome, TreeNum;
 
   String money_type;

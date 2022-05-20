@@ -1,28 +1,23 @@
-package de.vdw.io.alpha2mqtt.services.alpha;
+package de.vdw.io.alpha2mqtt.services.alpha.get;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.vdw.io.alpha2mqtt.config.Constants;
-import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
-import de.vdw.io.alpha2mqtt.models.AlphaEssSetting;
-import de.vdw.io.alpha2mqtt.models.AlphaEssToken;
-import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
-import de.vdw.io.alpha2mqtt.models.api.TokenDto;
-import lombok.RequiredArgsConstructor;
-import lombok.Synchronized;
-import lombok.extern.slf4j.Slf4j;
-import org.javalite.activejdbc.Base;
-import org.javalite.common.JsonHelper;
-import org.javalite.http.Http;
-import org.javalite.http.Post;
-
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
+import javax.inject.Singleton;
+import org.javalite.http.Http;
+import org.javalite.http.Post;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.vdw.io.alpha2mqtt.config.Constants;
+import de.vdw.io.alpha2mqtt.models.Credentials;
+import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
+import de.vdw.io.alpha2mqtt.models.api.TokenDto;
+import lombok.RequiredArgsConstructor;
+import lombok.Synchronized;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
 @Singleton
@@ -31,39 +26,48 @@ public class TokenService {
 
   private final ObjectMapper objectMapper;
 
+  private final Credentials credentials;
+
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+  private String token;
+
+  private LocalDateTime validTill;
+
+  private String getCurrentToken() {
+    if ((token == null) || validTill == null || LocalDateTime.now().isAfter(validTill)) {
+      return null;
+    }
+
+    return token;
+  }
 
   @Synchronized
   public String getToken() {
     log.debug("Get token from db.");
-    AlphaEssToken currentToken = Base.withDb(AlphaEssToken::findCurrentToken);
+
+    String currentToken = getCurrentToken();
 
     if (currentToken == null) {
       log.debug("No valid token found.");
-      String url = Base.withDb(() -> AlphaEssLoadJob.getLoginJob().getUrl());
+      String url = Constants.loginUrl;
 
-      if (url == null) {
-        log.error("No Login url found.");
+      String settings;
+      try {
+        settings = objectMapper.writeValueAsString(credentials);
+      } catch (JsonProcessingException e1) {
+        log.error("Error receiving token:", e1);
         return null;
       }
-
-      Map<String, String> settingMap = Base.withDb(AlphaEssSetting::getSettings);
-
-      if (settingMap == null || settingMap.isEmpty()) {
-        log.error("No Login settings found.");
-        return null;
-      }
-
-      String settings = JsonHelper.toJsonString(settingMap);
 
       Post loginPost =
           Http.post(
-                  url,
-                  settings.getBytes(StandardCharsets.UTF_8),
-                  (int) Constants.TIMEOUT,
-                  (int) Constants.TIMEOUT)
-              .header("Accept", Constants.APPLICATION_JSON)
-              .header("Content-Type", Constants.APPLICATION_JSON);
+              url,
+              settings.getBytes(StandardCharsets.UTF_8),
+              (int) Constants.TIMEOUT,
+              (int) Constants.TIMEOUT)
+          .header("Accept", Constants.APPLICATION_JSON)
+          .header("Content-Type", Constants.APPLICATION_JSON);
 
       if (loginPost.responseCode() != HttpURLConnection.HTTP_OK) {
         log.error(
@@ -83,24 +87,13 @@ public class TokenService {
 
         TokenDto tokenDto = loginResponseDto.getData();
 
-        LocalDateTime expirationTime =
+        validTill =
             LocalDateTime.parse(tokenDto.getTokenCreateTime(), formatter)
-                .plusSeconds(tokenDto.getExpiresIn());
+            .plusSeconds(tokenDto.getExpiresIn());
 
-        log.debug("Token extracted, expiration time calculated: {}", expirationTime);
+        log.debug("Token extracted, expiration time calculated: {}", validTill);
 
-        currentToken =
-            Base.withDb(
-                () -> {
-                  // Delete all tokens as they are expired.
-                  log.debug("Deleting all existing tokens.");
-                  AlphaEssToken.deleteAll();
-
-                  // Save new token.
-                  log.debug("Creating new token entry.");
-                  return AlphaEssToken.create(
-                      tokenDto.getAccessToken(), expirationTime, tokenDto.getRefreshTokenKey());
-                });
+        currentToken = tokenDto.getAccessToken();
 
       } catch (IOException e) {
         log.error("Error receiving token:", e);
@@ -113,6 +106,6 @@ public class TokenService {
     }
 
     log.debug("Return token");
-    return currentToken.getToken();
+    return currentToken;
   }
 }

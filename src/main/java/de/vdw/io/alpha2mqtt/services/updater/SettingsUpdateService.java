@@ -1,11 +1,10 @@
-package de.vdw.io.alpha2mqtt.services;
+package de.vdw.io.alpha2mqtt.services.updater;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.RandomUtils;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
-import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
-import de.vdw.io.alpha2mqtt.services.alpha.SettingService;
+import de.vdw.io.alpha2mqtt.services.alpha.get.SettingService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
@@ -14,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
-public class SettingsUpdateService implements Runnable {
+public class SettingsUpdateService implements Updater {
 
   WallBoxDeviceService wallboxDeviceService;
 
@@ -24,10 +23,9 @@ public class SettingsUpdateService implements Runnable {
 
   SettingService settingService;
 
-  ChargingService chargingService;
-
   HomeAssistantMQTTService mqttService;
 
+  @Override
   public void init() {
     long delay = RandomUtils.nextLong(1, 11);
     long interval = settingService.getRefreshRate();

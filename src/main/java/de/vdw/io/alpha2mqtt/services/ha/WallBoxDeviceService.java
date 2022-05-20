@@ -8,7 +8,8 @@ import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
-import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
+import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
+import de.vdw.io.alpha2mqtt.services.alpha.set.ChargingService;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity;
 import de.vdw.it.hamqtt.devices.entities.AbstractCommandEntity;
@@ -30,15 +31,20 @@ public class WallBoxDeviceService extends DeviceService {
   AbstractEntity chargeEnergy, chargePower, chargeState, plugState, pluggedCarState;
   AbstractCommandEntity charger, chargerMode;
 
-  public WallBoxDeviceService() {
-    super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", "ALP2021040257071");
+  String id, sn;
+
+  public WallBoxDeviceService(WallboxDto wallbox) {
+    super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", wallbox.getChargingpile_sn(),
+        wallbox.getChargingpile_id());
+
+    id = wallbox.getChargingpile_id();
+    sn = wallbox.getChargingpile_sn();
 
     this.chargePower = getPowerSensor("chargePower", "Ladeleistung");
 
     this.chargeEnergy = getEnergySensor("chargeEnergy", "Energie geladen")
         .stateClass(Sensor.StateClass.total_increasing)
-        .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
-        .build();
+        .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic).build();
     getDevice().addEntity(this.chargeEnergy);
 
     this.chargeState = buildBinarySensor("Ladestatus", "charging",
@@ -50,63 +56,44 @@ public class WallBoxDeviceService extends DeviceService {
     this.pluggedCarState = buildBinarySensor("E-Auto Zustand", "ev_car",
         BinarySensor.DeviceClass.connectivity, "mdi:car-electric");
 
-    this.charger = Switch.builder()
-        .device(getDevice())
-        .name("Laden")
-        .objectId("charger_switch")
-        .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_switch"))
-        .icon("mdi:toggle-switch")
-        .entityCategory(AbstractAvailabilityEntity.EntityCategory.config)
-        .build();
+    this.charger = Switch.builder().device(getDevice()).name("Laden").objectId("charger_switch")
+        .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_switch")).icon("mdi:toggle-switch")
+        .entityCategory(AbstractAvailabilityEntity.EntityCategory.config).build();
     this.charger.setValue(OFF);
     getDevice().addEntity(this.charger);
 
-    this.chargerMode = Select.builder()
-        .device(getDevice())
-        .name("Lademodus")
-        .objectId("charger_mode")
-        .uniqueId(getUniqueId(getDevice().getNodeId(), "charger_mode"))
+    this.chargerMode = Select.builder().device(getDevice()).name("Lademodus")
+        .objectId("charger_mode").uniqueId(getUniqueId(getDevice().getNodeId(), "charger_mode"))
         .option(ChargingService.ChargingMode.SLOW.name())
         .option(ChargingService.ChargingMode.NORMAL.name())
         .option(ChargingService.ChargingMode.FAST.name())
-        .option(ChargingService.ChargingMode.MAX.name())
-        .icon("mdi:car-select")
-        .build();
+        .option(ChargingService.ChargingMode.MAX.name()).icon("mdi:car-select").build();
     getDevice().addEntity(this.chargerMode);
   }
 
-  private AbstractEntity buildBinarySensor(
-      String name,
-      String id,
-      BinarySensor.DeviceClass deviceClass,
-      String icon
-      ) {
-    final AbstractEntity binarySensor = BinarySensor.builder()
-        .device(getDevice())
-        .name(name)
-        .objectId(id)
-        .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), id))
-        .expireAfter(Constants.EXPIRE)
-        .forceUpdate(true)
+  private AbstractEntity buildBinarySensor(String name, String id,
+      BinarySensor.DeviceClass deviceClass, String icon) {
+    final AbstractEntity binarySensor = BinarySensor.builder().device(getDevice()).name(name)
+        .objectId(id).uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), id))
+        .expireAfter(Constants.EXPIRE).forceUpdate(true)
         .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic)
-        .deviceClass(deviceClass)
-        .icon(icon)
-        .build();
+        .deviceClass(deviceClass).icon(icon).build();
     getDevice().addEntity(binarySensor);
     return binarySensor;
   }
 
   @Override
   public void mapValues(RunningDataDto dataDto) {
-    double wallBoxPower = dataDto.getEv1_power();
 
-    double totalAvailablePower = dataDto.getPmeter_l1()
-        + dataDto.getPmeter_l2()
-        + dataDto.getPmeter_l1()
-        + dataDto.getPmeter_dc()
-        + dataDto.getPpv1()
-        + dataDto.getPpv2()
-        + dataDto.getPbat();
+    double wallBoxPower = switch (id) {
+      case Constants.chargingPileId1 -> dataDto.getEv1_power();
+      case Constants.chargingPileId2 -> dataDto.getEv2_power();
+      default -> throw new IllegalArgumentException("Unexpected value: " + id);
+    };
+
+    double totalAvailablePower =
+        dataDto.getPmeter_l1() + dataDto.getPmeter_l2() + dataDto.getPmeter_l1()
+            + dataDto.getPmeter_dc() + dataDto.getPpv1() + dataDto.getPpv2() + dataDto.getPbat();
 
     if (totalAvailablePower > 0 && wallBoxPower > 0 && totalAvailablePower < wallBoxPower) {
       log.warn(
@@ -119,7 +106,11 @@ public class WallBoxDeviceService extends DeviceService {
     }
 
     this.chargePower.setValue(wallBoxPower);
-    this.chargeEnergy.setValue(dataDto.getEv1_chgenergy_real());
+    this.chargeEnergy.setValue(switch (id) {
+      case Constants.chargingPileId1 -> dataDto.getEv1_chgenergy_real();
+      case Constants.chargingPileId2 -> dataDto.getEv2_chgenergy_real();
+      default -> throw new IllegalArgumentException("Unexpected value: " + id);
+    });
 
     // 1: Nicht angeschlossen
     // 2: Angeschlossen, nicht laden
@@ -133,7 +124,12 @@ public class WallBoxDeviceService extends DeviceService {
     this.plugState.setValue(OFF);
     this.pluggedCarState.setValue(OFF);
 
-    switch (dataDto.getEv1_mode()) {
+    int mode = switch (id) {
+      case Constants.chargingPileId1 -> dataDto.getEv1_mode();
+      case Constants.chargingPileId2 -> dataDto.getEv2_mode();
+      default -> throw new IllegalArgumentException("Unexpected value: " + id);
+    };
+    switch (mode) {
       case 1:
         break;
       case 3:

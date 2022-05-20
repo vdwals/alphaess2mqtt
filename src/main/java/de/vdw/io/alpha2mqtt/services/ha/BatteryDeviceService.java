@@ -3,8 +3,7 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.javalite.activejdbc.Base;
-import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
+import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
@@ -16,32 +15,20 @@ import de.vdw.it.hamqtt.devices.entities.Number;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)
 public class BatteryDeviceService extends DeviceService {
-
-  private static AlphaEssBattery getBattery() {
-    return Base.withDb(() -> {
-      log.info("Load and init batteries");
-
-      return AlphaEssBattery.findAll().stream().map(batteryModel -> (AlphaEssBattery) batteryModel)
-          .findFirst().orElseThrow();
-    });
-  }
-
   AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput, batteryLoadEnergy,
   useCapacity;
 
   double capacity;
 
-  public BatteryDeviceService() {
-    super("Alpha ESS", "Smile5", "PV-Batterie", getBattery().getSn());
+  public BatteryDeviceService(BatteryDto battery) {
+    super("Alpha ESS", battery.getMbat(), "PV-Batterie", battery.getSys_sn());
 
-    capacity = getBattery().getUsableCapacity();
+    capacity = battery.getUscapacity();
 
     batteryLoad = getMeasurementSensor(Sensor.DeviceClass.battery, "pv_soc", "Batterie Ladung")
         .unitOfMeasurement(Units.PERCENT.getUnit()).forceUpdate(true).build();
