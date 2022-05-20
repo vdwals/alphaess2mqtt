@@ -47,6 +47,9 @@ public class App {
     ed.bindInstance(ScheduledExecutorService.class, Executors.newSingleThreadScheduledExecutor());
 
     ed.markAsSingleton(Cache.class);
+    ed.markAsSingleton(MqttService.class);
+    ed.markAsSingleton(SystemService.class);
+    ed.markAsSingleton(ServiceFactory.class);
 
     App app = ed.getInstance(App.class);
 

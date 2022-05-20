@@ -11,17 +11,17 @@ import lombok.Value;
 public class MqttService {
   ServiceFactory serviceFactory;
 
+  HomeAssistantMQTTService mqttService;
+
   Cache cache;
 
   public void init() {
-    HomeAssistantMQTTService mqttService = serviceFactory.getMqttService();
-
     serviceFactory.getDeviceServices().stream().map(DeviceService::getDevice)
         .forEach(mqttService::addDevice);
 
     serviceFactory.getCommandServices().forEach(mqttService::addCommandListener);
 
-    mqttService.publishConfigs();
+    mqttService.connect();
   }
 
 }
