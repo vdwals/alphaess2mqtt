@@ -38,7 +38,8 @@ public class App {
     HomeAssistantMQTTService homeAssistantMQTTService = de.vdw.it.hamqtt.utils.ServiceFactory
         .createHomeAssistantMQTTService(environmentVariables.get("MQTT.HOST"),
             environmentVariables.get("MQTT.PORT"), environmentVariables.get("MQTT.USERNAME"),
-            environmentVariables.get("MQTT.PASSWORD").toCharArray(), "alpha_energy",
+            environmentVariables.get("MQTT.PASSWORD").toCharArray(),
+            environmentVariables.getOrDefault("MQTT.TOPIC", "alpha_energy"),
             environmentVariables.getOrDefault("MQTT.DISCOVERY_TOPIC", "homeassistant"),
             "Alpha ESS Proxy", environmentVariables.getOrDefault("MQTT.PROTOCOLL", "tcp"));
 

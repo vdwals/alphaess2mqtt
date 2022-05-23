@@ -13,6 +13,7 @@ services:
     environment:
       MQTT.HOST: host
       MQTT.PASSWORD: password
+      #      MQTT.TOPIC: alpha_test
       #      MQTT.DISCOVERY_TOPIC: test
       #      MQTT.PROTOCOLL: mqtt
       MQTT.USERNAME: username
