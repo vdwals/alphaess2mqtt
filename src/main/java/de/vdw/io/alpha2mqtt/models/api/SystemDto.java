@@ -1,11 +1,10 @@
 package de.vdw.io.alpha2mqtt.models.api;
 
+import java.util.List;
 import lombok.Value;
 
-import java.util.List;
-
 @Value
-public class SystemDto {
+public class SystemDto implements DataDto {
   String sys_sn;
   String ems_version;
   String charge_workdays;

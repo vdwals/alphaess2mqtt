@@ -1,64 +1,80 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
+import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
+import static de.vdw.it.hamqtt.devices.Units.PERCENT;
+import static de.vdw.it.hamqtt.devices.Units.WATT;
+import java.time.LocalDate;
+import javax.inject.Singleton;
+import de.vdw.io.alpha2mqtt.config.Constants;
+import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.entities.AbstractEntity;
+import de.vdw.it.hamqtt.devices.entities.AbstractSensorEntity;
+import de.vdw.it.hamqtt.devices.entities.RawEntity;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-
-import javax.inject.Singleton;
-
-import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
-import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 
 @Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)
 public class InverterDeviceService extends DeviceService {
 
-  AbstractEntity gridPower,
-      gridPowerIn,
-      gridPowerOut,
-      powerConsumption,
-      selfConsumption,
-      selfSufficiency,
-      carbonNum,
-      treeNum,
-      vGridPowerIn,
-      vGridPowerOut;
+  AbstractEntity gridPower, gridPowerIn, gridPowerOut, powerConsumption, selfConsumption,
+      selfSufficiency, carbonNum, treeNum, vGridPowerIn, vGridPowerOut, pvPower, ppv1, ppv2,
+      pMeterDc, pvToday, pvTotal, startOfToday;
 
-  public InverterDeviceService() {
-    super("Alpha ESS", "Smile5", "PV-Wechselrichter", "Smile5");
+  public InverterDeviceService(BatteryDto battery) {
+    super("Alpha ESS", battery.getMinv(), "PV-Wechselrichter", battery.getSys_sn());
 
-    gridPower = getPowerSensor("gridPower", "Netz Leistung");
+    String nodeIdCurrent =
+        IdUtils.getDeviceId("Alpha ESS", battery.getMinv(), "PV-Wechselrichter", "2");
 
-    powerConsumption = getPowerSensor("powerConsumption", "Verbraucher Leistung");
+    gridPower = getPowerSensor("gridPower", "Netz Leistung", nodeIdCurrent);
+
+    powerConsumption = getPowerSensor("powerConsumption", "Verbraucher Leistung", nodeIdCurrent);
 
     selfConsumption = getPercentSensor("selfConsumption", "Anteil PV Energie Eigenverbrauch");
 
     selfSufficiency = getPercentSensor("selfSufficiency", "Autarkie");
 
-    gridPowerIn = getPowerSensor("gridPowerIn", "Netzbezug");
-    gridPowerOut = getPowerSensor("gridPowerOut", "Netzeinspeisung");
+    gridPowerIn = getPowerSensor("gridPowerIn", "Netzbezug", nodeIdCurrent);
+    gridPowerOut = getPowerSensor("gridPowerOut", "Netzeinspeisung", nodeIdCurrent);
 
-    vGridPowerIn = getPowerSensor("vGridPowerIn", "virtueller Netzbezug");
-    vGridPowerOut = getPowerSensor("vGridPowerOut", "virtuelle Netzeinspeisung");
+    vGridPowerIn = getPowerSensor("vGridPowerIn", "virtueller Netzbezug", nodeIdCurrent);
+    vGridPowerOut = getPowerSensor("vGridPowerOut", "virtuelle Netzeinspeisung", nodeIdCurrent);
 
     treeNum = getNumberSensor("treeNum", "Gepflanzte Bäume", "mdi:forest", "Stk");
 
     carbonNum = getNumberSensor("carbonNum", "CO2 Einsparung", "mdi:molecule-co2", "kg");
+
+    pvPower = getPowerSensor("ppvTotal", "PV Leistung", nodeIdCurrent);
+
+    ppv1 = getPowerSensor("ppv1", "PV 1 Leistung", nodeIdCurrent);
+
+    ppv2 = getPowerSensor("ppv2", "PV 2 Leistung", nodeIdCurrent);
+
+    pMeterDc = getPowerSensor("pMeterDc", "PV SUN2000 Leistung", nodeIdCurrent);
+
+    pvToday = getEnergySensor("pvToday", "PV Energie Heute").stateClass(Sensor.StateClass.total)
+        .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
+        .build();
+    getDevice().addEntity(pvToday);
+
+    pvTotal = getEnergySensor("pvTotal", "PV Energie Gesamt")
+        .stateClass(Sensor.StateClass.total_increasing).build();
+    getDevice().addEntity(pvTotal);
+
+    startOfToday = RawEntity.builder().objectId(Constants.START_OF_DAY)
+        .className(pvToday.getClassName()).build();
+    getDevice().addEntity(startOfToday);
   }
 
   private Sensor getNumberSensor(String id, String name, String icon, String unitOfMeasurement) {
-    Sensor s =
-        Sensor.builder()
-            .objectId(id)
-            .uniqueId(getUniqueId(getDevice().getNodeId(), id))
-            .name(name)
-            .icon(icon)
-            .unitOfMeasurement(unitOfMeasurement)
-            .build();
+    Sensor s = Sensor.builder().objectId(id).uniqueId(getUniqueId(getDevice().getNodeId(), id))
+        .name(name).icon(icon).unitOfMeasurement(unitOfMeasurement).build();
 
     getDevice().addEntity(s);
     return s;
@@ -67,6 +83,15 @@ public class InverterDeviceService extends DeviceService {
   private Sensor getPercentSensor(String objectId, String name) {
     Sensor s = getSensor(null, objectId, name).unitOfMeasurement(PERCENT.getUnit()).build();
     getDevice().addEntity(s);
+    return s;
+  }
+
+  private AbstractSensorEntity getPowerSensor(String objectId, String name, String nodeId) {
+    AbstractSensorEntity s = getMeasurementSensor(Sensor.DeviceClass.power, objectId, name)
+        .unitOfMeasurement(WATT.getUnit()).forceUpdate(true).expireAfter(Constants.EXPIRE).build();
+
+    getDevice().addEntity(s, nodeId);
+
     return s;
   }
 
@@ -88,6 +113,13 @@ public class InverterDeviceService extends DeviceService {
     vGridPowerOut.setValue(batteryIn + gridOut);
     double batteryOut = pBat > 0 ? pBat : 0;
     vGridPowerIn.setValue(batteryOut + gridIn);
+
+    pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
+
+    ppv1.setValue(data.getPpv1());
+    ppv2.setValue(data.getPpv2());
+
+    pMeterDc.setValue(data.getPmeter_dc());
   }
 
   @Override
@@ -96,6 +128,9 @@ public class InverterDeviceService extends DeviceService {
     anyChange |= selfConsumption.setValue(getScaledValue(data.getEselfConsumption() * 100));
     anyChange |= selfSufficiency.setValue(getScaledValue(data.getEselfSufficiency() * 100));
     anyChange |= treeNum.setValue(getScaledValue(data.getTreeNum()));
+    anyChange |= pvToday.setValue(data.getEpvtoday());
+    anyChange |= pvTotal.setValue(data.getEpvtotal());
+    anyChange |= startOfToday.setValue(LocalDate.now().atStartOfDay());
     return anyChange;
   }
 }

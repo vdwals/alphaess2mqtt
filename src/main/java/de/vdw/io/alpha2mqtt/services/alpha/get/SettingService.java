@@ -1,41 +1,36 @@
-package de.vdw.io.alpha2mqtt.services.alpha;
+package de.vdw.io.alpha2mqtt.services.alpha.get;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.vdw.io.alpha2mqtt.config.Constants;
-import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
-import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
-import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
-import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
-import de.vdw.io.alpha2mqtt.models.api.SystemDto;
-import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
-import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
-import de.vdw.io.alpha2mqtt.utils.RequestUtils;
-import de.vdw.it.hamqtt.utils.JsonUtils;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
-import org.javalite.activejdbc.Base;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Get;
 import org.javalite.http.Http;
 import org.javalite.http.Post;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.vdw.io.alpha2mqtt.config.Constants;
+import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
+import de.vdw.io.alpha2mqtt.models.api.SystemDto;
+import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
+import de.vdw.io.alpha2mqtt.utils.RequestUtils;
+import de.vdw.it.hamqtt.utils.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SettingService extends AlphaService<SystemDto> {
+  private final String systemId;
 
-  public SettingService(ObjectMapper objectMapper, TokenService tokenService) {
+  public SettingService(ObjectMapper objectMapper, TokenService tokenService, String systemId) {
     super(objectMapper, tokenService);
+    this.systemId = systemId;
   }
 
   @Override
   public long getRefreshRate() {
-    return Base.withDb(() -> AlphaEssLoadJob.getSettingsJob()
-        .getIntervalInSeconds());
+    return 600L;
   }
 
   private SystemDto getResponse(String token, String url) {
@@ -45,8 +40,7 @@ public class SettingService extends AlphaService<SystemDto> {
         .addHeader(Http.get(url, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
 
     if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
-      log.error("Unexpected response code while receiving items {}: {}",
-          dataGet.responseCode(),
+      log.error("Unexpected response code while receiving items {}: {}", dataGet.responseCode(),
           dataGet.responseMessage());
       return null;
     }
@@ -71,16 +65,6 @@ public class SettingService extends AlphaService<SystemDto> {
 
   public SettingDto getSettingDto() {
     log.debug("Build settings DTO.");
-    Optional<String> systemId = Base.withDb(() -> AlphaEssBattery.findAll()
-        .stream()
-        .map(model -> (AlphaEssBattery) model)
-        .map(AlphaEssBattery::getSystemId)
-        .findFirst());
-
-    if (systemId.isEmpty()) {
-      log.error("No System Id available.");
-      return null;
-    }
 
     SystemDto systemData = getSystemSettings();
 
@@ -102,11 +86,10 @@ public class SettingService extends AlphaService<SystemDto> {
     }
 
     // Add wallbox values
-    settingDto.setWallbox(systemData.getCharging_pile_list()
-        .get(0));
+    settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
 
     // Set system id
-    settingDto.setSystem_id(systemId.get());
+    settingDto.setSystem_id(systemId);
 
     return settingDto;
   }
@@ -120,52 +103,16 @@ public class SettingService extends AlphaService<SystemDto> {
     }
 
     log.info("Load system settings information.");
-    Optional<String> settingsUrl = Base.withDb(() -> {
-      String url = AlphaEssLoadJob.getSettingsJob()
-          .getUrl();
-      return AlphaEssBattery.findAll()
-          .stream()
-          .map(model -> (AlphaEssBattery) model)
-          .map(battery -> String.format(url, battery.getSystemId()))
-          .findFirst();
-    });
-
-    if (settingsUrl.isEmpty()) {
-      log.error("No settings url available");
-      return null;
-    }
-
-    String url = settingsUrl.get();
+    String url = String.format(Constants.getSettingUrl, systemId);
 
     return getResponse(token, url);
   }
 
   @Override
   protected SystemDto requestNewData(String token, LocalDateTime now) {
-    log.info("Load wallbox information.");
+    log.info("Load settings.");
 
-    String url = Base.withDb(() -> AlphaEssLoadJob.getSettingsJob()
-        .getUrl());
-
-    if (url == null) {
-      log.error("No Settings url available");
-      return null;
-    }
-    log.debug("URL loaded");
-
-    Optional<AlphaEssBattery> alphaEssBattery = Base.withDb(() -> AlphaEssBattery.findAll()
-        .stream()
-        .map(model -> (AlphaEssBattery) model)
-        .findFirst());
-
-    if (alphaEssBattery.isEmpty()) {
-      log.error("No Battery found");
-      return null;
-    }
-    log.debug("Battery loaded");
-
-    AlphaEssBattery battery = alphaEssBattery.get();
-    url = String.format(url, battery.getSystemId());
+    String url = String.format(Constants.getSettingUrl, systemId);
 
     SystemDto systemResponseDto = getResponse(token, url);
 
@@ -174,12 +121,10 @@ public class SettingService extends AlphaService<SystemDto> {
       return null;
     }
 
-    Base.withDb(() -> {
-      for (WallboxDto wallboxDto : systemResponseDto.getCharging_pile_list()) {
-        AlphaEssWallbox.create(battery, wallboxDto.getChargingpile_sn());
-      }
-      return null;
-    });
+    /*
+     * Base.withDb(() -> { for (WallboxDto wallboxDto : systemResponseDto.getCharging_pile_list()) {
+     * AlphaEssWallbox.create(battery, wallboxDto.getChargingpile_sn()); } return null; });
+     */
 
     return systemResponseDto;
   }
@@ -187,30 +132,18 @@ public class SettingService extends AlphaService<SystemDto> {
   public SystemDto updateSetting(SettingDto settingDto) {
     String token = this.tokenService.getToken();
 
-    String url = Base.withDb(() -> {
-      AlphaEssLoadJob alphaEssLoadJob = AlphaEssLoadJob.setSettingsJob();
-
-      if (alphaEssLoadJob == null) {
-        log.error("No Settings set job found");
-        return null;
-      }
-
-      return alphaEssLoadJob.getUrl();
-    });
+    String url = Constants.setSettingUrl;
 
     String setting = JsonHelper.toJsonString(settingDto);
 
     log.debug("Posting charging mode request.");
     log.trace("Request: {}", setting);
 
-    Post post = RequestUtils.addPostHeader(Http.post(url,
-        setting.getBytes(StandardCharsets.UTF_8),
-        (int) Constants.TIMEOUT,
-        (int) Constants.TIMEOUT), token);
+    Post post = RequestUtils.addPostHeader(Http.post(url, setting.getBytes(StandardCharsets.UTF_8),
+        (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
-      log.error("Charging mode not changed. Code: {}, Message: {}",
-          post.responseCode(),
+      log.error("Charging mode not changed. Code: {}, Message: {}", post.responseCode(),
           post.responseMessage());
       return null;
     }

@@ -1,12 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<artifactId>alpha_ess_mqtt</artifactId>
 	<groupId>de.vdwals.io</groupId>
 	<modelVersion>4.0.0</modelVersion>
 	<name>Alpha Ess 2 MQTT</name>
 	<version>1.1.1</version>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -29,11 +26,6 @@
 									</excludes>
 								</filter>
 							</filters>
-							<artifactSet>
-								<excludes>
-									<exclude>log4j:log4j:jar:</exclude>
-								</excludes>
-							</artifactSet>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>de.vdw.io.alpha2mqtt.App</mainClass>
@@ -58,51 +50,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<version>${maven-compiler-plugin.version}</version>
 			</plugin>
-			<plugin>
-				<artifactId>activejdbc-instrumentation</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>instrument</goal>
-						</goals>
-						<phase>process-classes</phase>
-					</execution>
-				</executions>
-				<groupId>org.javalite</groupId>
-				<version>${javalite.version}</version>
-			</plugin>
 		</plugins>
-		<pluginManagement>
-			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>org.javalite</groupId>
-										<artifactId>
-											activejdbc-instrumentation
-										</artifactId>
-										<version>${javalite.version}</version>
-										<goals>
-											<goal>instrument</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore></ignore>
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 	</build>
 	<dependencies>
 		<dependency>
@@ -111,25 +59,10 @@
 			<version>${easy-di.version}</version>
 		</dependency>
 		<dependency>
-			<artifactId>activejdbc</artifactId>
-			<groupId>org.javalite</groupId>
-			<version>${javalite.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>mariadb-java-client</artifactId>
-			<groupId>org.mariadb.jdbc</groupId>
-			<version>${mariadb-java-client.version}</version>
-		</dependency>
-		<dependency>
 			<artifactId>lombok</artifactId>
 			<groupId>org.projectlombok</groupId>
 			<scope>provided</scope>
 			<version>${lombok.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>ehcache</artifactId>
-			<groupId>net.sf.ehcache</groupId>
-			<version>${ehcache.version}</version>
 		</dependency>
 		<dependency>
 			<artifactId>commons-lang3</artifactId>
@@ -141,17 +74,19 @@
 			<groupId>de.vdw.it</groupId>
 			<version>${hamqtt.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>javax.inject</groupId>
+			<artifactId>javax.inject</artifactId>
+			<version>1</version>
+		</dependency>
 	</dependencies>
 
 	<properties>
 		<apache-commons.version>3.12.0</apache-commons.version>
-		<easy-di.version>0.3.0</easy-di.version>
-		<ehcache.version>2.10.9.2</ehcache.version>
-		<hamqtt.version>3.3.0</hamqtt.version>
+		<easy-di.version>0.6.0</easy-di.version>
+		<hamqtt.version>3.3.1</hamqtt.version>
 		<java.version>16</java.version>
-		<javalite.version>3.0-j11</javalite.version>
-		<lombok.version>1.18.22</lombok.version>
-		<mariadb-java-client.version>2.7.3</mariadb-java-client.version>
+		<lombok.version>1.18.24</lombok.version>
 		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
 		<mqtt.version>1.2.5</mqtt.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -1,0 +1,59 @@
+=================
+ericdemo is an example program that shows you how to use the ERiC-functions in a Java application.
+
+In ericdemo the following aspects are implemented exemplarily:
+
+    Validity check of a tax number
+    Reading and interpreting tax office data from ERiC
+    Reading a tax record from a file
+    Call the function EricBearbeiteVorgang
+    Validate a tax record
+    Sending a tax record, authenticated with certificate, or unsigned
+    PDF creation after sending
+
+The source code of the sample program can be found in the directory 'src'.
+
+The main program starts in the file src/de/elster/eric/demo/Main.java.
+
+The following sections describe how to build and run the sample program under on Windows, Linux and macOS.
+
+Build:
+======
+
+Install a current Java Developer Kit and set the environment variable JAVA_HOME to this Developer Kit (required for javadoc). Install the Ant build system and build the project by calling of "ant" in the current directory.
+
+Alternatively you can use e. g. the development environment Eclipse and import the EricDemoJava project (PATH has to be extended by the Java SDK path if you want to use the ant build script from Eclipse).
+
+Execute:
+==========
+
+ericdemo is a console application. To run it on Windows you need the 32-Bit or 64-Bit Visual C++ the Redistributable Package for Visual Studio 2017 is necessary. Download: https://www.visualstudio.com/downloads/
+
+Prerequisites: "java" (Java Runtime) must be located in the path and the Java executable must have the same CPU architecture as ERiC (x86/AMD64).
+
+You can run ericdemo as follows:
+
+    On Windows:
+    "startedemo-x86.bat" or "startedemo-x64.bat", respectively.
+
+    On Linux and macOS:
+    "sh startedemo-x86.sh" or "sh startedemo-x64.sh", respectively.
+
+Alternatively you can call ericdemo directly:
+
+java -jar EricDemo.jar [-c Zert] [-p PIN] [-d Dir] [-l Log] <data type version> <tax record file>
+
+Options:
+-c [Zert] Path to a user certificate
+-p [PIN] User certificate PIN
+-d [Dir] Directory of ERiC libraries
+-l [Log] Directory for the ERiC log files
+
+Examples:
+java -jar EricDemo.jar ESt_2011 steuersatz.xml
+java -jar EricDemo.jar -c cert.pfx -p 123456 ESt_2011 steuersatz.xml
+java -jar EricDemo.jar --help
+
+In the above calls, the complete path to the Java Archive has to be supplied.
+
+The tax record file must contain an ELSTER XML tax record. The data type version must be specified to match the tax record file.

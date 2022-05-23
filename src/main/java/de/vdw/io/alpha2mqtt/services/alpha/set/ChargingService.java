@@ -1,22 +1,19 @@
-package de.vdw.io.alpha2mqtt.services.alpha;
+package de.vdw.io.alpha2mqtt.services.alpha.set;
 
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.EnumUtils;
-import org.javalite.activejdbc.Base;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Http;
 import org.javalite.http.Post;
 import de.vdw.io.alpha2mqtt.config.Constants;
-import de.vdw.io.alpha2mqtt.models.AlphaEssBattery;
-import de.vdw.io.alpha2mqtt.models.AlphaEssLoadJob;
-import de.vdw.io.alpha2mqtt.models.AlphaEssWallbox;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
+import de.vdw.io.alpha2mqtt.services.alpha.get.SettingService;
+import de.vdw.io.alpha2mqtt.services.alpha.get.TokenService;
 import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
@@ -35,20 +32,20 @@ import lombok.extern.slf4j.Slf4j;
 public class ChargingService implements ICommandListener {
   @RequiredArgsConstructor
   public enum ChargingMode {
-    SLOW(1),
-    NORMAL(2),
-    FAST(3),
-    MAX(4);
+    SLOW(1), NORMAL(2), FAST(3), MAX(4);
 
     public static ChargingMode chargingModeByValue(int value) {
       for (ChargingMode chargingMode : ChargingMode.values()) {
-        if (chargingMode.mode == value) return chargingMode;
+        if (chargingMode.mode == value)
+          return chargingMode;
       }
       return null;
     }
 
     final int mode;
   }
+
+  String batterySn, wallboxSn;
   SettingService settingService;
   TokenService tokenService;
   WallBoxDeviceService wallboxDeviceService;
@@ -70,31 +67,19 @@ public class ChargingService implements ICommandListener {
     }
 
     // Build post body.
-    Optional<ChargingDto> chargingDto = getChargingDto();
+    ChargingDto chargingDto = getChargingDto();
 
-    if (chargingDto.isEmpty()) {
-      logError();
-      return false;
-    }
-    log.debug("System settings received: {}", chargingDto.get());
+    log.debug("System settings received: {}", chargingDto);
 
     // Post charging command.
     String payload = JsonHelper.toJsonString(chargingDto);
     log.debug("Calling charging url {}", url);
     log.trace("With payload: {}", payload);
-    Post post =
-        RequestUtils.addPostHeader(
-            Http.post(
-                url,
-                payload.getBytes(StandardCharsets.UTF_8),
-                (int) Constants.TIMEOUT,
-                (int) Constants.TIMEOUT),
-            token);
+    Post post = RequestUtils.addPostHeader(Http.post(url, payload.getBytes(StandardCharsets.UTF_8),
+        (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
-      log.error(
-          "Charging not started. Code: {}, Message: {}",
-          post.responseCode(),
+      log.error("Charging not started. Code: {}, Message: {}", post.responseCode(),
           post.responseMessage());
       return false;
     }
@@ -104,52 +89,13 @@ public class ChargingService implements ICommandListener {
     return true;
   }
 
-  private Optional<ChargingDto> getChargingDto() {
-    return Base.withDb(
-        () -> {
-          AlphaEssLoadJob startChargingJob = AlphaEssLoadJob.getStartChargingJob();
-
-          if (startChargingJob == null) {
-            logError();
-            return Optional.empty();
-          }
-
-          @SuppressWarnings("unchecked")
-          Optional<ChargingDto> chargingDto =
-          AlphaEssBattery.findAll().include(AlphaEssWallbox.class).stream()
-          .map(battery -> (AlphaEssBattery) battery)
-          .map(
-              battery -> {
-                String sn = battery.getSn();
-                Optional<String> wallBoxSn =
-                    battery.getAll(AlphaEssWallbox.class).stream()
-                    .map(AlphaEssWallbox::getSn)
-                    .findFirst();
-
-                if (wallBoxSn.isEmpty()) {
-                  logError();
-                  return null;
-                }
-                return new ChargingDto(sn, wallBoxSn.get());
-              })
-          .findFirst();
-
-          if (chargingDto.isEmpty()) {
-            logError();
-            return Optional.empty();
-          }
-
-          return chargingDto;
-        });
+  private ChargingDto getChargingDto() {
+    return new ChargingDto(batterySn, wallboxSn);
   }
 
   @Override
   public List<Device> getDevices() {
     return List.of(wallboxDeviceService.getDevice());
-  }
-
-  private void logError() {
-    log.error("No charging job found");
   }
 
   @Override
@@ -222,44 +168,18 @@ public class ChargingService implements ICommandListener {
       wallboxDeviceService.getChargerMode().setValue(mode);
       log.debug("Charging mode updated successfully");
     } else {
-      log.debug(
-          "Charging mode not changed. Expected: {}, Actual: {}", mode, systemDto.getChargingmode());
+      log.debug("Charging mode not changed. Expected: {}, Actual: {}", mode,
+          systemDto.getChargingmode());
     }
 
     return modeSet;
   }
 
   private boolean startCharging() {
-    // Get url for charging start job.
-    String url =
-        Base.withDb(
-            () -> {
-              AlphaEssLoadJob startChargingJob = AlphaEssLoadJob.getStartChargingJob();
-
-              if (startChargingJob == null) {
-                logError();
-                return null;
-              }
-              return startChargingJob.getUrl();
-            });
-
-    return callChargingUrl(url);
+    return callChargingUrl(Constants.startCharginUrl);
   }
 
   private boolean stopCharging() {
-    // Get url for charging stop job.
-    String url =
-        Base.withDb(
-            () -> {
-              AlphaEssLoadJob stopChargingJob = AlphaEssLoadJob.getStopChargingJob();
-
-              if (stopChargingJob == null) {
-                logError();
-                return null;
-              }
-              return stopChargingJob.getUrl();
-            });
-
-    return callChargingUrl(url);
+    return callChargingUrl(Constants.stopCharginUrl);
   }
 }
