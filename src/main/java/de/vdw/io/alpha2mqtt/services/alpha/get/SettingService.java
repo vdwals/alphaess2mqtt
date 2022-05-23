@@ -40,8 +40,7 @@ public class SettingService extends AlphaService<SystemDto> {
         .addHeader(Http.get(url, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
 
     if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
-      log.error("Unexpected response code while receiving items {}: {}",
-          dataGet.responseCode(),
+      log.error("Unexpected response code while receiving items {}: {}", dataGet.responseCode(),
           dataGet.responseMessage());
       return null;
     }
@@ -87,8 +86,7 @@ public class SettingService extends AlphaService<SystemDto> {
     }
 
     // Add wallbox values
-    settingDto.setWallbox(systemData.getCharging_pile_list()
-        .get(0));
+    settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
 
     // Set system id
     settingDto.setSystem_id(systemId);
@@ -112,7 +110,7 @@ public class SettingService extends AlphaService<SystemDto> {
 
   @Override
   protected SystemDto requestNewData(String token, LocalDateTime now) {
-    log.info("Load wallbox information.");
+    log.info("Load settings.");
 
     String url = String.format(Constants.getSettingUrl, systemId);
 
@@ -141,14 +139,11 @@ public class SettingService extends AlphaService<SystemDto> {
     log.debug("Posting charging mode request.");
     log.trace("Request: {}", setting);
 
-    Post post = RequestUtils.addPostHeader(Http.post(url,
-        setting.getBytes(StandardCharsets.UTF_8),
-        (int) Constants.TIMEOUT,
-        (int) Constants.TIMEOUT), token);
+    Post post = RequestUtils.addPostHeader(Http.post(url, setting.getBytes(StandardCharsets.UTF_8),
+        (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
-      log.error("Charging mode not changed. Code: {}, Message: {}",
-          post.responseCode(),
+      log.error("Charging mode not changed. Code: {}, Message: {}", post.responseCode(),
           post.responseMessage());
       return null;
     }
