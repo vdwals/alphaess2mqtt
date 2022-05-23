@@ -92,12 +92,12 @@ public class WallBoxDeviceService extends DeviceService {
     };
 
     double totalAvailablePower =
-        dataDto.getPmeter_l1() + dataDto.getPmeter_l2() + dataDto.getPmeter_l1()
+        dataDto.getPmeter_l1() + dataDto.getPmeter_l2() + dataDto.getPmeter_l3()
             + dataDto.getPmeter_dc() + dataDto.getPpv1() + dataDto.getPpv2() + dataDto.getPbat();
 
     if (totalAvailablePower > 0 && wallBoxPower > 0 && totalAvailablePower < wallBoxPower) {
       log.warn(
-          "Wallbox power {} Wh exceeds total available power of {} Wh. Fixing by recalculating wallbox power",
+          "Wallbox power {} W exceeds total available power of {} W. Fixing by recalculating wallbox power",
           wallBoxPower, totalAvailablePower);
 
       wallBoxPower = Math.max(
