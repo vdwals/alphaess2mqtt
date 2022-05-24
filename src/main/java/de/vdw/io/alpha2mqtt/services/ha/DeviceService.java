@@ -5,6 +5,7 @@ import static de.vdw.it.hamqtt.devices.Units.KILO_WATT_PER_HOUR;
 import static de.vdw.it.hamqtt.devices.Units.WATT;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
@@ -12,8 +13,10 @@ import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.Device.DeviceBuilder;
+import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity.EntityCategory;
 import de.vdw.it.hamqtt.devices.entities.AbstractSensorEntity;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
+import de.vdw.it.hamqtt.devices.entities.Sensor.SensorBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +34,9 @@ public abstract class DeviceService {
         .name(manufacturer + " " + name).nodeId(IdUtils.getDeviceId(manufacturer, model, name));
 
     for (String id : identifier) {
-      deviceBuilder.identifier(id);
+      if (StringUtils.isNotBlank(id)) {
+        deviceBuilder.identifier(id);
+      }
     }
 
     this.device = deviceBuilder.build();
@@ -45,6 +50,22 @@ public abstract class DeviceService {
   protected Sensor.SensorBuilder getMeasurementSensor(Sensor.DeviceClass deviceClass, String id,
       String name) {
     return getSensor(deviceClass, id, name).stateClass(Sensor.StateClass.measurement);
+  }
+
+  protected Sensor getNumberSensor(String id, String name, String icon, String unitOfMeasurement,
+      EntityCategory entityCategory) {
+    SensorBuilder sensorBuilder =
+        Sensor.builder().objectId(id).uniqueId(getUniqueId(getDevice().getNodeId(), id)).name(name)
+            .icon(icon).unitOfMeasurement(unitOfMeasurement);
+
+    if (entityCategory != null) {
+      sensorBuilder.entityCategory(entityCategory);
+    }
+
+    Sensor s = sensorBuilder.build();
+
+    getDevice().addEntity(s);
+    return s;
   }
 
   protected AbstractSensorEntity getPowerSensor(String objectId, String name) {
@@ -63,6 +84,10 @@ public abstract class DeviceService {
   protected Sensor.SensorBuilder getSensor(Sensor.DeviceClass deviceClass, String id, String name) {
     return Sensor.builder().deviceClass(deviceClass).objectId(id)
         .uniqueId(getUniqueId(device.getNodeId(), id)).name(name);
+  }
+
+  protected Sensor.SensorBuilder getSensor(String id, String name) {
+    return Sensor.builder().objectId(id).uniqueId(getUniqueId(device.getNodeId(), id)).name(name);
   }
 
   public abstract void mapValues(RunningDataDto dataDto);

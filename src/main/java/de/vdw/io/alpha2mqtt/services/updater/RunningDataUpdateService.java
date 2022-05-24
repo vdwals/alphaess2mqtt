@@ -31,9 +31,10 @@ public class RunningDataUpdateService implements Updater {
 
   HomeAssistantMQTTService mqttService;
 
+  @Override
   public void init() {
     long delay = RandomUtils.nextLong(1, 11);
-    long interval = runningDataService.getRefreshRate();
+    long interval = (long) batteryDeviceService.getFrequency();
     log.info("Start scheduling live data in {} seconds with interval {}", delay, interval);
     scheduledExecutorService.scheduleAtFixedRate(this, delay, interval, TimeUnit.SECONDS);
   }
