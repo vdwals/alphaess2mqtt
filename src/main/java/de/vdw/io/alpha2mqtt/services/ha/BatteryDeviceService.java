@@ -34,7 +34,7 @@ public class BatteryDeviceService extends DeviceService {
     super("Alpha ESS", battery.getMbat(), "PV-Batterie",
         String.join("_", battery.getSys_sn(), battery.getMbat()), battery.getSys_name());
 
-    capacity = battery.getUscapacity();
+    capacity = battery.getSurpluscobat();
     frequency = battery.getTrans_frequency();
 
     batteryLoad = getMeasurementSensor(Sensor.DeviceClass.battery, "pv_soc", "Batterie Ladung")
@@ -82,7 +82,7 @@ public class BatteryDeviceService extends DeviceService {
     batteryInput.setValue(pBat > 0 ? 0 : Math.abs(pBat));
     batteryOutput.setValue(pBat > 0 ? pBat : 0);
 
-    batteryLoadEnergy.setValue(getScaledValue(data.getSoc() * capacity * 1000 / 100));
+    batteryLoadEnergy.setValue(getScaledValue(data.getSoc() * capacity * 10));
   }
 
   @Override
