@@ -67,7 +67,8 @@ public class WallBoxDeviceService extends DeviceService {
         .option(ChargingService.ChargingMode.SLOW.name())
         .option(ChargingService.ChargingMode.NORMAL.name())
         .option(ChargingService.ChargingMode.FAST.name())
-        .option(ChargingService.ChargingMode.MAX.name()).icon("mdi:car-select").build();
+        .option(ChargingService.ChargingMode.MAX.name()).icon("mdi:car-select")
+        .entityCategory(AbstractAvailabilityEntity.EntityCategory.config).build();
     getDevice().addEntity(this.chargerMode);
   }
 

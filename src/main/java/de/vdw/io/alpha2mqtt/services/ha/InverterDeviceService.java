@@ -48,18 +48,16 @@ public class InverterDeviceService extends DeviceService {
     vGridPowerIn = getPowerSensor("vGridPowerIn", "virtueller Netzbezug", nodeIdCurrent);
     vGridPowerOut = getPowerSensor("vGridPowerOut", "virtuelle Netzeinspeisung", nodeIdCurrent);
 
-    treeNum =
-        getNumberSensor("treeNum", "Gepflanzte Bäume", "mdi:forest", "Stk", EntityCategory.system);
+    treeNum = getNumberSensor("treeNum", "Gepflanzte Bäume", "mdi:forest", "Stk", null);
 
-    carbonNum = getNumberSensor("carbonNum", "CO2 Einsparung", "mdi:molecule-co2", "kg",
-        EntityCategory.system);
+    carbonNum = getNumberSensor("carbonNum", "CO2 Einsparung", "mdi:molecule-co2", "kg", null);
 
     poinv = getNumberSensor("power_output_inverter", "Power Output Inverter", "mdi:power",
-        Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.system);
+        Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.diagnostic);
     poinv.setValue(battery.getPoinv());
 
     popv = getNumberSensor("power_output_solar_modules", "Power Output Solar Modules", "mdi:power",
-        Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.system);
+        Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.diagnostic);
     popv.setValue(battery.getPopv());
 
     pvPower = getPowerSensor("ppvTotal", "PV Leistung", nodeIdCurrent);

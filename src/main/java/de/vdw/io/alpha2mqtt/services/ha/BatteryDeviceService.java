@@ -65,11 +65,11 @@ public class BatteryDeviceService extends DeviceService {
     getDevice().addEntity(useCapacity);
 
     cobat = getNumberSensor("battery_total_capacity", "Total Battery Capacity", "mdi:battery",
-        Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.system);
+        Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.diagnostic);
     cobat.setValue(battery.getCobat());
 
     surpluscobat = getNumberSensor("battery_usable_capacity", "Usable Battery Capacity",
-        "mdi:battery", Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.system);
+        "mdi:battery", Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.diagnostic);
     surpluscobat.setValue(battery.getSurpluscobat());
   }
 
