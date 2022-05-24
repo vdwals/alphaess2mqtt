@@ -28,7 +28,8 @@ public class InverterDeviceService extends DeviceService {
       pMeterDc, pvToday, pvTotal, startOfToday, popv, poinv;
 
   public InverterDeviceService(BatteryDto battery) {
-    super("Alpha ESS", battery.getMinv(), "PV-Wechselrichter", battery.getSys_sn());
+    super("Alpha ESS", battery.getMinv(), "PV-Wechselrichter",
+        String.join("_", battery.getSys_sn(), battery.getMinv()));
 
     String nodeIdCurrent =
         IdUtils.getDeviceId("Alpha ESS", battery.getMinv(), "PV-Wechselrichter", "2");

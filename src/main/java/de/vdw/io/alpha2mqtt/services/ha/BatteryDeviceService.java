@@ -31,8 +31,8 @@ public class BatteryDeviceService extends DeviceService {
   double frequency;
 
   public BatteryDeviceService(BatteryDto battery) {
-    super("Alpha ESS", battery.getMbat(), "PV-Batterie", battery.getSys_sn(),
-        battery.getSys_name());
+    super("Alpha ESS", battery.getMbat(), "PV-Batterie",
+        String.join("_", battery.getSys_sn(), battery.getMbat()), battery.getSys_name());
 
     capacity = battery.getUscapacity();
     frequency = battery.getTrans_frequency();
