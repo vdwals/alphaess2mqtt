@@ -60,19 +60,14 @@ public class TokenService {
         return null;
       }
 
-      Post loginPost =
-          Http.post(
-              url,
-              settings.getBytes(StandardCharsets.UTF_8),
-              (int) Constants.TIMEOUT,
+      Post loginPost = Http
+          .post(url, settings.getBytes(StandardCharsets.UTF_8), (int) Constants.TIMEOUT,
               (int) Constants.TIMEOUT)
           .header("Accept", Constants.APPLICATION_JSON)
           .header("Content-Type", Constants.APPLICATION_JSON);
 
       if (loginPost.responseCode() != HttpURLConnection.HTTP_OK) {
-        log.error(
-            "Unexpected response code while receiving token {}: {}",
-            loginPost.responseCode(),
+        log.error("Unexpected response code while receiving token {}: {}", loginPost.responseCode(),
             loginPost.responseMessage());
         return null;
       }
@@ -87,13 +82,14 @@ public class TokenService {
 
         TokenDto tokenDto = loginResponseDto.getData();
 
-        validTill =
-            LocalDateTime.parse(tokenDto.getTokenCreateTime(), formatter)
+        token = tokenDto.getAccessToken();
+        validTill = LocalDateTime.parse(tokenDto.getTokenCreateTime(), formatter)
             .plusSeconds(tokenDto.getExpiresIn());
 
         log.debug("Token extracted, expiration time calculated: {}", validTill);
 
-        currentToken = tokenDto.getAccessToken();
+
+        currentToken = token;
 
       } catch (IOException e) {
         log.error("Error receiving token:", e);

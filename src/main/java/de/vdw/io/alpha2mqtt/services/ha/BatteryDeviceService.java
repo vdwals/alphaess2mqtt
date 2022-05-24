@@ -10,10 +10,12 @@ import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.Units;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity;
+import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity.EntityCategory;
 import de.vdw.it.hamqtt.devices.entities.AbstractEntity;
 import de.vdw.it.hamqtt.devices.entities.Number;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Value;
 
 @Singleton
@@ -21,14 +23,19 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = true)
 public class BatteryDeviceService extends DeviceService {
   AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput, batteryLoadEnergy,
-  useCapacity;
+      useCapacity, systemStatus, updateInterval, cobat, surpluscobat;
 
   double capacity;
 
+  @Getter
+  double frequency;
+
   public BatteryDeviceService(BatteryDto battery) {
-    super("Alpha ESS", battery.getMbat(), "PV-Batterie", battery.getSys_sn());
+    super("Alpha ESS", battery.getMbat(), "PV-Batterie", battery.getSys_sn(),
+        battery.getSys_name());
 
     capacity = battery.getUscapacity();
+    frequency = battery.getTrans_frequency();
 
     batteryLoad = getMeasurementSensor(Sensor.DeviceClass.battery, "pv_soc", "Batterie Ladung")
         .unitOfMeasurement(Units.PERCENT.getUnit()).forceUpdate(true).build();
@@ -43,11 +50,27 @@ public class BatteryDeviceService extends DeviceService {
         .build();
     getDevice().addEntity(batteryLoadEnergy);
 
+    systemStatus = getSensor("PV Battery System Status", "bat_system_status")
+        .value(battery.getEms_status()).build();
+    getDevice().addEntity(systemStatus);
+
+    updateInterval = getNumberSensor("bat_system_update_interval", "PV Data Update Interval",
+        "mdi:battery-clock", "s", EntityCategory.diagnostic);
+    updateInterval.setValue(battery.getTrans_frequency());
+
     useCapacity = Number.builder().max(100).min(1).device(getDevice())
         .name("Batteriereserve für Notstrom").objectId("bat_use_cap")
         .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "bat_use_cap"))
         .entityCategory(AbstractAvailabilityEntity.EntityCategory.config).step(1).build();
     getDevice().addEntity(useCapacity);
+
+    cobat = getNumberSensor("battery_total_capacity", "Total Battery Capacity", "mdi:battery",
+        Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.system);
+    cobat.setValue(battery.getCobat());
+
+    surpluscobat = getNumberSensor("battery_usable_capacity", "Usable Battery Capacity",
+        "mdi:battery", Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.system);
+    surpluscobat.setValue(battery.getSurpluscobat());
   }
 
   @Override

@@ -67,7 +67,7 @@ public class ChargingService implements ICommandListener {
     }
 
     // Build post body.
-    ChargingDto chargingDto = getChargingDto();
+    ChargingDto chargingDto = new ChargingDto(batterySn, wallboxSn);
 
     log.debug("System settings received: {}", chargingDto);
 
@@ -87,10 +87,6 @@ public class ChargingService implements ICommandListener {
     log.debug("Charging url called successfully");
     log.trace("Charging url post call response: {}", post.responseMessage());
     return true;
-  }
-
-  private ChargingDto getChargingDto() {
-    return new ChargingDto(batterySn, wallboxSn);
   }
 
   @Override
