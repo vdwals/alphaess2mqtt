@@ -96,6 +96,7 @@ public class SystemDto implements DataDto {
   int peakvalue;
   int fillvalue;
   int delta;
+  int chargingpile_control_open;
   String peak_s1a;
   String peak_e1a;
   String peak_s2a;
@@ -117,4 +118,7 @@ public class SystemDto implements DataDto {
   int ac_tied;
   int soc_50_flag;
   int auto_soccalib_en;
+  String three_unbalance_en;
+  int enable_current_set;
+  int enable_obc_set;
 }
