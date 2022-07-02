@@ -11,9 +11,11 @@ public class WallboxDto {
   int chargingpile_switch;
   int priority;
   int time_charge_1;
+  int time_charge_2;
+  int chargingpile_phase;
   String time_charge_s1;
   String time_charge_e1;
-  int time_charge_2;
+  double max_current;
   String time_charge_s2;
   String time_charge_e2;
   String chargingpile_soft_ver;

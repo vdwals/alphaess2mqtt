@@ -13,7 +13,7 @@ public class Constants {
 
   public static final String START_OF_DAY = "start_of_day";
 
-  private static final String basicUrl = "https://www.alphaess.com/api/";
+  private static final String basicUrl = "https://cloud.alphaess.com/api/";
 
   public static final String loginUrl = basicUrl + "Account/Login";
 
