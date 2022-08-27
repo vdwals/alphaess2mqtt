@@ -1,5 +1,6 @@
 package de.vdw.io.alpha2mqtt.config;
 
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 import lombok.experimental.UtilityClass;
 
@@ -37,4 +38,7 @@ public class Constants {
   public static final String chargingPileId1 = "EV1";
 
   public static final String chargingPileId2 = "EV2";
+
+  public static final DateTimeFormatter formatter =
+      DateTimeFormatter.ofPattern("yyyy/M/d HH:mm:ss");
 }

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import javax.inject.Singleton;
 import org.javalite.http.Http;
 import org.javalite.http.Post;
@@ -27,8 +26,6 @@ public class TokenService {
   private final ObjectMapper objectMapper;
 
   private final Credentials credentials;
-
-  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   private String token;
 
@@ -83,7 +80,7 @@ public class TokenService {
         TokenDto tokenDto = loginResponseDto.getData();
 
         token = tokenDto.getAccessToken();
-        validTill = LocalDateTime.parse(tokenDto.getTokenCreateTime(), formatter)
+        validTill = LocalDateTime.parse(tokenDto.getTokenCreateTime(), Constants.formatter)
             .plusSeconds(tokenDto.getExpiresIn());
 
         log.debug("Token extracted, expiration time calculated: {}", validTill);
