@@ -40,5 +40,5 @@ public class Constants {
   public static final String chargingPileId2 = "EV2";
 
   public static final DateTimeFormatter formatter =
-      DateTimeFormatter.ofPattern("yyyy/M/d HH:mm:ss");
+      DateTimeFormatter.ofPattern("yyyy/M/d H:mm:ss");
 }
