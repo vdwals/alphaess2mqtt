@@ -1,31 +1,12 @@
-# Simple example to explore pure RESTful [ActiveWeb](http://javalite.io/activeweb) possibilities
+# Simple services that polls data from alpha ess cloud and publishes them to an mqtt broker
 
-Related [Blog Article](http://www.productiveedge.com/blog/index.php/exploring-activeweb-pure-restful-possibilities)
+Implemented is currently only the support for basic user authentication for MQTT Broker.
 
-Follow these simple steps to run this app:
+It uses a auto discoverable format for famous [Home Assistant](https://www.home-assistant.io/). For this compatibility, I created a separated project: [HAMQTT](https://bitbucket.org/vdwals/hamqtt/src/main/).
 
-* Create two empty schemas in MySQL DB:
-    * activerest_development
-    * activerest_test
+## How to use
+The project can either be run as Java code using maven or be build to a jar before.
+Additionally, a Dockerfile and a docker-compose configuration are provided where build instructions and environment variables are explained.
+I prefere running it as a Docker container parallel to Home Assistant.
 
-* Modify JDBC connection parameters in:
-    * class app.config.DbConfig
-    * pom.xml
-
-* Run the application
-
-```
-    mvn jetty:run
-```
-
-* The api can be explored using this [Chrome Postman - Rest Client](https://chrome.google.com/webstore/detail/postman-rest-client/fdmmgilgnpjigdojojpjoooidkmcomcm) example [collection](https://www.getpostman.com/collections/acff504b766cde75d1b5), or through basic HTTP calls (e.g. curl)
-
-* API urls:
-    * http://localhost:8080/users
-    	* http://localhost:8080/users/new_form
-    	* http://localhost:8080/users/{user_id}/edit_form
-    * http://localhost:8080/users/{user_id}/tasks
-    
-  
-
- 
+If I have time, I'll convert it to an Home Assistant Addon, too.
