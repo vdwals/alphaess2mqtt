@@ -63,7 +63,7 @@ public class ServiceFactory {
   }
 
   public void init() {
-    cache.getBatteries().stream().forEach(battery -> {
+    cache.getBatteries().forEach(battery -> {
       log.info("Setup devices for {}", battery);
 
       BatteryDeviceService batteryDeviceService = new BatteryDeviceService(battery);
