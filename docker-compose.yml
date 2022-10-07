@@ -11,12 +11,12 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     environment:
-      MQTT.HOST: host
-      MQTT.PASSWORD: password
+      MQTT.HOST: ${MQTT.HOST}
+      MQTT.PASSWORD: ${MQTT.PASSWORD}
       #      MQTT.TOPIC: alpha_test
       #      MQTT.DISCOVERY_TOPIC: test
       #      MQTT.PROTOCOLL: mqtt
-      MQTT.USERNAME: username
-      MQTT.PORT: port
-      ALPHA.USERNAME: user
-      ALPHA.PASSWORD: p@ssword
+      MQTT.USERNAME: ${MQTT.USERNAME}
+      MQTT.PORT: ${MQTT.PORT}
+      ALPHA.USERNAME: ${ALPHA.USERNAME}
+      ALPHA.PASSWORD: ${ALPHA.PASSWORD}
