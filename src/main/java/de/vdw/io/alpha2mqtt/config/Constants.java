@@ -1,6 +1,7 @@
 package de.vdw.io.alpha2mqtt.config;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import lombok.experimental.UtilityClass;
 
@@ -40,5 +41,5 @@ public class Constants {
   public static final String chargingPileId2 = "EV2";
 
   public static final DateTimeFormatter formatter =
-      DateTimeFormatter.ofPattern("yyyy/M/d H:mm:ss");
+      DateTimeFormatter.ofPattern("yyyy/M/d a H:mm:ss").withLocale(Locale.CHINESE);
 }
