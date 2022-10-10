@@ -41,5 +41,5 @@ public class Constants {
   public static final String chargingPileId2 = "EV2";
 
   public static final DateTimeFormatter formatter =
-      DateTimeFormatter.ofPattern("yyyy/M/d a H:mm:ss").withLocale(Locale.CHINESE);
+      DateTimeFormatter.ofPattern("yyyy/M/d ah:mm:ss").localizedBy(Locale.SIMPLIFIED_CHINESE);
 }
