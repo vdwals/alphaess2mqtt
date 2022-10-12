@@ -5,3 +5,4 @@ dependency-reduced-pom.xml
 *.orig
 Instrument.launch
 app.properties
+.env
