@@ -3,6 +3,8 @@ package de.vdw.io.alpha2mqtt;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.models.Cache;
@@ -23,7 +25,24 @@ import lombok.extern.slf4j.Slf4j;
 public class App {
 
   public static void main(String[] args) throws MqttException {
+    log.info("Starting Application");
+
     Map<String, String> environmentVariables = System.getenv();
+
+    if (environmentVariables.containsKey("LOG_LEVEL")) {
+      switch (environmentVariables.get("LOG_LEVEL")) {
+        case "TRACE":
+          Configurator.setRootLevel(Level.TRACE);
+          log.trace("Trace level logging activated");
+          break;
+        case "DEBUG":
+          Configurator.setRootLevel(Level.DEBUG);
+          log.trace("Debug level logging activated");
+          break;
+        default:
+          log.warn("Unexpected value: " + environmentVariables.get("LOG_LEVEL"));
+      }
+    }
 
     Credentials c = new Credentials(environmentVariables.get("ALPHA.USERNAME"),
         environmentVariables.get("ALPHA.PASSWORD"));
