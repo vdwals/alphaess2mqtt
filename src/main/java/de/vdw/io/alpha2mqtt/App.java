@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.Cache;
 import de.vdw.io.alpha2mqtt.models.Credentials;
 import de.vdw.io.alpha2mqtt.services.MqttService;
@@ -44,8 +45,8 @@ public class App {
       }
     }
 
-    Credentials c = new Credentials(environmentVariables.get("ALPHA.USERNAME"),
-        environmentVariables.get("ALPHA.PASSWORD"));
+    Credentials c = new Credentials(environmentVariables.get(Constants.ALPHA_USERNAME),
+        environmentVariables.get(Constants.ALPHA_PASSWORD));
 
     EasyDI ed = new EasyDI();
     ed.bindInstance(EasyDI.class, ed);
@@ -55,12 +56,13 @@ public class App {
 
     log.info("Connect to MQTT-Broker");
     HomeAssistantMQTTService homeAssistantMQTTService = de.vdw.it.hamqtt.utils.ServiceFactory
-        .createHomeAssistantMQTTService(environmentVariables.get("MQTT.HOST"),
-            environmentVariables.get("MQTT.PORT"), environmentVariables.get("MQTT.USERNAME"),
-            environmentVariables.get("MQTT.PASSWORD").toCharArray(),
-            environmentVariables.getOrDefault("MQTT.TOPIC", "alpha_energy"),
-            environmentVariables.getOrDefault("MQTT.DISCOVERY_TOPIC", "homeassistant"),
-            "Alpha ESS Proxy", environmentVariables.getOrDefault("MQTT.PROTOCOLL", "tcp"));
+        .createHomeAssistantMQTTService(environmentVariables.get(Constants.MQTT_HOST),
+            environmentVariables.get(Constants.MQTT_PORT),
+            environmentVariables.get(Constants.MQTT_USERNAME),
+            environmentVariables.get(Constants.MQTT_PASSWORD).toCharArray(),
+            environmentVariables.getOrDefault(Constants.MQTT_TOPIC, "alpha_energy"),
+            environmentVariables.getOrDefault(Constants.MQTT_DISCOVERY_TOPIC, "homeassistant"),
+            "Alpha ESS Proxy", environmentVariables.getOrDefault(Constants.MQTT_PROTOCOLL, "tcp"));
 
     ed.bindInstance(HomeAssistantMQTTService.class, homeAssistantMQTTService);
 
@@ -86,12 +88,12 @@ public class App {
   MqttService mqttService;
 
   public void init() {
-    serviceFactory.init();
+    this.serviceFactory.init();
 
-    mqttService.init();
+    this.mqttService.init();
   }
 
   public void start() {
-    serviceFactory.getUpdateServices().forEach(Updater::init);
+    this.serviceFactory.getUpdateServices().forEach(Updater::init);
   }
 }

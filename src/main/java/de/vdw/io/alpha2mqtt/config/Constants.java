@@ -15,7 +15,7 @@ public class Constants {
 
   public static final String START_OF_DAY = "start_of_day";
 
-  private static final String basicUrl = "https://cloud.alphaess.com/api/";
+  public static final String basicUrl = "https://cloud.alphaess.com/api/";
 
   public static final String loginUrl = basicUrl + "Account/Login";
 
@@ -42,4 +42,36 @@ public class Constants {
 
   public static final DateTimeFormatter formatter =
       DateTimeFormatter.ofPattern("yyyy/M/d ah:mm:ss").localizedBy(Locale.SIMPLIFIED_CHINESE);
+
+  public static final String ALPHA_SIGNATURE = "ALPHA.AUTH_SIGNATURE";
+
+  public static final String ALPHA_TIMESTAMP = "ALPHA.AUTH_TIMESTAMP";
+
+  public static final String AUTH_SIGNATURE_HEADER = "authsignature";
+
+  public static final String AUTH_SIGNATURE_VALUE = System.getenv().getOrDefault(ALPHA_SIGNATURE,
+      "al8e4s13dc9f335861149638562609cd1dd60f441bd656e4c6510a8f1b07ba6bc105605df2bb3c6e81589012bc54cf1f51a04c7453d609d0006a624491a393ed3a30d2ui893ed");
+
+  public static final String AUTH_TIMESTAMP_HEADER = "authsignature";
+
+  public static final String AUTH_TIMESTAMP_VALUE =
+      System.getenv().getOrDefault(ALPHA_TIMESTAMP, "1666023810");
+
+  public static final String ALPHA_PASSWORD = "ALPHA.PASSWORD";
+
+  public static final String ALPHA_USERNAME = "ALPHA.USERNAME";
+
+  public static final String MQTT_PROTOCOLL = "MQTT.PROTOCOLL";
+
+  public static final String MQTT_DISCOVERY_TOPIC = "MQTT.DISCOVERY_TOPIC";
+
+  public static final String MQTT_TOPIC = "MQTT.TOPIC";
+
+  public static final String MQTT_PASSWORD = "MQTT.PASSWORD";
+
+  public static final String MQTT_USERNAME = "MQTT.USERNAME";
+
+  public static final String MQTT_HOST = "MQTT.HOST";
+
+  public static final String MQTT_PORT = "MQTT.PORT";
 }
