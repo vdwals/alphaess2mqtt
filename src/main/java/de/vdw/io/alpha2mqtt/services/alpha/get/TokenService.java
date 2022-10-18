@@ -14,6 +14,7 @@ import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.Credentials;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.TokenDto;
+import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +33,11 @@ public class TokenService {
   private LocalDateTime validTill;
 
   private String getCurrentToken() {
-    if ((token == null) || validTill == null || LocalDateTime.now().isAfter(validTill)) {
+    if ((this.token == null) || (this.validTill == null)
+        || LocalDateTime.now().isAfter(this.validTill))
       return null;
-    }
 
-    return token;
+    return this.token;
   }
 
   @Synchronized
@@ -57,11 +58,9 @@ public class TokenService {
         return null;
       }
 
-      Post loginPost = Http
-          .post(url, settings.getBytes(StandardCharsets.UTF_8), (int) Constants.TIMEOUT,
-              (int) Constants.TIMEOUT)
-          .header("Accept", Constants.APPLICATION_JSON)
-          .header("Content-Type", Constants.APPLICATION_JSON);
+      Post loginPost =
+          RequestUtils.addPostHeader(Http.post(url, settings.getBytes(StandardCharsets.UTF_8),
+              (int) Constants.TIMEOUT, (int) Constants.TIMEOUT));
 
       if (loginPost.responseCode() != HttpURLConnection.HTTP_OK) {
         log.error("Unexpected response code while receiving token {}: {}", loginPost.responseCode(),
