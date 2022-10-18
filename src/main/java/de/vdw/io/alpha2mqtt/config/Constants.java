@@ -43,19 +43,15 @@ public class Constants {
   public static final DateTimeFormatter formatter =
       DateTimeFormatter.ofPattern("yyyy/M/d ah:mm:ss").localizedBy(Locale.SIMPLIFIED_CHINESE);
 
-  public static final String ALPHA_SIGNATURE = "ALPHA.AUTH_SIGNATURE";
-
-  public static final String ALPHA_TIMESTAMP = "ALPHA.AUTH_TIMESTAMP";
-
   public static final String AUTH_SIGNATURE_HEADER = "authsignature";
 
-  public static final String AUTH_SIGNATURE_VALUE = System.getenv().getOrDefault(ALPHA_SIGNATURE,
-      "al8e4s13dc9f335861149638562609cd1dd60f441bd656e4c6510a8f1b07ba6bc105605df2bb3c6e81589012bc54cf1f51a04c7453d609d0006a624491a393ed3a30d2ui893ed");
+  public static final String AUTH_SIGNATURE_START = "al8e4s";
 
-  public static final String AUTH_TIMESTAMP_HEADER = "authsignature";
+  public static final String AUTH_SIGNATURE_HASH = "LSZYDA95JVFQKV7PQNODZRDZIS4EDS0EED8BCWSS";
 
-  public static final String AUTH_TIMESTAMP_VALUE =
-      System.getenv().getOrDefault(ALPHA_TIMESTAMP, "1666023810");
+  public static final String AUTH_SIGNATURE_END = "ui893ed";
+
+  public static final String AUTH_TIMESTAMP_HEADER = "authtimestamp";
 
   public static final String ALPHA_PASSWORD = "ALPHA.PASSWORD";
 

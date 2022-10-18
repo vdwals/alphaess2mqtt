@@ -1,5 +1,7 @@
 package de.vdw.io.alpha2mqtt.utils;
 
+import java.util.Date;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.javalite.http.Post;
 import org.javalite.http.Request;
 import de.vdw.io.alpha2mqtt.config.Constants;
@@ -22,8 +24,15 @@ public final class RequestUtils {
   }
 
   private static <T extends Request<T>> T addSignatureHeader(T request) {
-    return request.header(Constants.AUTH_SIGNATURE_HEADER, Constants.AUTH_SIGNATURE_VALUE)
-        .header(Constants.AUTH_TIMESTAMP_HEADER, Constants.AUTH_TIMESTAMP_VALUE)
+    String timestamp = String.valueOf(new Date().getTime() / 1000);
+
+    String formatHex = DigestUtils.sha512Hex(Constants.AUTH_SIGNATURE_HASH + timestamp);
+
+    String signature = Constants.AUTH_SIGNATURE_START + formatHex + Constants.AUTH_SIGNATURE_END;
+
+    return request.header(Constants.AUTH_SIGNATURE_HEADER, signature)
+        .header(Constants.AUTH_TIMESTAMP_HEADER, timestamp)
         .header("Accept", Constants.APPLICATION_JSON);
   }
+
 }
