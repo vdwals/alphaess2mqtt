@@ -50,7 +50,7 @@ public class BatteryDeviceService extends DeviceService {
         .build();
     getDevice().addEntity(batteryLoadEnergy);
 
-    systemStatus = getSensor("PV Battery System Status", "bat_system_status")
+    systemStatus = getSensor("bat_system_status", "PV Battery System Status")
         .value(battery.getEms_status()).build();
     getDevice().addEntity(systemStatus);
 
