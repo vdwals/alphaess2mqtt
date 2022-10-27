@@ -4,28 +4,34 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.RandomUtils;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.services.EnvironmentService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.SummeryService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
+@Value
 public class SummeryDataUpdateService implements Updater {
 
-  private final InverterDeviceService inverterDeviceService;
+  InverterDeviceService inverterDeviceService;
 
-  private final SummeryService summeryService;
+  SummeryService summeryService;
 
-  private final ScheduledExecutorService scheduledExecutorService;
+  ScheduledExecutorService scheduledExecutorService;
 
-  private final HomeAssistantMQTTService mqttService;
+  HomeAssistantMQTTService mqttService;
+
+  EnvironmentService environmentService;
 
   @Override
   public void init() {
     long delay = RandomUtils.nextLong(1, 11);
-    long interval = summeryService.getRefreshRate();
+
+    long interval = Math.max(summeryService.getRefreshRate(), environmentService.getIntervall());
     log.info("Start scheduling summary data in {} seconds with interval {}", delay, interval);
     scheduledExecutorService.scheduleAtFixedRate(this, delay, interval, TimeUnit.SECONDS);
   }
