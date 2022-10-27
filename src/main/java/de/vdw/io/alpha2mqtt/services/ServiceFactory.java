@@ -43,6 +43,8 @@ public class ServiceFactory {
 
   ScheduledExecutorService scheduledExecutorService;
 
+  EnvironmentService environmentService;
+
   Map<BatteryDto, BatteryDeviceService> batteryDeviceServices = new HashMap<>();
 
   Map<BatteryDto, InverterDeviceService> inverterDeviceServices = new HashMap<>();
@@ -79,12 +81,14 @@ public class ServiceFactory {
       log.info("Setup device data mapping services for {}", battery);
       RunningDataService rds = new RunningDataService(objectMapper, tokenService, battery);
       RunningDataUpdateService rdus = new RunningDataUpdateService(batteryDeviceService,
-          inverterDeviceService, wallBoxDeviceServices, scheduledExecutorService, rds, mqttService);
+          inverterDeviceService, wallBoxDeviceServices, scheduledExecutorService, rds, mqttService,
+          environmentService);
       updateServices.add(rdus);
 
       SummeryService summeryService = new SummeryService(objectMapper, tokenService);
-      SummeryDataUpdateService summeryDataUpdateService = new SummeryDataUpdateService(
-          inverterDeviceService, summeryService, scheduledExecutorService, mqttService);
+      SummeryDataUpdateService summeryDataUpdateService =
+          new SummeryDataUpdateService(inverterDeviceService, summeryService,
+              scheduledExecutorService, mqttService, environmentService);
       updateServices.add(summeryDataUpdateService);
 
       SettingService settingService = new SettingService(objectMapper, tokenService,
@@ -102,7 +106,7 @@ public class ServiceFactory {
 
         SettingsUpdateService settingsUpdateService =
             new SettingsUpdateService(wallBoxDeviceService, batteryDeviceService,
-                scheduledExecutorService, settingService, mqttService);
+                scheduledExecutorService, settingService, mqttService, environmentService);
         updateServices.add(settingsUpdateService);
       });
 

@@ -5,6 +5,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.RandomUtils;
 import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.services.EnvironmentService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.RunningDataService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
@@ -31,10 +32,14 @@ public class RunningDataUpdateService implements Updater {
 
   HomeAssistantMQTTService mqttService;
 
+  EnvironmentService environmentService;
+
   @Override
   public void init() {
     long delay = RandomUtils.nextLong(1, 11);
-    long interval = (long) batteryDeviceService.getFrequency();
+
+    long interval =
+        Math.max((long) batteryDeviceService.getFrequency(), environmentService.getIntervall());
     log.info("Start scheduling live data in {} seconds with interval {}", delay, interval);
     scheduledExecutorService.scheduleAtFixedRate(this, delay, interval, TimeUnit.SECONDS);
   }
