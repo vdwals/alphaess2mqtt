@@ -52,22 +52,4 @@ public class Constants {
   public static final String AUTH_SIGNATURE_END = "ui893ed";
 
   public static final String AUTH_TIMESTAMP_HEADER = "authtimestamp";
-
-  public static final String ALPHA_PASSWORD = "ALPHA.PASSWORD";
-
-  public static final String ALPHA_USERNAME = "ALPHA.USERNAME";
-
-  public static final String MQTT_PROTOCOLL = "MQTT.PROTOCOLL";
-
-  public static final String MQTT_DISCOVERY_TOPIC = "MQTT.DISCOVERY_TOPIC";
-
-  public static final String MQTT_TOPIC = "MQTT.TOPIC";
-
-  public static final String MQTT_PASSWORD = "MQTT.PASSWORD";
-
-  public static final String MQTT_USERNAME = "MQTT.USERNAME";
-
-  public static final String MQTT_HOST = "MQTT.HOST";
-
-  public static final String MQTT_PORT = "MQTT.PORT";
 }
