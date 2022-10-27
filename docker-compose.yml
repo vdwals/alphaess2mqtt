@@ -6,6 +6,7 @@ services:
     restart: always
     build:
       context: .
+    #     dockerfile: Dockerfile_x86
     image: alpha_ess_2_mqtt
     volumes:
       - /etc/localtime:/etc/localtime:ro
