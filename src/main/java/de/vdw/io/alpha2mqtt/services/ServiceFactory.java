@@ -85,7 +85,7 @@ public class ServiceFactory {
           environmentService);
       updateServices.add(rdus);
 
-      SummeryService summeryService = new SummeryService(objectMapper, tokenService);
+      SummeryService summeryService = new SummeryService(objectMapper, tokenService, battery);
       SummeryDataUpdateService summeryDataUpdateService =
           new SummeryDataUpdateService(inverterDeviceService, summeryService,
               scheduledExecutorService, mqttService, environmentService);
