@@ -2,17 +2,15 @@ package de.vdw.io.alpha2mqtt.services.alpha.get;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import org.javalite.common.JsonHelper;
+import org.javalite.http.Get;
 import org.javalite.http.Http;
-import org.javalite.http.Post;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.config.Constants;
+import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
-import de.vdw.io.alpha2mqtt.models.api.SummaryRequestDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import lombok.EqualsAndHashCode;
@@ -23,11 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @EqualsAndHashCode(callSuper = true)
 public class SummeryService extends AlphaService<SummeryDto> {
-
+  String sn;
   DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-  public SummeryService(ObjectMapper objectMapper, TokenService tokenService) {
+  public SummeryService(ObjectMapper objectMapper, TokenService tokenService, BatteryDto battery) {
     super(objectMapper, tokenService);
+
+    sn = battery.getSys_sn();
   }
 
   @Override
@@ -37,30 +37,22 @@ public class SummeryService extends AlphaService<SummeryDto> {
 
   @Override
   public SummeryDto requestNewData(String token, LocalDateTime now) {
-    String url = Constants.summeryUrl;
+    String url = String.format(Constants.summeryUrl, sn, formatter.format(now));
 
-    SummaryRequestDto requestDto =
-        SummaryRequestDto.builder().showLoading(true).tday(now.format(formatter)).build();
+    log.debug("Get summary request");
+    log.trace("URL: " + url);
 
-    String payload = JsonHelper.toJsonString(requestDto);
+    Get summary =
+        RequestUtils.addHeader(Http.get(url, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT)
+            .header("Content-Type", Constants.APPLICATION_JSON), token);
 
-    log.debug("Posting summary request");
-    log.trace("Payload: {}", payload);
-
-    Post summaryPost =
-        RequestUtils
-            .addPostHeader(
-                Http.post(url, payload.getBytes(StandardCharsets.UTF_8), (int) Constants.TIMEOUT,
-                    (int) Constants.TIMEOUT).header("Content-Type", Constants.APPLICATION_JSON),
-                token);
-
-    if (summaryPost.responseCode() != HttpURLConnection.HTTP_OK) {
+    if (summary.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error("Unexpected response code while receiving summary data {}: {}",
-          summaryPost.responseCode(), summaryPost.responseMessage());
+          summary.responseCode(), summary.responseMessage());
       return null;
     }
 
-    String summaryResponse = summaryPost.text();
+    String summaryResponse = summary.text();
     try {
       ResponseDto<SummeryDto> summaryResponseDto =
           getObjectMapper().readValue(summaryResponse, new TypeReference<>() {});

@@ -19,7 +19,8 @@ public class Constants {
 
   public static final String loginUrl = basicUrl + "Account/Login";
 
-  public static final String summeryUrl = basicUrl + "ESS/SticsSummeryDataForCustomer";
+  public static final String summeryUrl =
+      basicUrl + "ESS/SticsSummeryDataForCustomer?sn=%s&tday=%s&showLoading=true";
 
   public static final String setSettingUrl = basicUrl + "Account/CustomUseESSSetting";
 
