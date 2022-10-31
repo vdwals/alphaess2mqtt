@@ -48,7 +48,8 @@ public class Constants {
 
   public static final String AUTH_SIGNATURE_START = "al8e4s";
 
-  public static final String AUTH_SIGNATURE_HASH = "LSZYDA95JVFQKV7PQNODZRDZIS4EDS0EED8BCWSS";
+  public static final String AUTH_SIGNATURE_HASH =
+      "LS885ZYDA95JVFQKUIUUUV7PQNODZRDZIS4ERREDS0EED8BCWSS";
 
   public static final String AUTH_SIGNATURE_END = "ui893ed";
 

@@ -7,7 +7,7 @@ import lombok.Value;
 @Builder
 public class ResponseDto<P> {
   int code;
-  String info;
+  String info, exMessageInfo;
 
   P data;
 }
