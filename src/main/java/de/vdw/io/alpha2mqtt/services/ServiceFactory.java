@@ -100,8 +100,8 @@ public class ServiceFactory {
 
       wallBoxDeviceServices.forEach(wallBoxDeviceService -> {
         ChargingService chargingService =
-            new ChargingService(battery.getSys_sn(), wallBoxDeviceService.getSn(), settingService,
-                tokenService, wallBoxDeviceService, mqttService);
+            new ChargingService(objectMapper, battery.getSys_sn(), wallBoxDeviceService.getSn(),
+                settingService, tokenService, wallBoxDeviceService, mqttService);
         commandServices.add(chargingService);
 
         SettingsUpdateService settingsUpdateService =

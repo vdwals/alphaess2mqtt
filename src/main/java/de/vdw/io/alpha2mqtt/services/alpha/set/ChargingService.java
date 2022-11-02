@@ -1,5 +1,6 @@
 package de.vdw.io.alpha2mqtt.services.alpha.set;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -8,7 +9,10 @@ import org.apache.commons.lang3.EnumUtils;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Http;
 import org.javalite.http.Post;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.config.Constants;
+import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
@@ -44,6 +48,8 @@ public class ChargingService implements ICommandListener {
 
     final int mode;
   }
+
+  private final ObjectMapper objectMapper;
 
   String batterySn, wallboxSn;
   SettingService settingService;
@@ -84,9 +90,25 @@ public class ChargingService implements ICommandListener {
       return false;
     }
 
+    String response = post.text();
+
     log.debug("Charging url called successfully");
-    log.trace("Charging url post call response: {}", post.responseMessage());
-    return true;
+    log.trace("Charging url post call response: {}", response);
+
+    try {
+      ResponseDto<String> responseDto =
+          getObjectMapper().readValue(response, new TypeReference<>() {});
+
+      if (responseDto.getCode() == HttpURLConnection.HTTP_OK) {
+        log.trace("Charging url post call response: {}", responseDto);
+        return true;
+      }
+      log.warn("Charging url post call response: {}", responseDto);
+
+    } catch (IOException e) {
+      log.error("Could not parse response.", e);
+    }
+    return false;
   }
 
   @Override
