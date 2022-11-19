@@ -31,7 +31,8 @@ public class Constants {
 
   public static final String stopCharginUrl = basicUrl + "ESS/StopCharging";
 
-  public static final String dataUrl = basicUrl + "ESS/GetSecondDataBySn?sys_sn=%s&noLoading=true";
+  public static final String dataUrl =
+      basicUrl + "ESS/GetLastPowerDataBySN?sys_sn=%s&noLoading=true";
 
   public static final String batteriesUrl = basicUrl + "Account/GetCustomMenuESSlist";
 
