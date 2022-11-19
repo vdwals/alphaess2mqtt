@@ -1,6 +1,9 @@
 package de.vdw.io.alpha2mqtt.models.api;
 
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.Builder;
+import lombok.Singular;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
@@ -44,4 +47,8 @@ public class RunningDataDto implements DataDto {
   String uploadtime;
   double varac;
   double vardc;
+
+  @JsonAnySetter
+  @Singular("any")
+  Map<String, String> properties;
 }
