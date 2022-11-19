@@ -151,6 +151,7 @@ public class SystemService extends AlphaService<List<BatteryDto>> {
 
     } catch (IOException e) {
       log.error("Error receiving system setting:", e);
+      log.error("Parsing error for SystemDto: {}", listResponse);
       return;
     }
 

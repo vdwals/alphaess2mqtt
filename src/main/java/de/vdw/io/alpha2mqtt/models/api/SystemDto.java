@@ -1,6 +1,9 @@
 package de.vdw.io.alpha2mqtt.models.api;
 
 import java.util.List;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import lombok.Singular;
 import lombok.Value;
 
 @Value
@@ -121,4 +124,9 @@ public class SystemDto implements DataDto {
   String ups1;
   String ups2;
   int vpp_mode_jp;
+  int upsReserve;
+
+  @JsonAnySetter
+  @Singular("any")
+  Map<String, String> properties;
 }
