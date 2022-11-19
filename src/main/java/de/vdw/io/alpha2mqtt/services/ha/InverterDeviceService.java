@@ -3,11 +3,11 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 import static de.vdw.it.hamqtt.devices.Units.WATT;
 import java.time.LocalDate;
-import javax.inject.Singleton;
 import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.models.api.PowerDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.Units;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity.EntityCategory;
@@ -18,9 +18,14 @@ import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-@Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)
+/**
+ * Class for inverter device and its entities.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public class InverterDeviceService extends DeviceService {
 
   AbstractEntity gridPower, gridPowerIn, gridPowerOut, powerConsumption, selfConsumption,
@@ -98,30 +103,31 @@ public class InverterDeviceService extends DeviceService {
   }
 
   @Override
-  public void mapValues(RunningDataDto data) {
+  public boolean mapValues(PowerDataDto data) {
     double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
 
-    gridPower.setValue(totalGridPower);
-    powerConsumption.setValue(
+    boolean anyChange = gridPower.setValue(totalGridPower);
+    anyChange |= powerConsumption.setValue(
         totalGridPower + data.getPpv1() + data.getPpv2() + data.getPmeter_dc() + data.getPbat());
 
     double gridIn = totalGridPower < 0 ? 0 : totalGridPower;
-    gridPowerIn.setValue(gridIn);
+    anyChange |= gridPowerIn.setValue(gridIn);
     double gridOut = totalGridPower < 0 ? Math.abs(totalGridPower) : 0;
-    gridPowerOut.setValue(gridOut);
+    anyChange |= gridPowerOut.setValue(gridOut);
 
     double pBat = data.getPbat();
     double batteryIn = pBat > 0 ? 0 : Math.abs(pBat);
-    vGridPowerOut.setValue(batteryIn + gridOut);
+    anyChange |= vGridPowerOut.setValue(batteryIn + gridOut);
     double batteryOut = pBat > 0 ? pBat : 0;
-    vGridPowerIn.setValue(batteryOut + gridIn);
+    anyChange |= vGridPowerIn.setValue(batteryOut + gridIn);
 
-    pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
+    anyChange |= pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
 
-    ppv1.setValue(data.getPpv1());
-    ppv2.setValue(data.getPpv2());
+    anyChange |= ppv1.setValue(data.getPpv1());
+    anyChange |= ppv2.setValue(data.getPpv2());
 
-    pMeterDc.setValue(data.getPmeter_dc());
+    anyChange |= pMeterDc.setValue(data.getPmeter_dc());
+    return anyChange;
   }
 
   @Override
@@ -134,5 +140,10 @@ public class InverterDeviceService extends DeviceService {
     anyChange |= pvTotal.setValue(data.getEpvtotal());
     anyChange |= startOfToday.setValue(LocalDate.now().atStartOfDay());
     return anyChange;
+  }
+
+  @Override
+  public boolean mapValues(SystemDto dataDto) {
+    return false;
   }
 }

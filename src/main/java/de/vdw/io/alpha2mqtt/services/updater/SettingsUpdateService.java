@@ -7,16 +7,22 @@ import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.services.EnvironmentService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.SettingService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
-import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
+/**
+ * Class for updating devices related to settings by calling the API at fixed rates.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public class SettingsUpdateService implements Updater {
 
-  WallBoxDeviceService wallboxDeviceService;
+  ChargingPileDeviceService wallboxDeviceService;
 
   BatteryDeviceService batteryDeviceService;
 

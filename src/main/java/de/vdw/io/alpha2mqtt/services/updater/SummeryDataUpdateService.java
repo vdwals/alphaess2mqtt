@@ -8,13 +8,17 @@ import de.vdw.io.alpha2mqtt.services.EnvironmentService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.SummeryService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
-import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
 @Value
+/**
+ * Class for updating summary data and related devices by calling the API at fixes rates.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public class SummeryDataUpdateService implements Updater {
 
   InverterDeviceService inverterDeviceService;

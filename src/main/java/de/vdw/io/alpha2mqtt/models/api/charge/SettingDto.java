@@ -1,6 +1,6 @@
 package de.vdw.io.alpha2mqtt.models.api.charge;
 
-import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
+import de.vdw.io.alpha2mqtt.models.api.ChargingPileDto;
 import lombok.Data;
 
 import java.util.List;
@@ -92,7 +92,7 @@ public class SettingDto {
   int gc_rate_percent;
   int chargingpile;
   String currentsetting;
-  List<WallboxDto> charging_pile_list;
+  List<ChargingPileDto> charging_pile_list;
   int peak_fill_en;
   int peakvalue;
   int fillvalue;
@@ -135,16 +135,16 @@ public class SettingDto {
   String system_id;
   String languageCode = "de-DE";
 
-  public void setWallbox(WallboxDto wallboxDto) {
-    chargingpile_id = wallboxDto.getChargingpile_id();
-    chargingpile_sn = wallboxDto.getChargingpile_sn();
-    time_charge_1 = wallboxDto.getTime_charge_1();
-    time_charge_2 = wallboxDto.getTime_charge_2();
-    time_charge_s1 = wallboxDto.getTime_charge_s1();
-    time_charge_e1 = wallboxDto.getTime_charge_e1();
-    time_charge_s2 = wallboxDto.getTime_charge_s2();
-    time_charge_e2 = wallboxDto.getTime_charge_e2();
-    chargingpile_switch = wallboxDto.getChargingpile_switch();
-    priority = wallboxDto.getPriority();
+  public void setWallbox(ChargingPileDto chargingPileDto) {
+    chargingpile_id = chargingPileDto.getChargingpile_id();
+    chargingpile_sn = chargingPileDto.getChargingpile_sn();
+    time_charge_1 = chargingPileDto.getTime_charge_1();
+    time_charge_2 = chargingPileDto.getTime_charge_2();
+    time_charge_s1 = chargingPileDto.getTime_charge_s1();
+    time_charge_e1 = chargingPileDto.getTime_charge_e1();
+    time_charge_s2 = chargingPileDto.getTime_charge_s2();
+    time_charge_e2 = chargingPileDto.getTime_charge_e2();
+    chargingpile_switch = chargingPileDto.getChargingpile_switch();
+    priority = chargingPileDto.getPriority();
   }
 }

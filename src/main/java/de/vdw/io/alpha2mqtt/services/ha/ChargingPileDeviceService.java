@@ -3,13 +3,13 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 import static de.vdw.it.hamqtt.devices.Payload.OFF;
 import static de.vdw.it.hamqtt.devices.Payload.ON;
-import javax.inject.Singleton;
 import de.vdw.io.alpha2mqtt.config.Constants;
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.models.ChargingPileId;
+import de.vdw.io.alpha2mqtt.models.api.ChargingPileDto;
+import de.vdw.io.alpha2mqtt.models.api.PowerDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
-import de.vdw.io.alpha2mqtt.models.api.WallboxDto;
-import de.vdw.io.alpha2mqtt.services.alpha.set.ChargingService;
+import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity;
 import de.vdw.it.hamqtt.devices.entities.AbstractCommandEntity;
@@ -22,22 +22,28 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-@Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
-public class WallBoxDeviceService extends DeviceService {
+/**
+ * Class for charging pile device
+ *
+ * @author Dennis van der Wals
+ *
+ */
+public class ChargingPileDeviceService extends DeviceService {
 
   AbstractEntity chargeEnergy, chargePower, chargeState, plugState, pluggedCarState;
   AbstractCommandEntity charger, chargerMode;
 
-  String id, sn;
+  ChargingPileId id;
+  String sn;
 
-  public WallBoxDeviceService(WallboxDto wallbox) {
+  public ChargingPileDeviceService(ChargingPileDto wallbox) {
     super("Alpha ESS", "SMILE-EVCT11", "SMILE Wallbox", wallbox.getChargingpile_sn(),
         wallbox.getChargingpile_id());
 
-    id = wallbox.getChargingpile_id();
+    id = ChargingPileId.valueOf(wallbox.getChargingpile_id().toUpperCase());
     sn = wallbox.getChargingpile_sn();
 
     this.chargePower = getPowerSensor("chargePower", "Ladeleistung");
@@ -83,36 +89,7 @@ public class WallBoxDeviceService extends DeviceService {
     return binarySensor;
   }
 
-  @Override
-  public void mapValues(RunningDataDto dataDto) {
-
-    double wallBoxPower = switch (id) {
-      case Constants.chargingPileId1 -> dataDto.getEv1_power();
-      case Constants.chargingPileId2 -> dataDto.getEv2_power();
-      default -> throw new IllegalArgumentException("Unexpected value: " + id);
-    };
-
-    double totalAvailablePower =
-        dataDto.getPmeter_l1() + dataDto.getPmeter_l2() + dataDto.getPmeter_l3()
-            + dataDto.getPmeter_dc() + dataDto.getPpv1() + dataDto.getPpv2() + dataDto.getPbat();
-
-    if (totalAvailablePower > 0 && wallBoxPower > 0 && totalAvailablePower < wallBoxPower) {
-      log.warn(
-          "Wallbox power {} W exceeds total available power of {} W. Fixing by recalculating wallbox power",
-          wallBoxPower, totalAvailablePower);
-
-      wallBoxPower = Math.max(
-          Math.min(wallBoxPower, wallBoxPower - 2 * Math.abs(totalAvailablePower - wallBoxPower)),
-          0.0);
-    }
-
-    this.chargePower.setValue(wallBoxPower);
-    this.chargeEnergy.setValue(switch (id) {
-      case Constants.chargingPileId1 -> dataDto.getEv1_chgenergy_real();
-      case Constants.chargingPileId2 -> dataDto.getEv2_chgenergy_real();
-      default -> throw new IllegalArgumentException("Unexpected value: " + id);
-    });
-
+  public void mapValues(Integer mode) {
     // 1: Nicht angeschlossen
     // 2: Angeschlossen, nicht laden
     // 3: Laden
@@ -125,11 +102,6 @@ public class WallBoxDeviceService extends DeviceService {
     this.plugState.setValue(OFF);
     this.pluggedCarState.setValue(OFF);
 
-    int mode = switch (id) {
-      case Constants.chargingPileId1 -> dataDto.getEv1_mode();
-      case Constants.chargingPileId2 -> dataDto.getEv2_mode();
-      default -> throw new IllegalArgumentException("Unexpected value: " + id);
-    };
     switch (mode) {
       case 1:
         break;
@@ -147,10 +119,50 @@ public class WallBoxDeviceService extends DeviceService {
   }
 
   @Override
+  public boolean mapValues(PowerDataDto dataDto) {
+
+    double wallBoxPower = switch (id) {
+      case EV1 -> dataDto.getEv1_power();
+      case EV2 -> dataDto.getEv2_power();
+      default -> throw new IllegalArgumentException("Unexpected value: " + id);
+    };
+
+    double totalAvailablePower =
+        dataDto.getPmeter_l1() + dataDto.getPmeter_l2() + dataDto.getPmeter_l3()
+            + dataDto.getPmeter_dc() + dataDto.getPpv1() + dataDto.getPpv2() + dataDto.getPbat();
+
+    if (totalAvailablePower > 0 && wallBoxPower > 0 && totalAvailablePower < wallBoxPower) {
+      log.warn(
+          "Wallbox power {} W exceeds total available power of {} W. Fixing by recalculating wallbox power",
+          wallBoxPower, totalAvailablePower);
+
+      wallBoxPower = Math.max(
+          Math.min(wallBoxPower, wallBoxPower - 2 * Math.abs(totalAvailablePower - wallBoxPower)),
+          0.0);
+    }
+
+    boolean anyChange = this.chargePower.setValue(wallBoxPower);
+    anyChange |= this.chargeEnergy.setValue(switch (id) {
+      case EV1 -> dataDto.getEv1_chgenergy_real();
+      case EV2 -> dataDto.getEv2_chgenergy_real();
+      default -> throw new IllegalArgumentException("Unexpected value: " + id);
+    });
+
+    if (wallBoxPower > 0) {
+      anyChange |= this.charger.setValue(ON);
+      anyChange |= this.chargeState.setValue(ON);
+      anyChange |= this.plugState.setValue(ON);
+      anyChange |= this.pluggedCarState.setValue(ON);
+    }
+    return anyChange;
+  }
+
+  @Override
   public boolean mapValues(SummeryDto dataDto) {
     return false;
   }
 
+  @Override
   public boolean mapValues(SystemDto dataDto) {
     ChargingService.ChargingMode chargingMode =
         ChargingService.ChargingMode.chargingModeByValue(dataDto.getChargingmode());

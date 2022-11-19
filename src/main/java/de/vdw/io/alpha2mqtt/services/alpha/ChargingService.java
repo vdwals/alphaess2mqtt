@@ -1,8 +1,9 @@
-package de.vdw.io.alpha2mqtt.services.alpha.set;
+package de.vdw.io.alpha2mqtt.services.alpha;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.EnumUtils;
@@ -12,13 +13,16 @@ import org.javalite.http.Post;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.config.Constants;
+import de.vdw.io.alpha2mqtt.models.ChargingPileId;
 import de.vdw.io.alpha2mqtt.models.api.ResponseDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.ChargingDto;
+import de.vdw.io.alpha2mqtt.models.api.charge.ChargingPileDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
+import de.vdw.io.alpha2mqtt.services.alpha.get.AlphaService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.SettingService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.TokenService;
-import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import de.vdw.it.hamqtt.ICommandListener;
@@ -26,15 +30,30 @@ import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.Payload;
 import de.vdw.it.hamqtt.devices.entities.AbstractCommandEntity;
 import de.vdw.it.hamqtt.utils.TopicUtils;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
-@Value
 @Slf4j
-public class ChargingService implements ICommandListener {
+@Value
+@EqualsAndHashCode(callSuper = true)
+/**
+ * Command listener and state service for Charging Pile related API.
+ *
+ * @author Dennis van der Wals
+ *
+ */
+public class ChargingService extends AlphaService<Integer> implements ICommandListener {
+
   @RequiredArgsConstructor
+  /**
+   * Available charging modes
+   *
+   * @author Dennis van der Wals
+   *
+   */
   public enum ChargingMode {
     SLOW(1), NORMAL(2), FAST(3), MAX(4);
 
@@ -49,15 +68,37 @@ public class ChargingService implements ICommandListener {
     final int mode;
   }
 
-  private final ObjectMapper objectMapper;
-
-  String batterySn, wallboxSn;
+  byte[] chargingDto, chargingPileDto;
   SettingService settingService;
   TokenService tokenService;
-  WallBoxDeviceService wallboxDeviceService;
+  ChargingPileDeviceService wallboxDeviceService;
 
   HomeAssistantMQTTService mqttService;
 
+  public ChargingService(ObjectMapper objectMapper, String batterySn, String wallboxSn,
+      SettingService settingService, TokenService tokenService,
+      ChargingPileDeviceService chargingPileDeviceService, HomeAssistantMQTTService mqttService,
+      ChargingPileId chargingPileId) {
+    super(objectMapper, tokenService);
+
+    this.settingService = settingService;
+    this.tokenService = tokenService;
+    this.wallboxDeviceService = chargingPileDeviceService;
+    this.mqttService = mqttService;
+
+    chargingDto = JsonHelper.toJsonString(new ChargingDto(batterySn, wallboxSn))
+        .getBytes(StandardCharsets.UTF_8);
+    chargingPileDto = JsonHelper.toJsonString(new ChargingPileDto(chargingPileId, batterySn))
+        .getBytes(StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Common method to call the charging API to start/stop charging. Takes care of post body and
+   * token.
+   *
+   * @param url URL to call
+   * @return Success of calling the URL
+   */
   private boolean callChargingUrl(String url) {
     if (url == null) {
       log.error("No url available for changing process");
@@ -72,17 +113,10 @@ public class ChargingService implements ICommandListener {
       return false;
     }
 
-    // Build post body.
-    ChargingDto chargingDto = new ChargingDto(batterySn, wallboxSn);
-
-    log.debug("System settings received: {}", chargingDto);
-
     // Post charging command.
-    String payload = JsonHelper.toJsonString(chargingDto);
     log.debug("Calling charging url {}", url);
-    log.trace("With payload: {}", payload);
-    Post post = RequestUtils.addPostHeader(Http.post(url, payload.getBytes(StandardCharsets.UTF_8),
-        (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
+    Post post = RequestUtils.addPostHeader(
+        Http.post(url, chargingDto, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error("Charging not started. Code: {}, Message: {}", post.responseCode(),
@@ -114,6 +148,11 @@ public class ChargingService implements ICommandListener {
   @Override
   public List<Device> getDevices() {
     return List.of(wallboxDeviceService.getDevice());
+  }
+
+  @Override
+  public long getRefreshRate() {
+    return 30;
   }
 
   @Override
@@ -167,6 +206,47 @@ public class ChargingService implements ICommandListener {
     }
   }
 
+  @Override
+  protected Integer requestNewData(String token, LocalDateTime now) {
+    String url = String.format(Constants.chargingStateUpdateUrl);
+
+    Post dataGet = RequestUtils.addPostHeader(
+        Http.post(url, chargingPileDto, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
+    if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
+      log.error("Unexpected response code while receiving vharging data {}: {}",
+          dataGet.responseCode(), dataGet.responseMessage());
+      return null;
+    }
+
+    String dataResponse = dataGet.text();
+
+    try {
+      ResponseDto<Integer> value =
+          getObjectMapper().readValue(dataResponse, new TypeReference<>() {});
+
+      if (value.getCode() != HttpURLConnection.HTTP_OK) {
+        log.error("Response: {}", dataResponse);
+        return null;
+      }
+
+      log.trace("Response: {}", value);
+
+      return value.getData();
+
+    } catch (IOException e) {
+      log.error("Error receiving charging data:", e);
+      log.error("Response: {}", dataResponse);
+      return null;
+    }
+  }
+
+  /**
+   * Method to change the charging mode via settings service. Retrieves current system settings and
+   * adapts the values. Sends the updates to the API.
+   *
+   * @param mode Charging mode to set
+   * @return success of mode change
+   */
   private boolean setChargingMode(ChargingMode mode) {
     log.debug("Setting charging mode to {}", mode);
 
@@ -193,10 +273,20 @@ public class ChargingService implements ICommandListener {
     return modeSet;
   }
 
+  /**
+   * Call API to start charging.
+   *
+   * @return success of API call
+   */
   private boolean startCharging() {
     return callChargingUrl(Constants.startCharginUrl);
   }
 
+  /**
+   * Call API to stop charging.
+   *
+   * @return success of API call
+   */
   private boolean stopCharging() {
     return callChargingUrl(Constants.stopCharginUrl);
   }

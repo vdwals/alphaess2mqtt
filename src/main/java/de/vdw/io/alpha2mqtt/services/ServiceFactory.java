@@ -1,28 +1,28 @@
 package de.vdw.io.alpha2mqtt.services;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.inject.Singleton;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.vdw.io.alpha2mqtt.models.Cache;
 import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
-import de.vdw.io.alpha2mqtt.services.alpha.get.RunningDataService;
+import de.vdw.io.alpha2mqtt.models.api.SystemIdDto;
+import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
+import de.vdw.io.alpha2mqtt.services.alpha.get.PowerDataService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.SettingService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.SummeryService;
+import de.vdw.io.alpha2mqtt.services.alpha.get.SystemService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.TokenService;
 import de.vdw.io.alpha2mqtt.services.alpha.set.BatteryControlService;
-import de.vdw.io.alpha2mqtt.services.alpha.set.ChargingService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.DeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
-import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
-import de.vdw.io.alpha2mqtt.services.updater.RunningDataUpdateService;
+import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
+import de.vdw.io.alpha2mqtt.services.updater.ChargingPileUpdateService;
+import de.vdw.io.alpha2mqtt.services.updater.PowerDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.updater.SettingsUpdateService;
 import de.vdw.io.alpha2mqtt.services.updater.SummeryDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.updater.Updater;
@@ -34,8 +34,15 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @Singleton
 @Slf4j
+/**
+ * This class makes the initial request to the Alpha API to get all batteries and their systems. For
+ * each system, all related fetch services are created.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public class ServiceFactory {
-  Cache cache;
+  SystemService systemService;
 
   TokenService tokenService;
 
@@ -45,11 +52,7 @@ public class ServiceFactory {
 
   EnvironmentService environmentService;
 
-  Map<BatteryDto, BatteryDeviceService> batteryDeviceServices = new HashMap<>();
-
-  Map<BatteryDto, InverterDeviceService> inverterDeviceServices = new HashMap<>();
-
-  Map<BatteryDto, List<WallBoxDeviceService>> wallBoxDeviceServices = new HashMap<>();
+  List<DeviceService> deviceServices = new LinkedList<>();
 
   ObjectMapper objectMapper;
 
@@ -57,33 +60,37 @@ public class ServiceFactory {
 
   List<ICommandListener> commandServices = new ArrayList<>(2);
 
-  public List<DeviceService> getDeviceServices() {
-    return Stream
-        .concat(wallBoxDeviceServices.values().stream(),
-            Stream.of(batteryDeviceServices.values(), inverterDeviceServices.values()))
-        .flatMap(Collection::stream).collect(Collectors.toList());
-  }
-
   public void init() {
-    cache.getBatteries().forEach(battery -> {
+    List<BatteryDto> batteries = systemService.getData();
+
+    if (batteries == null) {
+      return;
+    }
+
+    List<SystemIdDto> systemIds = systemService.getSystemIds();
+
+    if (systemIds == null) {
+      return;
+    }
+
+    batteries.forEach(battery -> {
       log.info("Setup devices for {}", battery);
 
+      String sys_sn = battery.getSys_sn();
+      Optional<SystemIdDto> systemId = systemIds.stream()
+          .filter(systemIdDto -> systemIdDto.getSys_sn().equals(sys_sn)).findFirst();
+
+      if (systemId.isEmpty()) {
+        log.error("No system ID found for SN: {}", sys_sn);
+        return;
+      }
+      String system_id = systemId.get().getSystem_id();
+
       BatteryDeviceService batteryDeviceService = new BatteryDeviceService(battery);
-      batteryDeviceServices.put(battery, batteryDeviceService);
+      deviceServices.add(batteryDeviceService);
+
       InverterDeviceService inverterDeviceService = new InverterDeviceService(battery);
-      inverterDeviceServices.put(battery, inverterDeviceService);
-
-      List<WallBoxDeviceService> wallBoxDeviceServices =
-          cache.getWallboxes().get(battery.getSys_sn()).stream().map(WallBoxDeviceService::new)
-              .collect(Collectors.toList());
-      this.wallBoxDeviceServices.put(battery, wallBoxDeviceServices);
-
-      log.info("Setup device data mapping services for {}", battery);
-      RunningDataService rds = new RunningDataService(objectMapper, tokenService, battery);
-      RunningDataUpdateService rdus = new RunningDataUpdateService(batteryDeviceService,
-          inverterDeviceService, wallBoxDeviceServices, scheduledExecutorService, rds, mqttService,
-          environmentService);
-      updateServices.add(rdus);
+      deviceServices.add(inverterDeviceService);
 
       SummeryService summeryService = new SummeryService(objectMapper, tokenService, battery);
       SummeryDataUpdateService summeryDataUpdateService =
@@ -91,23 +98,38 @@ public class ServiceFactory {
               scheduledExecutorService, mqttService, environmentService);
       updateServices.add(summeryDataUpdateService);
 
-      SettingService settingService = new SettingService(objectMapper, tokenService,
-          cache.getSystemIdMap().get(battery.getSys_sn()));
-
+      SettingService settingService = new SettingService(objectMapper, tokenService, system_id);
       BatteryControlService batteryControlService =
           new BatteryControlService(batteryDeviceService, settingService, mqttService);
       commandServices.add(batteryControlService);
 
-      wallBoxDeviceServices.forEach(wallBoxDeviceService -> {
+      List<ChargingPileDeviceService> chargingPileDeviceServices =
+          systemService.requestChargingPiles(sys_sn, system_id).stream().map(ChargingPileDeviceService::new)
+              .collect(Collectors.toList());
+      deviceServices.addAll(chargingPileDeviceServices);
+
+      log.info("Setup device data mapping services for {}", battery);
+      PowerDataService rds = new PowerDataService(objectMapper, tokenService, battery.getSys_sn());
+      PowerDataUpdateService rdus = new PowerDataUpdateService(batteryDeviceService,
+          inverterDeviceService, chargingPileDeviceServices, scheduledExecutorService, rds, mqttService,
+          environmentService);
+      updateServices.add(rdus);
+
+      chargingPileDeviceServices.forEach(wallBoxDeviceService -> {
         ChargingService chargingService =
-            new ChargingService(objectMapper, battery.getSys_sn(), wallBoxDeviceService.getSn(),
-                settingService, tokenService, wallBoxDeviceService, mqttService);
+            new ChargingService(objectMapper, sys_sn, wallBoxDeviceService.getSn(), settingService,
+                tokenService, wallBoxDeviceService, mqttService, wallBoxDeviceService.getId());
         commandServices.add(chargingService);
 
         SettingsUpdateService settingsUpdateService =
             new SettingsUpdateService(wallBoxDeviceService, batteryDeviceService,
                 scheduledExecutorService, settingService, mqttService, environmentService);
         updateServices.add(settingsUpdateService);
+
+        ChargingPileUpdateService chargingPileUpdateService =
+            new ChargingPileUpdateService(chargingPileDeviceServices, environmentService,
+                scheduledExecutorService, mqttService, chargingService);
+        updateServices.add(chargingPileUpdateService);
       });
 
     });

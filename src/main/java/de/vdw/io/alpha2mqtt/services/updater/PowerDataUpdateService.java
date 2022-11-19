@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.RandomUtils;
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.models.api.PowerDataDto;
 import de.vdw.io.alpha2mqtt.services.EnvironmentService;
-import de.vdw.io.alpha2mqtt.services.alpha.get.RunningDataService;
+import de.vdw.io.alpha2mqtt.services.alpha.get.PowerDataService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
-import de.vdw.io.alpha2mqtt.services.ha.WallBoxDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -18,17 +18,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 @RequiredArgsConstructor
-public class RunningDataUpdateService implements Updater {
+/**
+ * Class for updating power data by calling the related API at fixed rate.
+ *
+ * @author Dennis van der Wals
+ *
+ */
+public class PowerDataUpdateService implements Updater {
 
   BatteryDeviceService batteryDeviceService;
 
   InverterDeviceService inverterDeviceService;
 
-  List<WallBoxDeviceService> wallboxDeviceServices;
+  List<ChargingPileDeviceService> wallboxDeviceServices;
 
   ScheduledExecutorService scheduledExecutorService;
 
-  RunningDataService runningDataService;
+  PowerDataService powerDataService;
 
   HomeAssistantMQTTService mqttService;
 
@@ -47,7 +53,7 @@ public class RunningDataUpdateService implements Updater {
   @Override
   public void run() {
     log.info("Update live data.");
-    RunningDataDto data = runningDataService.getData();
+    PowerDataDto data = powerDataService.getData();
 
     if (data == null) {
       log.error("No live data available.");

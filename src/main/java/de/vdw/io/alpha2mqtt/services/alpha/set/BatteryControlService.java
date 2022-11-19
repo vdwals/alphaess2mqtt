@@ -17,11 +17,23 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Value
 @Slf4j
+/**
+ * Command listener service to update system settings.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public class BatteryControlService implements ICommandListener {
   BatteryDeviceService batteryDeviceService;
   SettingService settingService;
   HomeAssistantMQTTService mqttService;
 
+  /**
+   * Retrieves current system settings, adapts the battery reserve and sents the update to the
+   * settings update.
+   *
+   * @param batteryReserve Battery reserve to set
+   */
   private void changeBatteryReserveSetting(String batteryReserve) {
     SettingDto settingDto = settingService.getSettingDto();
 
@@ -34,7 +46,8 @@ public class BatteryControlService implements ICommandListener {
 
     // Check if settings have been set
     // Publish update of value
-    if (systemDto.getBat_use_cap().equals(batteryReserve) && batteryDeviceService.getUseCapacity().setValue(Integer.parseInt(batteryReserve))) {
+    if (systemDto.getBat_use_cap().equals(batteryReserve)
+        && batteryDeviceService.getUseCapacity().setValue(Integer.parseInt(batteryReserve))) {
       mqttService.publishValues();
     }
   }

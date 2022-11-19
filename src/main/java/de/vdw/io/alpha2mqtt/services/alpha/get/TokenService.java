@@ -17,20 +17,31 @@ import de.vdw.io.alpha2mqtt.models.api.TokenDto;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
+import lombok.Value;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
 @Singleton
 @Slf4j
+@Value
+/**
+ * Service for requesting and managing access token.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public class TokenService {
 
-  private final ObjectMapper objectMapper;
+  ObjectMapper objectMapper;
 
-  private final Credentials credentials;
+  Credentials credentials;
 
-  private String token;
+  @NonFinal
+  String token;
 
-  private LocalDateTime validTill;
+  @NonFinal
+  LocalDateTime validTill;
 
   private String getCurrentToken() {
     if ((this.token == null) || (this.validTill == null)
@@ -41,8 +52,13 @@ public class TokenService {
   }
 
   @Synchronized
+  /**
+   * Returns token if still valid or requests new token
+   *
+   * @return
+   */
   public String getToken() {
-    log.debug("Get token from db.");
+    log.debug("Check cached token.");
 
     String currentToken = getCurrentToken();
 
