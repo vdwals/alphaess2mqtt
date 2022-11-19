@@ -5,7 +5,7 @@ import lombok.With;
 
 @Value
 @With
-public class WallboxDto {
+public class ChargingPileDto {
   String chargingpile_hard_ver;
   String chargingpile_id;
   int chargingpile_phase;

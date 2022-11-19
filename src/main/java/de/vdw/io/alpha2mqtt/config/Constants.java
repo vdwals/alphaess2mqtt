@@ -31,16 +31,14 @@ public class Constants {
 
   public static final String stopCharginUrl = basicUrl + "ESS/StopCharging";
 
+  public static final String chargingStateUpdateUrl = basicUrl + "ESS/GetChargPileStatusByPileSn";
+
   public static final String dataUrl =
       basicUrl + "ESS/GetLastPowerDataBySN?sys_sn=%s&noLoading=true";
 
   public static final String batteriesUrl = basicUrl + "Account/GetCustomMenuESSlist";
 
   public static final String systemIdUrl = basicUrl + "Account/GetCustomUseESSList";
-
-  public static final String chargingPileId1 = "EV1";
-
-  public static final String chargingPileId2 = "EV2";
 
   public static final DateTimeFormatter formatter =
       DateTimeFormatter.ofPattern("yyyy/M/d ah:mm:ss").localizedBy(Locale.SIMPLIFIED_CHINESE);

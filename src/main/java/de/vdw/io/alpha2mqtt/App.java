@@ -4,7 +4,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.vdw.io.alpha2mqtt.models.Cache;
 import de.vdw.io.alpha2mqtt.models.Credentials;
 import de.vdw.io.alpha2mqtt.services.EnvironmentService;
 import de.vdw.io.alpha2mqtt.services.MqttService;
@@ -25,8 +24,10 @@ public class App {
   public static void main(String[] args) throws MqttException {
     log.info("Starting Application");
 
+    // Environment Service reads and manages system property access
     EnvironmentService environmentService = new EnvironmentService();
 
+    // Injector is prepared
     EasyDI ed = new EasyDI();
     ed.bindInstance(EasyDI.class, ed);
 
@@ -46,7 +47,6 @@ public class App {
 
     ed.bindInstance(ScheduledExecutorService.class, Executors.newSingleThreadScheduledExecutor());
 
-    ed.markAsSingleton(Cache.class);
     ed.markAsSingleton(MqttService.class);
     ed.markAsSingleton(SystemService.class);
     ed.markAsSingleton(ServiceFactory.class);
@@ -56,8 +56,6 @@ public class App {
     app.init();
     app.start();
   }
-
-  Cache cache;
 
   SystemService systemService;
 

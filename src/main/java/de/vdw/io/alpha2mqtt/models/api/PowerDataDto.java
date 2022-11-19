@@ -10,7 +10,7 @@ import lombok.extern.jackson.Jacksonized;
 @Value
 @Builder
 @Jacksonized
-public class RunningDataDto implements DataDto {
+public class PowerDataDto implements DataDto {
   String _id;
   String createtime;
   double ev1_chgenergy_real;

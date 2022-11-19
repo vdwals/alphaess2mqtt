@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import javax.inject.Singleton;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Get;
 import org.javalite.http.Http;
@@ -17,11 +18,22 @@ import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.models.api.charge.SettingDto;
 import de.vdw.io.alpha2mqtt.utils.RequestUtils;
 import de.vdw.it.hamqtt.utils.JsonUtils;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+@Singleton
 @Slf4j
+@Value
+@EqualsAndHashCode(callSuper = true)
+/**
+ * Class for calling the API to retrieve current settings and update the settings.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public class SettingService extends AlphaService<SystemDto> {
-  private final String systemId;
+  String systemId;
 
   public SettingService(ObjectMapper objectMapper, TokenService tokenService, String systemId) {
     super(objectMapper, tokenService);
@@ -33,7 +45,48 @@ public class SettingService extends AlphaService<SystemDto> {
     return 600L;
   }
 
-  private SystemDto getResponse(String token, String url) {
+  /**
+   * Fetches System settings and transforms it to a settings dto, to adjust settings.
+   *
+   * @return SettingDto created from latest system details.
+   */
+  public SettingDto getSettingDto() {
+    log.debug("Build settings DTO.");
+
+    SystemDto systemData = getData();
+
+    if (systemData == null) {
+      log.error("Could not retrieve system settings.");
+      return null;
+    }
+
+    log.debug("Build system settings.");
+    SettingDto settingDto;
+    try {
+      // Copy system from response to setting for request.
+      String systemString = JsonUtils.jsonMapper.writeValueAsString(systemData);
+
+      settingDto = JsonUtils.jsonMapper.readValue(systemString, SettingDto.class);
+    } catch (JsonProcessingException e) {
+      log.error(e.getMessage(), e);
+      return null;
+    }
+
+    // Add wallbox values
+    settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
+
+    // Set system id
+    settingDto.setSystem_id(systemId);
+
+    return settingDto;
+  }
+
+  @Override
+  protected SystemDto requestNewData(String token, LocalDateTime now) {
+    log.info("Load settings.");
+
+    String url = String.format(Constants.getSettingUrl, systemId);
+
     log.debug("Requesting settings from {}", url);
 
     Get dataGet = RequestUtils
@@ -63,72 +116,12 @@ public class SettingService extends AlphaService<SystemDto> {
     }
   }
 
-  public SettingDto getSettingDto() {
-    log.debug("Build settings DTO.");
-
-    SystemDto systemData = getSystemSettings();
-
-    if (systemData == null) {
-      log.error("Could not retrieve system settings.");
-      return null;
-    }
-
-    log.debug("Build system settings.");
-    SettingDto settingDto;
-    try {
-      // Copy system from response to setting for request.
-      String systemString = JsonUtils.jsonMapper.writeValueAsString(systemData);
-
-      settingDto = JsonUtils.jsonMapper.readValue(systemString, SettingDto.class);
-    } catch (JsonProcessingException e) {
-      log.error(e.getMessage(), e);
-      return null;
-    }
-
-    // Add wallbox values
-    settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
-
-    // Set system id
-    settingDto.setSystem_id(systemId);
-
-    return settingDto;
-  }
-
-  public SystemDto getSystemSettings() {
-    String token = this.tokenService.getToken();
-
-    if (token == null) {
-      log.error("No token available");
-      return null;
-    }
-
-    log.info("Load system settings information.");
-    String url = String.format(Constants.getSettingUrl, systemId);
-
-    return getResponse(token, url);
-  }
-
-  @Override
-  protected SystemDto requestNewData(String token, LocalDateTime now) {
-    log.info("Load settings.");
-
-    String url = String.format(Constants.getSettingUrl, systemId);
-
-    SystemDto systemResponseDto = getResponse(token, url);
-
-    if (systemResponseDto == null) {
-      log.error("No settings received.");
-      return null;
-    }
-
-    /*
-     * Base.withDb(() -> { for (WallboxDto wallboxDto : systemResponseDto.getCharging_pile_list()) {
-     * AlphaEssWallbox.create(battery, wallboxDto.getChargingpile_sn()); } return null; });
-     */
-
-    return systemResponseDto;
-  }
-
+  /**
+   * Call to API to adjust settings.
+   *
+   * @param settingDto Settings to set
+   * @return Updated system dto
+   */
   public SystemDto updateSetting(SettingDto settingDto) {
     String token = this.tokenService.getToken();
 
@@ -151,6 +144,6 @@ public class SettingService extends AlphaService<SystemDto> {
     log.debug("Settings changed to {}.", setting);
     log.trace("Response: {}", post.text());
 
-    return getSystemSettings();
+    return getData();
   }
 }

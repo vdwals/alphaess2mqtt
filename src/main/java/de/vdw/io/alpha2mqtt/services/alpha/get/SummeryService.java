@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import javax.inject.Singleton;
 import org.javalite.http.Get;
 import org.javalite.http.Http;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -17,9 +18,16 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+@Singleton
 @Slf4j
 @Value
 @EqualsAndHashCode(callSuper = true)
+/**
+ * Class to call API for summary data.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public class SummeryService extends AlphaService<SummeryDto> {
   String sn;
   DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

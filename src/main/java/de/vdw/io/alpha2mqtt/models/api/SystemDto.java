@@ -25,7 +25,7 @@ public class SystemDto implements DataDto {
   String charge_soc2;
   String charge_weekend;
   String charge_workdays;
-  List<WallboxDto> charging_pile_list;
+  List<ChargingPileDto> charging_pile_list;
   int chargingmode;
   int chargingpile;
   int chargingpile_control_open;

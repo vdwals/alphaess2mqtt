@@ -8,8 +8,9 @@ import java.math.RoundingMode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import de.vdw.io.alpha2mqtt.config.Constants;
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.models.api.PowerDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
+import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.Device.DeviceBuilder;
@@ -22,6 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @SuppressWarnings("rawtypes")
 @Slf4j
+/**
+ * Parent class of services holding devices. Interface for updating mqtt values.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public abstract class DeviceService {
   @Getter
   private final Device device;
@@ -90,7 +97,27 @@ public abstract class DeviceService {
     return Sensor.builder().objectId(id).uniqueId(getUniqueId(device.getNodeId(), id)).name(name);
   }
 
-  public abstract void mapValues(RunningDataDto dataDto);
+  /**
+   * Method to map dto values to device entity values.
+   *
+   * @param dataDto source dto
+   * @return true if values changes, false otherwise
+   */
+  public abstract boolean mapValues(PowerDataDto dataDto);
 
+  /**
+   * Method to map dto values to device entity values.
+   *
+   * @param dataDto source dto
+   * @return true if values changes, false otherwise
+   */
   public abstract boolean mapValues(SummeryDto dataDto);
+
+  /**
+   * Method to map dto values to device entity values.
+   *
+   * @param dataDto source dto
+   * @return true if values changes, false otherwise
+   */
+  public abstract boolean mapValues(SystemDto dataDto);
 }

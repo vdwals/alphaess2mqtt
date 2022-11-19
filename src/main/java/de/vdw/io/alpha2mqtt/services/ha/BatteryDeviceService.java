@@ -1,10 +1,9 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
 import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
-import javax.inject.Singleton;
 import org.apache.commons.lang3.math.NumberUtils;
 import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
-import de.vdw.io.alpha2mqtt.models.api.RunningDataDto;
+import de.vdw.io.alpha2mqtt.models.api.PowerDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
@@ -18,9 +17,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
 
-@Singleton
 @Value
 @EqualsAndHashCode(callSuper = true)
+/**
+ * Class for the Battery device with its attributes.
+ *
+ * @author Dennis van der Wals
+ *
+ */
 public class BatteryDeviceService extends DeviceService {
   AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput, batteryLoadEnergy,
       useCapacity, systemStatus, updateInterval, cobat, surpluscobat;
@@ -74,15 +78,15 @@ public class BatteryDeviceService extends DeviceService {
   }
 
   @Override
-  public void mapValues(RunningDataDto data) {
-    batteryLoad.setValue(data.getSoc());
+  public boolean mapValues(PowerDataDto data) {
+    boolean anyChange = batteryLoad.setValue(data.getSoc());
 
     double pBat = data.getPbat();
-    batteryEnergy.setValue(pBat);
-    batteryInput.setValue(pBat > 0 ? 0 : Math.abs(pBat));
-    batteryOutput.setValue(pBat > 0 ? pBat : 0);
+    anyChange |= batteryEnergy.setValue(pBat);
+    anyChange |= batteryInput.setValue(pBat > 0 ? 0 : Math.abs(pBat));
+    anyChange |= batteryOutput.setValue(pBat > 0 ? pBat : 0);
 
-    batteryLoadEnergy.setValue(getScaledValue(data.getSoc() * capacity * 10));
+    return anyChange || batteryLoadEnergy.setValue(getScaledValue(data.getSoc() * capacity * 10));
   }
 
   @Override
@@ -90,11 +94,11 @@ public class BatteryDeviceService extends DeviceService {
     return false;
   }
 
+  @Override
   public boolean mapValues(SystemDto data) {
-    if (!NumberUtils.isCreatable(data.getBat_use_cap())) {
-      return false;
+    if (NumberUtils.isCreatable(data.getBat_use_cap())) {
+      return useCapacity.setValue(NumberUtils.createNumber(data.getBat_use_cap()));
     }
-
-    return useCapacity.setValue(NumberUtils.createNumber(data.getBat_use_cap()));
+    return false;
   }
 }
