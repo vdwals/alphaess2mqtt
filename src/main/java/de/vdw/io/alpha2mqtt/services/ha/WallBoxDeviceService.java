@@ -125,6 +125,11 @@ public class WallBoxDeviceService extends DeviceService {
     this.plugState.setValue(OFF);
     this.pluggedCarState.setValue(OFF);
 
+    if (wallBoxPower > 0) {
+      this.charger.setValue(ON);
+      this.chargeState.setValue(ON);
+    }
+
     int mode = switch (id) {
       case Constants.chargingPileId1 -> dataDto.getEv1_mode();
       case Constants.chargingPileId2 -> dataDto.getEv2_mode();
