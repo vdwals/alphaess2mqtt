@@ -13,10 +13,10 @@ public class SystemDto implements DataDto {
   int backupbox;
   String bakbox_ver;
   int basic_mode_jp;
-  String bat_high_cap;
-  int bat_highcap_we;
-  String bat_use_cap;
-  int bat_usecap_we;
+  double bat_high_cap;
+  double bat_highcap_we;
+  double bat_use_cap;
+  double bat_usecap_we;
   String channel1;
   String channel2;
   int charge_mode1;
