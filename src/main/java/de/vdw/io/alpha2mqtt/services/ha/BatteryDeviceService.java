@@ -1,18 +1,22 @@
 package de.vdw.io.alpha2mqtt.services.ha;
 
+import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
+import static de.vdw.it.hamqtt.devices.Payload.OFF;
 import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
-import org.apache.commons.lang3.math.NumberUtils;
 import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
 import de.vdw.io.alpha2mqtt.models.api.PowerDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
+import de.vdw.it.hamqtt.devices.Payload;
 import de.vdw.it.hamqtt.devices.Units;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity.EntityCategory;
+import de.vdw.it.hamqtt.devices.entities.AbstractCommandEntity;
 import de.vdw.it.hamqtt.devices.entities.AbstractEntity;
 import de.vdw.it.hamqtt.devices.entities.Number;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
+import de.vdw.it.hamqtt.devices.entities.Switch;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
@@ -30,7 +34,9 @@ public class BatteryDeviceService extends DeviceService {
   public static final Integer MAX_USV_CAPACITY = 100;
 
   AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput, batteryLoadEnergy,
-      useCapacity, systemStatus, updateInterval, cobat, surpluscobat;
+      systemStatus, updateInterval, cobat, surpluscobat;
+
+  AbstractCommandEntity useCapacity, usvMode;
 
   double capacity;
 
@@ -78,6 +84,12 @@ public class BatteryDeviceService extends DeviceService {
     surpluscobat = getNumberSensor("battery_usable_capacity", "Usable Battery Capacity",
         "mdi:battery", Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.diagnostic);
     surpluscobat.setValue(battery.getSurpluscobat());
+
+    usvMode = Switch.builder().device(getDevice()).name("USV-Mode").objectId("usv_mode_switch")
+        .uniqueId(getUniqueId(getDevice().getNodeId(), "usv_mode_switch")).icon("mdi:toggle-switch")
+        .entityCategory(AbstractAvailabilityEntity.EntityCategory.config).build();
+    this.usvMode.setValue(OFF);
+    getDevice().addEntity(this.usvMode);
   }
 
   @Override
@@ -99,9 +111,13 @@ public class BatteryDeviceService extends DeviceService {
 
   @Override
   public boolean mapValues(SystemDto data) {
-    if (NumberUtils.isCreatable(data.getBat_use_cap())) {
-      return useCapacity.setValue(NumberUtils.createNumber(data.getBat_use_cap()));
-    }
-    return false;
+    boolean anyChange = useCapacity.setValue(data.getBat_use_cap());
+
+    if (data.getUpsReserve() == 1)
+      anyChange |= usvMode.setValue(Payload.ON);
+    else
+      anyChange |= usvMode.setValue(OFF);
+
+    return anyChange;
   }
 }
