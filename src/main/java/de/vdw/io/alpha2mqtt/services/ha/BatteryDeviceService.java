@@ -26,6 +26,9 @@ import lombok.Value;
  *
  */
 public class BatteryDeviceService extends DeviceService {
+  public static final Integer MIN_USV_CAPACITY = 4;
+  public static final Integer MAX_USV_CAPACITY = 100;
+
   AbstractEntity batteryLoad, batteryEnergy, batteryInput, batteryOutput, batteryLoadEnergy,
       useCapacity, systemStatus, updateInterval, cobat, surpluscobat;
 
@@ -62,7 +65,7 @@ public class BatteryDeviceService extends DeviceService {
         "mdi:battery-clock", "s", EntityCategory.diagnostic);
     updateInterval.setValue(battery.getTrans_frequency());
 
-    useCapacity = Number.builder().max(100).min(1).device(getDevice())
+    useCapacity = Number.builder().max(MAX_USV_CAPACITY).min(MIN_USV_CAPACITY).device(getDevice())
         .name("Batteriereserve für Notstrom").objectId("bat_use_cap")
         .uniqueId(IdUtils.getUniqueId(getDevice().getNodeId(), "bat_use_cap"))
         .entityCategory(AbstractAvailabilityEntity.EntityCategory.config).step(1).build();

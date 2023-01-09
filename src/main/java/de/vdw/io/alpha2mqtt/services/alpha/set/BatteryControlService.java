@@ -40,6 +40,12 @@ public class BatteryControlService implements ICommandListener {
     // Replace decimal places
     batteryReserve = batteryReserve.split("\\.")[0];
 
+    int reserve = Integer.parseInt(batteryReserve);
+    reserve = Math.min(BatteryDeviceService.MAX_USV_CAPACITY,
+        Math.max(reserve, BatteryDeviceService.MIN_USV_CAPACITY));
+
+    batteryReserve = String.valueOf(reserve);
+
     settingDto.setBat_use_cap(batteryReserve);
 
     SystemDto systemDto = settingService.updateSetting(settingDto);
@@ -47,7 +53,7 @@ public class BatteryControlService implements ICommandListener {
     // Check if settings have been set
     // Publish update of value
     if (systemDto.getBat_use_cap().equals(batteryReserve)
-        && batteryDeviceService.getUseCapacity().setValue(Integer.parseInt(batteryReserve))) {
+        && batteryDeviceService.getUseCapacity().setValue(reserve)) {
       mqttService.publishValues();
     }
   }

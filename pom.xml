@@ -88,7 +88,6 @@
 		<java.version>17</java.version>
 		<lombok.version>1.18.24</lombok.version>
 		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
-		<mqtt.version>1.2.5</mqtt.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
 	</properties>
