@@ -3,7 +3,7 @@
 	<groupId>de.vdwals.io</groupId>
 	<modelVersion>4.0.0</modelVersion>
 	<name>Alpha Ess 2 MQTT</name>
-	<version>2.6.0</version>
+	<version>2.6.1</version>
 	<build>
 		<plugins>
 			<plugin>
@@ -84,7 +84,7 @@
 	<properties>
 		<apache-commons.version>1.15</apache-commons.version>
 		<easy-di.version>0.6.0</easy-di.version>
-		<hamqtt.version>3.4.1</hamqtt.version>
+		<hamqtt.version>3.5.0</hamqtt.version>
 		<java.version>17</java.version>
 		<lombok.version>1.18.24</lombok.version>
 		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
