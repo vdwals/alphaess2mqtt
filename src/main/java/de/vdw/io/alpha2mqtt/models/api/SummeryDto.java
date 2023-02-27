@@ -7,7 +7,7 @@ import lombok.Value;
 
 @Value
 public class SummeryDto implements DataDto {
-  double CarbonNum, ToalIncome, TodayIncome, TreeNum;
+  double CarbonNum, TotalIncome, TodayIncome, TreeNum;
 
   String money_type;
 

@@ -58,17 +58,15 @@ public class InverterDeviceService extends DeviceService {
 
     carbonNum = getNumberSensor("carbonNum", "CO2 Einsparung", "mdi:molecule-co2", "kg", null);
 
-    todayCharge = getNumberSensor("Echarge", "Geladene Energiemenge", "mdi:battery-arrow-up", "kWh",
-        EntityCategory.diagnostic);
+    todayCharge =
+        getNumberSensor("Echarge", "Geladene Energiemenge", "mdi:battery-arrow-up", "kWh", null);
 
     todayDischarge = getNumberSensor("EDischarge", "Entladene Energiemenge",
-        "mdi:battery-arrow-down-outline", "kWh", EntityCategory.diagnostic);
+        "mdi:battery-arrow-down-outline", "kWh", null);
 
-    todayIncome = getNumberSensor("TodayIncome", "Einnahmen heute", "mdi:cash-100", "€",
-        EntityCategory.diagnostic);
+    todayIncome = getNumberSensor("TodayIncome", "Einnahmen heute", "mdi:cash-100", "€", null);
 
-    totalIncome = getNumberSensor("ToalIncome", "Einnahmen gesamt", "mdi:cash-100", "€",
-        EntityCategory.diagnostic);
+    totalIncome = getNumberSensor("TotalIncome", "Einnahmen gesamt", "mdi:cash-100", "€", null);
 
 
     poinv = getNumberSensor("power_output_inverter", "Power Output Inverter", "mdi:power",
@@ -153,6 +151,11 @@ public class InverterDeviceService extends DeviceService {
     anyChange |= pvToday.setValue(data.getEpvtoday());
     anyChange |= pvTotal.setValue(data.getEpvtotal());
     anyChange |= startOfToday.setValue(LocalDate.now().atStartOfDay());
+    anyChange |= totalIncome.setValue(data.getTotalIncome());
+    anyChange |= todayIncome.setValue(data.getTodayIncome());
+    anyChange |= todayCharge.setValue(data.getEcharge());
+    anyChange |= todayDischarge.setValue(data.getEDisCharge());
+
     return anyChange;
   }
 
