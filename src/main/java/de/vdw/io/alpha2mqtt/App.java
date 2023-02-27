@@ -1,7 +1,5 @@
 package de.vdw.io.alpha2mqtt;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vdw.io.alpha2mqtt.models.Credentials;
@@ -44,8 +42,6 @@ public class App {
             "Alpha ESS Proxy", environmentService.mqttProtocoll());
 
     ed.bindInstance(HomeAssistantMQTTService.class, homeAssistantMQTTService);
-
-    ed.bindInstance(ScheduledExecutorService.class, Executors.newSingleThreadScheduledExecutor());
 
     ed.markAsSingleton(MqttService.class);
     ed.markAsSingleton(SystemService.class);
