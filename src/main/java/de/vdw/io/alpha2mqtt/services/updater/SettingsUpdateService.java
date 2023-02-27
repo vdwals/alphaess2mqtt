@@ -1,6 +1,5 @@
 package de.vdw.io.alpha2mqtt.services.updater;
 
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.RandomUtils;
 import de.vdw.io.alpha2mqtt.models.api.SystemDto;
@@ -9,11 +8,14 @@ import de.vdw.io.alpha2mqtt.services.alpha.get.SettingService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
+@RequiredArgsConstructor
 /**
  * Class for updating devices related to settings by calling the API at fixed rates.
  *
@@ -26,45 +28,62 @@ public class SettingsUpdateService implements Updater {
 
   BatteryDeviceService batteryDeviceService;
 
-  ScheduledExecutorService scheduledExecutorService;
-
   SettingService settingService;
 
   HomeAssistantMQTTService mqttService;
 
   EnvironmentService environmentService;
 
+  @NonFinal
+  long delay;
+
+  @NonFinal
+  long interval;
+
   @Override
   public void init() {
-    long delay = RandomUtils.nextLong(1, 11);
+    delay = RandomUtils.nextLong(1, 11);
 
-    long interval = Math.max(settingService.getRefreshRate(), environmentService.getIntervall());
+    interval = Math.max(settingService.getRefreshRate(), environmentService.getIntervall());
     log.info("Start scheduling settings update in {} seconds with interval {}", delay, interval);
-    scheduledExecutorService.scheduleAtFixedRate(this, delay, interval, TimeUnit.SECONDS);
   }
 
   @Override
   public void run() {
-    log.info("Update setting data.");
-    SystemDto data = settingService.getData();
-
-    if (data == null) {
-      log.error("No setting data available.");
-      return;
+    try {
+      Thread.sleep(TimeUnit.SECONDS.toMillis(delay));
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
-    log.debug("Setting data received.");
 
-    boolean anyChange = wallboxDeviceService.mapValues(data);
+    while (true) {
+      log.info("Update setting data.");
+      SystemDto data = settingService.getData();
 
-    anyChange |= batteryDeviceService.mapValues(data);
+      if (data == null) {
+        log.error("No setting data available.");
+        return;
+      }
+      log.debug("Setting data received.");
 
-    if (anyChange) {
-      log.debug("Setting data mapped. Publishing via service.");
-      mqttService.publishValues();
-      log.debug("Setting data updated successfully");
+      boolean anyChange = wallboxDeviceService.mapValues(data);
 
-    } else {
-      log.debug("No changes in settings to publish");
+      anyChange |= batteryDeviceService.mapValues(data);
+
+      if (anyChange) {
+        log.debug("Setting data mapped. Publishing via service.");
+        mqttService.publishValues();
+        log.debug("Setting data updated successfully");
+
+      } else {
+        log.debug("No changes in settings to publish");
+      }
+
+      try {
+        Thread.sleep(TimeUnit.SECONDS.toMillis(interval));
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
     }
   }
 }

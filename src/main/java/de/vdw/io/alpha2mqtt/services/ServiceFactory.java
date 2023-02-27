@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,9 +17,9 @@ import de.vdw.io.alpha2mqtt.services.alpha.get.SystemService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.TokenService;
 import de.vdw.io.alpha2mqtt.services.alpha.set.BatteryControlService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
+import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.DeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
-import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.io.alpha2mqtt.services.updater.ChargingPileUpdateService;
 import de.vdw.io.alpha2mqtt.services.updater.PowerDataUpdateService;
 import de.vdw.io.alpha2mqtt.services.updater.SettingsUpdateService;
@@ -47,8 +46,6 @@ public class ServiceFactory {
   TokenService tokenService;
 
   HomeAssistantMQTTService mqttService;
-
-  ScheduledExecutorService scheduledExecutorService;
 
   EnvironmentService environmentService;
 
@@ -93,9 +90,8 @@ public class ServiceFactory {
       deviceServices.add(inverterDeviceService);
 
       SummeryService summeryService = new SummeryService(objectMapper, tokenService, battery);
-      SummeryDataUpdateService summeryDataUpdateService =
-          new SummeryDataUpdateService(inverterDeviceService, summeryService,
-              scheduledExecutorService, mqttService, environmentService);
+      SummeryDataUpdateService summeryDataUpdateService = new SummeryDataUpdateService(
+          inverterDeviceService, summeryService, mqttService, environmentService);
       updateServices.add(summeryDataUpdateService);
 
       SettingService settingService = new SettingService(objectMapper, tokenService, system_id);
@@ -104,15 +100,14 @@ public class ServiceFactory {
       commandServices.add(batteryControlService);
 
       List<ChargingPileDeviceService> chargingPileDeviceServices =
-          systemService.requestChargingPiles(sys_sn, system_id).stream().map(ChargingPileDeviceService::new)
-              .collect(Collectors.toList());
+          systemService.requestChargingPiles(sys_sn, system_id).stream()
+              .map(ChargingPileDeviceService::new).collect(Collectors.toList());
       deviceServices.addAll(chargingPileDeviceServices);
 
       log.info("Setup device data mapping services for {}", battery);
       PowerDataService rds = new PowerDataService(objectMapper, tokenService, battery.getSys_sn());
       PowerDataUpdateService rdus = new PowerDataUpdateService(batteryDeviceService,
-          inverterDeviceService, chargingPileDeviceServices, scheduledExecutorService, rds, mqttService,
-          environmentService);
+          inverterDeviceService, chargingPileDeviceServices, rds, mqttService, environmentService);
       updateServices.add(rdus);
 
       chargingPileDeviceServices.forEach(wallBoxDeviceService -> {
@@ -122,13 +117,12 @@ public class ServiceFactory {
         commandServices.add(chargingService);
 
         SettingsUpdateService settingsUpdateService =
-            new SettingsUpdateService(wallBoxDeviceService, batteryDeviceService,
-                scheduledExecutorService, settingService, mqttService, environmentService);
+            new SettingsUpdateService(wallBoxDeviceService, batteryDeviceService, settingService,
+                mqttService, environmentService);
         updateServices.add(settingsUpdateService);
 
-        ChargingPileUpdateService chargingPileUpdateService =
-            new ChargingPileUpdateService(chargingPileDeviceServices, environmentService,
-                scheduledExecutorService, mqttService, chargingService);
+        ChargingPileUpdateService chargingPileUpdateService = new ChargingPileUpdateService(
+            chargingPileDeviceServices, environmentService, mqttService, chargingService);
         updateServices.add(chargingPileUpdateService);
       });
 

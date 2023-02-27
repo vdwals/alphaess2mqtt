@@ -1,18 +1,20 @@
 package de.vdw.io.alpha2mqtt.services.updater;
 
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.RandomUtils;
 import de.vdw.io.alpha2mqtt.services.EnvironmentService;
 import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
 import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
+@RequiredArgsConstructor
 /**
  * Class for updating charging pile devices by calling the API at fixed rate.
  *
@@ -25,39 +27,56 @@ public class ChargingPileUpdateService implements Updater {
 
   EnvironmentService environmentService;
 
-  ScheduledExecutorService scheduledExecutorService;
-
   HomeAssistantMQTTService mqttService;
 
   ChargingService chargingService;
 
+  @NonFinal
+  long delay;
+
+  @NonFinal
+  long interval;
+
   @Override
   public void init() {
-    long delay = RandomUtils.nextLong(1, 11);
+    delay = RandomUtils.nextLong(1, 11);
 
-    long interval = Math.max(chargingService.getRefreshRate(), environmentService.getIntervall());
+    interval = Math.max(chargingService.getRefreshRate(), environmentService.getIntervall());
     log.info("Start scheduling charging pile state in {} seconds with interval {}", delay,
         interval);
-    scheduledExecutorService.scheduleAtFixedRate(this, delay, interval, TimeUnit.SECONDS);
   }
 
   @Override
   public void run() {
-    log.info("Update charging pile states.");
-    Integer data = chargingService.getData();
-
-    if (data == null) {
-      log.error("No charging data available.");
-      return;
+    try {
+      Thread.sleep(TimeUnit.SECONDS.toMillis(delay));
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
-    log.debug("Charging data received.");
 
-    wallboxDeviceServices.forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
+    while (true) {
+      log.info("Update charging pile states.");
+      Integer data = chargingService.getData();
 
-    log.debug("Charging data mapped. Publishing via service.");
-    mqttService.publishValues();
+      if (data == null) {
+        log.error("No charging data available.");
+        return;
+      }
+      log.debug("Charging data received.");
 
-    log.debug("Charging data updated successfully.");
+      wallboxDeviceServices.forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
+
+      log.debug("Charging data mapped. Publishing via service.");
+      mqttService.publishValues();
+
+      log.debug("Charging data updated successfully.");
+
+      try {
+        Thread.sleep(TimeUnit.SECONDS.toMillis(interval));
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
 }
