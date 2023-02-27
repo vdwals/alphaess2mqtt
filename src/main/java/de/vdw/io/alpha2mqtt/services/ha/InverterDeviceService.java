@@ -40,6 +40,9 @@ public class InverterDeviceService extends DeviceService {
     String nodeIdCurrent =
         IdUtils.getDeviceId("Alpha ESS", battery.getMinv(), "PV-Wechselrichter", "2");
 
+    String nodeIdStats =
+        IdUtils.getDeviceId("Alpha ESS", battery.getMinv(), "PV-Wechselrichter", "3");
+
     gridPower = getPowerSensor("gridPower", "Netz Leistung", nodeIdCurrent);
 
     powerConsumption = getPowerSensor("powerConsumption", "Verbraucher Leistung", nodeIdCurrent);
@@ -62,23 +65,23 @@ public class InverterDeviceService extends DeviceService {
         getEnergySensor("Echarge", "Gespeicherte Energiemenge").stateClass(Sensor.StateClass.total)
             .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
             .build();
-    getDevice().addEntity(todayCharge);
+    getDevice().addEntity(todayCharge, nodeIdStats);
 
     todayDischarge =
         getEnergySensor("EDischarge", "Entnommene Energiemenge").stateClass(Sensor.StateClass.total)
             .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
             .build();
-    getDevice().addEntity(todayDischarge);
+    getDevice().addEntity(todayDischarge, nodeIdStats);
 
     todayIncome = getSensor(Sensor.DeviceClass.monetary, "TodayIncome", "Einnahmen heute")
         .unitOfMeasurement("€").stateClass(Sensor.StateClass.total)
         .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
         .build();
-    getDevice().addEntity(todayIncome);
+    getDevice().addEntity(todayIncome, nodeIdStats);
 
     totalIncome = getSensor(Sensor.DeviceClass.monetary, "TotalIncome", "Einnahmen gesamt")
         .unitOfMeasurement("€").stateClass(Sensor.StateClass.total_increasing).build();
-    getDevice().addEntity(totalIncome);
+    getDevice().addEntity(totalIncome, nodeIdStats);
 
 
     poinv = getNumberSensor("power_output_inverter", "Power Output Inverter", "mdi:power",
