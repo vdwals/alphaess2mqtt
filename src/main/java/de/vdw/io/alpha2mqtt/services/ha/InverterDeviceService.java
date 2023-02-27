@@ -30,7 +30,8 @@ public class InverterDeviceService extends DeviceService {
 
   AbstractEntity gridPower, gridPowerIn, gridPowerOut, powerConsumption, selfConsumption,
       selfSufficiency, carbonNum, treeNum, vGridPowerIn, vGridPowerOut, pvPower, ppv1, ppv2,
-      pMeterDc, pvToday, pvTotal, startOfToday, popv, poinv;
+      pMeterDc, pvToday, pvTotal, startOfToday, popv, poinv, todayCharge, todayDischarge,
+      todayIncome, totalIncome;
 
   public InverterDeviceService(BatteryDto battery) {
     super("Alpha ESS", battery.getMinv(), "PV-Wechselrichter",
@@ -56,6 +57,19 @@ public class InverterDeviceService extends DeviceService {
     treeNum = getNumberSensor("treeNum", "Gepflanzte Bäume", "mdi:forest", "Stk", null);
 
     carbonNum = getNumberSensor("carbonNum", "CO2 Einsparung", "mdi:molecule-co2", "kg", null);
+
+    todayCharge = getNumberSensor("Echarge", "Geladene Energiemenge", "mdi:battery-arrow-up", "kWh",
+        EntityCategory.diagnostic);
+
+    todayDischarge = getNumberSensor("EDischarge", "Entladene Energiemenge",
+        "mdi:battery-arrow-down-outline", "kWh", EntityCategory.diagnostic);
+
+    todayIncome = getNumberSensor("TodayIncome", "Einnahmen heute", "mdi:cash-100", "€",
+        EntityCategory.diagnostic);
+
+    totalIncome = getNumberSensor("ToalIncome", "Einnahmen gesamt", "mdi:cash-100", "€",
+        EntityCategory.diagnostic);
+
 
     poinv = getNumberSensor("power_output_inverter", "Power Output Inverter", "mdi:power",
         Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.diagnostic);
