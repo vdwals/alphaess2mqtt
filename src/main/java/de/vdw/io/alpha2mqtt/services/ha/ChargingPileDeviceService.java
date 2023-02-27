@@ -48,7 +48,7 @@ public class ChargingPileDeviceService extends DeviceService {
 
     this.chargePower = getPowerSensor("chargePower", "Ladeleistung");
 
-    this.chargeEnergy = getEnergySensor("chargeEnergy", "Energie geladen")
+    this.chargeEnergy = getEnergySensor("chargeEnergy", "Wallbox geladen")
         .stateClass(Sensor.StateClass.total_increasing)
         .entityCategory(AbstractAvailabilityEntity.EntityCategory.diagnostic).build();
     getDevice().addEntity(this.chargeEnergy);

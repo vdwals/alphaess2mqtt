@@ -59,14 +59,26 @@ public class InverterDeviceService extends DeviceService {
     carbonNum = getNumberSensor("carbonNum", "CO2 Einsparung", "mdi:molecule-co2", "kg", null);
 
     todayCharge =
-        getNumberSensor("Echarge", "Geladene Energiemenge", "mdi:battery-arrow-up", "kWh", null);
+        getEnergySensor("Echarge", "Gespeicherte Energiemenge").stateClass(Sensor.StateClass.total)
+            .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
+            .build();
+    getDevice().addEntity(todayCharge);
 
-    todayDischarge = getNumberSensor("EDischarge", "Entladene Energiemenge",
-        "mdi:battery-arrow-down-outline", "kWh", null);
+    todayDischarge =
+        getEnergySensor("EDischarge", "Entnommene Energiemenge").stateClass(Sensor.StateClass.total)
+            .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
+            .build();
+    getDevice().addEntity(todayDischarge);
 
-    todayIncome = getNumberSensor("TodayIncome", "Einnahmen heute", "mdi:cash-100", "€", null);
+    todayIncome = getSensor(Sensor.DeviceClass.monetary, "TodayIncome", "Einnahmen heute")
+        .unitOfMeasurement("€").stateClass(Sensor.StateClass.total)
+        .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
+        .build();
+    getDevice().addEntity(todayIncome);
 
-    totalIncome = getNumberSensor("TotalIncome", "Einnahmen gesamt", "mdi:cash-100", "€", null);
+    totalIncome = getSensor(Sensor.DeviceClass.monetary, "TotalIncome", "Einnahmen gesamt")
+        .unitOfMeasurement("€").stateClass(Sensor.StateClass.total_increasing).build();
+    getDevice().addEntity(totalIncome);
 
 
     poinv = getNumberSensor("power_output_inverter", "Power Output Inverter", "mdi:power",
