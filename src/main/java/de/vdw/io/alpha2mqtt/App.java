@@ -67,5 +67,6 @@ public class App {
 
   public void start() {
     this.serviceFactory.getUpdateServices().forEach(Updater::init);
+    this.serviceFactory.getUpdateServices().stream().map(Thread::new).forEach(Thread::start);
   }
 }
