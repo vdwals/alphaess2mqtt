@@ -3,6 +3,7 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 import static de.vdw.it.hamqtt.devices.Units.WATT;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
 import de.vdw.io.alpha2mqtt.models.api.PowerDataDto;
@@ -31,7 +32,7 @@ public class InverterDeviceService extends DeviceService {
   AbstractEntity gridPower, gridPowerIn, gridPowerOut, powerConsumption, selfConsumption,
       selfSufficiency, carbonNum, treeNum, vGridPowerIn, vGridPowerOut, pvPower, ppv1, ppv2,
       pMeterDc, pvToday, pvTotal, startOfToday, popv, poinv, todayCharge, todayDischarge,
-      todayIncome, totalIncome;
+      todayIncome, totalIncome, eload, einput, eoutput;
 
   public InverterDeviceService(BatteryDto battery) {
     super("Alpha ESS", battery.getMinv(), "PV-Wechselrichter",
@@ -43,75 +44,79 @@ public class InverterDeviceService extends DeviceService {
     String nodeIdStats =
         IdUtils.getDeviceId("Alpha ESS", battery.getMinv(), "PV-Wechselrichter", "3");
 
-    gridPower = getPowerSensor("gridPower", "Netz Leistung", nodeIdCurrent);
+    this.gridPower = getPowerSensor("gridPower", "Netz Leistung", nodeIdCurrent);
 
-    powerConsumption = getPowerSensor("powerConsumption", "Verbraucher Leistung", nodeIdCurrent);
+    this.powerConsumption =
+        getPowerSensor("powerConsumption", "Verbraucher Leistung", nodeIdCurrent);
 
-    selfConsumption = getPercentSensor("selfConsumption", "Anteil PV Energie Eigenverbrauch");
+    this.selfConsumption = getPercentSensor("selfConsumption", "Anteil PV Energie Eigenverbrauch");
 
-    selfSufficiency = getPercentSensor("selfSufficiency", "Autarkie");
+    this.selfSufficiency = getPercentSensor("selfSufficiency", "Autarkie");
 
-    gridPowerIn = getPowerSensor("gridPowerIn", "Netzbezug", nodeIdCurrent);
-    gridPowerOut = getPowerSensor("gridPowerOut", "Netzeinspeisung", nodeIdCurrent);
+    this.gridPowerIn = getPowerSensor("gridPowerIn", "Netzbezug", nodeIdCurrent);
+    this.gridPowerOut = getPowerSensor("gridPowerOut", "Netzeinspeisung", nodeIdCurrent);
 
-    vGridPowerIn = getPowerSensor("vGridPowerIn", "virtueller Netzbezug", nodeIdCurrent);
-    vGridPowerOut = getPowerSensor("vGridPowerOut", "virtuelle Netzeinspeisung", nodeIdCurrent);
+    this.vGridPowerIn = getPowerSensor("vGridPowerIn", "virtueller Netzbezug", nodeIdCurrent);
+    this.vGridPowerOut =
+        getPowerSensor("vGridPowerOut", "virtuelle Netzeinspeisung", nodeIdCurrent);
 
-    treeNum = getNumberSensor("treeNum", "Gepflanzte Bäume", "mdi:forest", "Stk", null);
+    this.treeNum = getNumberSensor("treeNum", "Gepflanzte Bäume", "mdi:forest", "Stk", null);
 
-    carbonNum = getNumberSensor("carbonNum", "CO2 Einsparung", "mdi:molecule-co2", "kg", null);
+    this.carbonNum = getNumberSensor("carbonNum", "CO2 Einsparung", "mdi:molecule-co2", "kg", null);
 
-    todayCharge =
-        getEnergySensor("Echarge", "Gespeicherte Energiemenge").stateClass(Sensor.StateClass.total)
-            .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
-            .build();
-    getDevice().addEntity(todayCharge, nodeIdStats);
+    this.todayCharge = getDailyEnergySensor("Echarge", "Gespeicherte Energiemenge");
 
-    todayDischarge =
-        getEnergySensor("EDischarge", "Entnommene Energiemenge").stateClass(Sensor.StateClass.total)
-            .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
-            .build();
-    getDevice().addEntity(todayDischarge, nodeIdStats);
+    this.todayDischarge = getDailyEnergySensor("EDischarge", "Entnommene Energiemenge");
 
-    todayIncome = getSensor(Sensor.DeviceClass.monetary, "TodayIncome", "Einnahmen heute")
+    this.todayIncome = getSensor(Sensor.DeviceClass.monetary, "TodayIncome", "Einnahmen heute")
         .unitOfMeasurement("€").stateClass(Sensor.StateClass.total)
         .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
         .build();
-    getDevice().addEntity(todayIncome, nodeIdStats);
+    getDevice().addEntity(this.todayIncome, nodeIdStats);
 
-    totalIncome = getSensor(Sensor.DeviceClass.monetary, "TotalIncome", "Einnahmen gesamt")
+    this.totalIncome = getSensor(Sensor.DeviceClass.monetary, "TotalIncome", "Einnahmen gesamt")
         .unitOfMeasurement("€").stateClass(Sensor.StateClass.total_increasing).build();
-    getDevice().addEntity(totalIncome, nodeIdStats);
+    getDevice().addEntity(this.totalIncome, nodeIdStats);
 
 
-    poinv = getNumberSensor("power_output_inverter", "Power Output Inverter", "mdi:power",
+    this.poinv = getNumberSensor("power_output_inverter", "Power Output Inverter", "mdi:power",
         Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.diagnostic);
-    poinv.setValue(battery.getPoinv());
+    this.poinv.setValue(battery.getPoinv());
 
-    popv = getNumberSensor("power_output_solar_modules", "Power Output Solar Modules", "mdi:power",
-        Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.diagnostic);
-    popv.setValue(battery.getPopv());
+    this.popv = getNumberSensor("power_output_solar_modules", "Power Output Solar Modules",
+        "mdi:power", Units.KILO_WATT_PER_HOUR.getUnit(), EntityCategory.diagnostic);
+    this.popv.setValue(battery.getPopv());
 
-    pvPower = getPowerSensor("ppvTotal", "PV Leistung", nodeIdCurrent);
+    this.pvPower = getPowerSensor("ppvTotal", "PV Leistung", nodeIdCurrent);
 
-    ppv1 = getPowerSensor("ppv1", "PV 1 Leistung", nodeIdCurrent);
+    this.ppv1 = getPowerSensor("ppv1", "PV 1 Leistung", nodeIdCurrent);
 
-    ppv2 = getPowerSensor("ppv2", "PV 2 Leistung", nodeIdCurrent);
+    this.ppv2 = getPowerSensor("ppv2", "PV 2 Leistung", nodeIdCurrent);
 
-    pMeterDc = getPowerSensor("pMeterDc", "PV SUN2000 Leistung", nodeIdCurrent);
+    this.pMeterDc = getPowerSensor("pMeterDc", "PV SUN2000 Leistung", nodeIdCurrent);
 
-    pvToday = getEnergySensor("pvToday", "PV Energie Heute").stateClass(Sensor.StateClass.total)
+    this.eload = getDailyEnergySensor("eload", "Geladene Energie");
+
+    this.eoutput = getDailyEnergySensor("eoutput", "Eingespeiste Energie");
+
+    this.einput = getDailyEnergySensor("einput", "Netzbezogene Energie");
+
+    this.pvToday = getDailyEnergySensor("pvToday", "PV Energie Heute");
+
+    this.pvTotal = getDailyEnergySensor("pvTotal", "PV Energie Gesamt");
+
+    this.startOfToday = RawEntity.builder().objectId(Constants.START_OF_DAY)
+        .className(this.pvToday.getClassName()).build();
+    getDevice().addEntity(this.startOfToday);
+  }
+
+  private Sensor getDailyEnergySensor(String objectId, String name) {
+    Sensor sensor = getEnergySensor(objectId, name).stateClass(Sensor.StateClass.total)
         .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
         .build();
-    getDevice().addEntity(pvToday);
+    getDevice().addEntity(sensor);
 
-    pvTotal = getEnergySensor("pvTotal", "PV Energie Gesamt")
-        .stateClass(Sensor.StateClass.total_increasing).build();
-    getDevice().addEntity(pvTotal);
-
-    startOfToday = RawEntity.builder().objectId(Constants.START_OF_DAY)
-        .className(pvToday.getClassName()).build();
-    getDevice().addEntity(startOfToday);
+    return sensor;
   }
 
   private Sensor getPercentSensor(String objectId, String name) {
@@ -133,43 +138,47 @@ public class InverterDeviceService extends DeviceService {
   public boolean mapValues(PowerDataDto data) {
     double totalGridPower = data.getPmeter_l1() + data.getPmeter_l2() + data.getPmeter_l3();
 
-    boolean anyChange = gridPower.setValue(totalGridPower);
-    anyChange |= powerConsumption.setValue(
+    boolean anyChange = this.gridPower.setValue(totalGridPower);
+    anyChange |= this.powerConsumption.setValue(
         totalGridPower + data.getPpv1() + data.getPpv2() + data.getPmeter_dc() + data.getPbat());
 
     double gridIn = totalGridPower < 0 ? 0 : totalGridPower;
-    anyChange |= gridPowerIn.setValue(gridIn);
+    anyChange |= this.gridPowerIn.setValue(gridIn);
     double gridOut = totalGridPower < 0 ? Math.abs(totalGridPower) : 0;
-    anyChange |= gridPowerOut.setValue(gridOut);
+    anyChange |= this.gridPowerOut.setValue(gridOut);
 
     double pBat = data.getPbat();
     double batteryIn = pBat > 0 ? 0 : Math.abs(pBat);
-    anyChange |= vGridPowerOut.setValue(batteryIn + gridOut);
+    anyChange |= this.vGridPowerOut.setValue(batteryIn + gridOut);
     double batteryOut = pBat > 0 ? pBat : 0;
-    anyChange |= vGridPowerIn.setValue(batteryOut + gridIn);
+    anyChange |= this.vGridPowerIn.setValue(batteryOut + gridIn);
 
-    anyChange |= pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
+    anyChange |= this.pvPower.setValue(data.getPpv1() + data.getPpv2() + data.getPmeter_dc());
 
-    anyChange |= ppv1.setValue(data.getPpv1());
-    anyChange |= ppv2.setValue(data.getPpv2());
+    anyChange |= this.ppv1.setValue(data.getPpv1());
+    anyChange |= this.ppv2.setValue(data.getPpv2());
 
-    anyChange |= pMeterDc.setValue(data.getPmeter_dc());
+    anyChange |= this.pMeterDc.setValue(data.getPmeter_dc());
     return anyChange;
   }
 
   @Override
   public boolean mapValues(SummeryDto data) {
-    boolean anyChange = carbonNum.setValue(data.getCarbonNum());
-    anyChange |= selfConsumption.setValue(getScaledValue(data.getEselfConsumption() * 100));
-    anyChange |= selfSufficiency.setValue(getScaledValue(data.getEselfSufficiency() * 100));
-    anyChange |= treeNum.setValue(getScaledValue(data.getTreeNum()));
-    anyChange |= pvToday.setValue(data.getEpvtoday());
-    anyChange |= pvTotal.setValue(data.getEpvtotal());
-    anyChange |= startOfToday.setValue(LocalDate.now().atStartOfDay());
-    anyChange |= totalIncome.setValue(data.getTotalIncome());
-    anyChange |= todayIncome.setValue(data.getTodayIncome());
-    anyChange |= todayCharge.setValue(data.getEcharge());
-    anyChange |= todayDischarge.setValue(data.getEDisCharge());
+    boolean anyChange = this.carbonNum.setValue(data.getCarbonNum());
+    anyChange |= this.selfConsumption.setValue(getScaledValue(data.getEselfConsumption() * 100));
+    anyChange |= this.selfSufficiency.setValue(getScaledValue(data.getEselfSufficiency() * 100));
+    anyChange |= this.treeNum.setValue(getScaledValue(data.getTreeNum()));
+    anyChange |= this.pvToday.setValue(data.getEpvtoday());
+    anyChange |= this.pvTotal.setValue(data.getEpvtotal());
+    anyChange |=
+        this.startOfToday.setValue(LocalDate.now().atStartOfDay().atOffset(ZoneOffset.UTC));
+    anyChange |= this.totalIncome.setValue(data.getTotalIncome());
+    anyChange |= this.todayIncome.setValue(data.getTodayIncome());
+    anyChange |= this.todayCharge.setValue(data.getEcharge());
+    anyChange |= this.todayDischarge.setValue(data.getEDisCharge());
+    anyChange |= this.eload.setValue(data.getEload());
+    anyChange |= this.einput.setValue(data.getEinput());
+    anyChange |= this.eoutput.setValue(data.getEoutput());
 
     return anyChange;
   }
