@@ -49,6 +49,20 @@ public abstract class DeviceService {
     this.device = deviceBuilder.build();
   }
 
+  protected Sensor getDailyEnergySensor(String objectId, String name, String nodeId) {
+    Sensor sensor = getEnergySensor(objectId, name).stateClass(Sensor.StateClass.total)
+        .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
+        .build();
+
+    if (nodeId != null) {
+      getDevice().addEntity(sensor, nodeId);
+    } else {
+      getDevice().addEntity(sensor);
+    }
+
+    return sensor;
+  }
+
   protected Sensor.SensorBuilder getEnergySensor(String objectId, String name) {
     return getSensor(Sensor.DeviceClass.energy, objectId, name)
         .unitOfMeasurement(KILO_WATT_PER_HOUR.getUnit());
@@ -90,11 +104,12 @@ public abstract class DeviceService {
 
   protected Sensor.SensorBuilder getSensor(Sensor.DeviceClass deviceClass, String id, String name) {
     return Sensor.builder().deviceClass(deviceClass).objectId(id)
-        .uniqueId(getUniqueId(device.getNodeId(), id)).name(name);
+        .uniqueId(getUniqueId(this.device.getNodeId(), id)).name(name);
   }
 
   protected Sensor.SensorBuilder getSensor(String id, String name) {
-    return Sensor.builder().objectId(id).uniqueId(getUniqueId(device.getNodeId(), id)).name(name);
+    return Sensor.builder().objectId(id).uniqueId(getUniqueId(this.device.getNodeId(), id))
+        .name(name);
   }
 
   /**

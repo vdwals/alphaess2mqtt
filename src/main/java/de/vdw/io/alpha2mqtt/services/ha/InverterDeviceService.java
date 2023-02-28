@@ -31,8 +31,8 @@ public class InverterDeviceService extends DeviceService {
 
   AbstractEntity gridPower, gridPowerIn, gridPowerOut, powerConsumption, selfConsumption,
       selfSufficiency, carbonNum, treeNum, vGridPowerIn, vGridPowerOut, pvPower, ppv1, ppv2,
-      pMeterDc, pvToday, pvTotal, startOfToday, popv, poinv, todayCharge, todayDischarge,
-      todayIncome, totalIncome, eload, einput, eoutput;
+      pMeterDc, pvToday, pvTotal, startOfToday, popv, poinv, todayIncome, totalIncome, eload,
+      einput, eoutput;
 
   public InverterDeviceService(BatteryDto battery) {
     super("Alpha ESS", battery.getMinv(), "PV-Wechselrichter",
@@ -64,10 +64,6 @@ public class InverterDeviceService extends DeviceService {
 
     this.carbonNum = getNumberSensor("carbonNum", "CO2 Einsparung", "mdi:molecule-co2", "kg", null);
 
-    this.todayCharge = getDailyEnergySensor("Echarge", "Gespeicherte Energiemenge");
-
-    this.todayDischarge = getDailyEnergySensor("EDischarge", "Entnommene Energiemenge");
-
     this.todayIncome = getSensor(Sensor.DeviceClass.monetary, "TodayIncome", "Einnahmen heute")
         .unitOfMeasurement("€").stateClass(Sensor.StateClass.total)
         .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
@@ -95,28 +91,19 @@ public class InverterDeviceService extends DeviceService {
 
     this.pMeterDc = getPowerSensor("pMeterDc", "PV SUN2000 Leistung", nodeIdCurrent);
 
-    this.eload = getDailyEnergySensor("eload", "Geladene Energie");
+    this.eload = getDailyEnergySensor("eload", "Geladene Energie", nodeIdStats);
 
-    this.eoutput = getDailyEnergySensor("eoutput", "Eingespeiste Energie");
+    this.eoutput = getDailyEnergySensor("eoutput", "Eingespeiste Energie", nodeIdStats);
 
-    this.einput = getDailyEnergySensor("einput", "Netzbezogene Energie");
+    this.einput = getDailyEnergySensor("einput", "Netzbezogene Energie", nodeIdStats);
 
-    this.pvToday = getDailyEnergySensor("pvToday", "PV Energie Heute");
+    this.pvToday = getDailyEnergySensor("pvToday", "PV Energie Heute", nodeIdStats);
 
-    this.pvTotal = getDailyEnergySensor("pvTotal", "PV Energie Gesamt");
+    this.pvTotal = getDailyEnergySensor("pvTotal", "PV Energie Gesamt", nodeIdStats);
 
     this.startOfToday = RawEntity.builder().objectId(Constants.START_OF_DAY)
         .className(this.pvToday.getClassName()).build();
     getDevice().addEntity(this.startOfToday);
-  }
-
-  private Sensor getDailyEnergySensor(String objectId, String name) {
-    Sensor sensor = getEnergySensor(objectId, name).stateClass(Sensor.StateClass.total)
-        .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
-        .build();
-    getDevice().addEntity(sensor);
-
-    return sensor;
   }
 
   private Sensor getPercentSensor(String objectId, String name) {
@@ -174,8 +161,6 @@ public class InverterDeviceService extends DeviceService {
         this.startOfToday.setValue(LocalDate.now().atStartOfDay().atOffset(ZoneOffset.UTC));
     anyChange |= this.totalIncome.setValue(data.getTotalIncome());
     anyChange |= this.todayIncome.setValue(data.getTodayIncome());
-    anyChange |= this.todayCharge.setValue(data.getEcharge());
-    anyChange |= this.todayDischarge.setValue(data.getEDisCharge());
     anyChange |= this.eload.setValue(data.getEload());
     anyChange |= this.einput.setValue(data.getEinput());
     anyChange |= this.eoutput.setValue(data.getEoutput());
