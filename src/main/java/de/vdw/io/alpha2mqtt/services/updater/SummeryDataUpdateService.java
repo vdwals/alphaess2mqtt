@@ -5,6 +5,7 @@ import org.apache.commons.lang3.RandomUtils;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
 import de.vdw.io.alpha2mqtt.services.EnvironmentService;
 import de.vdw.io.alpha2mqtt.services.alpha.get.SummeryService;
+import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,8 @@ public class SummeryDataUpdateService implements Updater {
   InverterDeviceService inverterDeviceService;
 
   SummeryService summeryService;
+
+  BatteryDeviceService batteryDeviceService;
 
   HomeAssistantMQTTService mqttService;
 
@@ -65,6 +68,7 @@ public class SummeryDataUpdateService implements Updater {
       }
 
       boolean anyChange = this.inverterDeviceService.mapValues(data);
+      anyChange |= this.batteryDeviceService.mapValues(data);
 
       if (anyChange) {
         log.debug("Summary data mapped. Publishing via service.");
