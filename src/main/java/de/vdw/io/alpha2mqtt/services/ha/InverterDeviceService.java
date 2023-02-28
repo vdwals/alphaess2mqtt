@@ -91,7 +91,7 @@ public class InverterDeviceService extends DeviceService {
 
     this.pMeterDc = getPowerSensor("pMeterDc", "PV SUN2000 Leistung", nodeIdCurrent);
 
-    this.eload = getDailyEnergySensor("eload", "Geladene Energie", nodeIdStats);
+    this.eload = getDailyEnergySensor("eload", "Verbrauchte Energie", nodeIdStats);
 
     this.eoutput = getDailyEnergySensor("eoutput", "Eingespeiste Energie", nodeIdStats);
 
