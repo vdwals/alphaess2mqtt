@@ -39,34 +39,36 @@ public class SummeryDataUpdateService implements Updater {
 
   @Override
   public void init() {
-    delay = RandomUtils.nextLong(1, 11);
+    this.delay = RandomUtils.nextLong(1, 11);
 
-    interval = Math.max(summeryService.getRefreshRate(), environmentService.getIntervall());
-    log.info("Start scheduling summary data in {} seconds with interval {}", delay, interval);
+    this.interval =
+        Math.max(this.summeryService.getRefreshRate(), this.environmentService.getIntervall());
+    log.info("Start scheduling summary data in {} seconds with interval {}", this.delay,
+        this.interval);
   }
 
   @Override
   public void run() {
     try {
-      Thread.sleep(TimeUnit.SECONDS.toMillis(delay));
+      Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
 
     while (true) {
       log.info("Update summary data");
-      SummeryDto data = summeryService.getData();
+      SummeryDto data = this.summeryService.getData();
 
       if (data == null) {
         log.error("No data available");
-        return;
+        continue;
       }
 
-      boolean anyChange = inverterDeviceService.mapValues(data);
+      boolean anyChange = this.inverterDeviceService.mapValues(data);
 
       if (anyChange) {
         log.debug("Summary data mapped. Publishing via service.");
-        mqttService.publishValues();
+        this.mqttService.publishValues();
 
         log.debug("Summary data updated successfully.");
       } else {
@@ -74,7 +76,7 @@ public class SummeryDataUpdateService implements Updater {
       }
 
       try {
-        Thread.sleep(TimeUnit.SECONDS.toMillis(interval));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(this.interval));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }

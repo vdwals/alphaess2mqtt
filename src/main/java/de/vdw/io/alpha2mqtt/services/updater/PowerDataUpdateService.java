@@ -46,42 +46,44 @@ public class PowerDataUpdateService implements Updater {
 
   @Override
   public void init() {
-    delay = RandomUtils.nextLong(1, 11);
+    this.delay = RandomUtils.nextLong(1, 11);
 
-    interval =
-        Math.max((long) batteryDeviceService.getFrequency(), environmentService.getIntervall());
-    log.info("Start scheduling live data in {} seconds with interval {}", delay, interval);
+    this.interval = Math.max((long) this.batteryDeviceService.getFrequency(),
+        this.environmentService.getIntervall());
+    log.info("Start scheduling live data in {} seconds with interval {}", this.delay,
+        this.interval);
   }
 
   @Override
   public void run() {
     try {
-      Thread.sleep(TimeUnit.SECONDS.toMillis(delay));
+      Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
 
     while (true) {
       log.info("Update live data.");
-      PowerDataDto data = powerDataService.getData();
+      PowerDataDto data = this.powerDataService.getData();
 
       if (data == null) {
         log.error("No live data available.");
-        return;
+        continue;
       }
       log.debug("Live data received.");
 
-      batteryDeviceService.mapValues(data);
-      inverterDeviceService.mapValues(data);
-      wallboxDeviceServices.forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
+      this.batteryDeviceService.mapValues(data);
+      this.inverterDeviceService.mapValues(data);
+      this.wallboxDeviceServices
+          .forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
 
       log.debug("Live data mapped. Publishing via service.");
-      mqttService.publishValues();
+      this.mqttService.publishValues();
 
       log.debug("Live data updated successfully.");
 
       try {
-        Thread.sleep(TimeUnit.SECONDS.toMillis(interval));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(this.interval));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }

@@ -39,40 +39,42 @@ public class ChargingPileUpdateService implements Updater {
 
   @Override
   public void init() {
-    delay = RandomUtils.nextLong(1, 11);
+    this.delay = RandomUtils.nextLong(1, 11);
 
-    interval = Math.max(chargingService.getRefreshRate(), environmentService.getIntervall());
-    log.info("Start scheduling charging pile state in {} seconds with interval {}", delay,
-        interval);
+    this.interval =
+        Math.max(this.chargingService.getRefreshRate(), this.environmentService.getIntervall());
+    log.info("Start scheduling charging pile state in {} seconds with interval {}", this.delay,
+        this.interval);
   }
 
   @Override
   public void run() {
     try {
-      Thread.sleep(TimeUnit.SECONDS.toMillis(delay));
+      Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
 
     while (true) {
       log.info("Update charging pile states.");
-      Integer data = chargingService.getData();
+      Integer data = this.chargingService.getData();
 
       if (data == null) {
         log.error("No charging data available.");
-        return;
+        continue;
       }
       log.debug("Charging data received.");
 
-      wallboxDeviceServices.forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
+      this.wallboxDeviceServices
+          .forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
 
       log.debug("Charging data mapped. Publishing via service.");
-      mqttService.publishValues();
+      this.mqttService.publishValues();
 
       log.debug("Charging data updated successfully.");
 
       try {
-        Thread.sleep(TimeUnit.SECONDS.toMillis(interval));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(this.interval));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }

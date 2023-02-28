@@ -42,37 +42,39 @@ public class SettingsUpdateService implements Updater {
 
   @Override
   public void init() {
-    delay = RandomUtils.nextLong(1, 11);
+    this.delay = RandomUtils.nextLong(1, 11);
 
-    interval = Math.max(settingService.getRefreshRate(), environmentService.getIntervall());
-    log.info("Start scheduling settings update in {} seconds with interval {}", delay, interval);
+    this.interval =
+        Math.max(this.settingService.getRefreshRate(), this.environmentService.getIntervall());
+    log.info("Start scheduling settings update in {} seconds with interval {}", this.delay,
+        this.interval);
   }
 
   @Override
   public void run() {
     try {
-      Thread.sleep(TimeUnit.SECONDS.toMillis(delay));
+      Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
 
     while (true) {
       log.info("Update setting data.");
-      SystemDto data = settingService.getData();
+      SystemDto data = this.settingService.getData();
 
       if (data == null) {
         log.error("No setting data available.");
-        return;
+        continue;
       }
       log.debug("Setting data received.");
 
-      boolean anyChange = wallboxDeviceService.mapValues(data);
+      boolean anyChange = this.wallboxDeviceService.mapValues(data);
 
-      anyChange |= batteryDeviceService.mapValues(data);
+      anyChange |= this.batteryDeviceService.mapValues(data);
 
       if (anyChange) {
         log.debug("Setting data mapped. Publishing via service.");
-        mqttService.publishValues();
+        this.mqttService.publishValues();
         log.debug("Setting data updated successfully");
 
       } else {
@@ -80,7 +82,7 @@ public class SettingsUpdateService implements Updater {
       }
 
       try {
-        Thread.sleep(TimeUnit.SECONDS.toMillis(interval));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(this.interval));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
