@@ -14,8 +14,10 @@ import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.Device.DeviceBuilder;
+import de.vdw.it.hamqtt.devices.EntityClass;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity.EntityCategory;
 import de.vdw.it.hamqtt.devices.entities.AbstractSensorEntity;
+import de.vdw.it.hamqtt.devices.entities.RawEntity;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import de.vdw.it.hamqtt.devices.entities.Sensor.SensorBuilder;
 import lombok.Getter;
@@ -32,6 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class DeviceService {
   @Getter
   private final Device device;
+
+  @Getter
+  private final RawEntity startOfToday =
+      RawEntity.builder().objectId(Constants.START_OF_DAY).className(EntityClass.SENSOR).build();
 
   protected DeviceService(String manufacturer, String model, String name, String... identifier) {
     log.info("Create device");

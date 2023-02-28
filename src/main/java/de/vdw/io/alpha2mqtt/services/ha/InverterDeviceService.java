@@ -3,7 +3,7 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import static de.vdw.it.hamqtt.devices.Units.PERCENT;
 import static de.vdw.it.hamqtt.devices.Units.WATT;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import de.vdw.io.alpha2mqtt.config.Constants;
 import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
 import de.vdw.io.alpha2mqtt.models.api.PowerDataDto;
@@ -14,7 +14,6 @@ import de.vdw.it.hamqtt.devices.Units;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity.EntityCategory;
 import de.vdw.it.hamqtt.devices.entities.AbstractEntity;
 import de.vdw.it.hamqtt.devices.entities.AbstractSensorEntity;
-import de.vdw.it.hamqtt.devices.entities.RawEntity;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -31,8 +30,7 @@ public class InverterDeviceService extends DeviceService {
 
   AbstractEntity gridPower, gridPowerIn, gridPowerOut, powerConsumption, selfConsumption,
       selfSufficiency, carbonNum, treeNum, vGridPowerIn, vGridPowerOut, pvPower, ppv1, ppv2,
-      pMeterDc, pvToday, pvTotal, startOfToday, popv, poinv, todayIncome, totalIncome, eload,
-      einput, eoutput;
+      pMeterDc, pvToday, pvTotal, popv, poinv, todayIncome, totalIncome, eload, einput, eoutput;
 
   public InverterDeviceService(BatteryDto battery) {
     super("Alpha ESS", battery.getMinv(), "PV-Wechselrichter",
@@ -101,9 +99,8 @@ public class InverterDeviceService extends DeviceService {
 
     this.pvTotal = getDailyEnergySensor("pvTotal", "PV Energie Gesamt", nodeIdStats);
 
-    this.startOfToday = RawEntity.builder().objectId(Constants.START_OF_DAY)
-        .className(this.pvToday.getClassName()).build();
-    getDevice().addEntity(this.startOfToday);
+    getDevice().addEntity(getStartOfToday());
+    getDevice().addEntity(getStartOfToday(), nodeIdStats);
   }
 
   private Sensor getPercentSensor(String objectId, String name) {
@@ -157,8 +154,7 @@ public class InverterDeviceService extends DeviceService {
     anyChange |= this.treeNum.setValue(getScaledValue(data.getTreeNum()));
     anyChange |= this.pvToday.setValue(data.getEpvtoday());
     anyChange |= this.pvTotal.setValue(data.getEpvtotal());
-    anyChange |=
-        this.startOfToday.setValue(LocalDate.now().atStartOfDay().atOffset(ZoneOffset.UTC));
+    anyChange |= getStartOfToday().setValue(LocalDate.now().atStartOfDay(ZoneId.of("UTC")));
     anyChange |= this.totalIncome.setValue(data.getTotalIncome());
     anyChange |= this.todayIncome.setValue(data.getTodayIncome());
     anyChange |= this.eload.setValue(data.getEload());

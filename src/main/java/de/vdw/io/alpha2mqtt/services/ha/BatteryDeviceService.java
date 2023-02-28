@@ -3,6 +3,8 @@ package de.vdw.io.alpha2mqtt.services.ha;
 import static de.vdw.io.alpha2mqtt.utils.IdUtils.getUniqueId;
 import static de.vdw.it.hamqtt.devices.Payload.OFF;
 import static de.vdw.it.hamqtt.devices.Units.WATT_PER_HOUR;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import de.vdw.io.alpha2mqtt.models.api.BatteryDto;
 import de.vdw.io.alpha2mqtt.models.api.PowerDataDto;
 import de.vdw.io.alpha2mqtt.models.api.SummeryDto;
@@ -95,6 +97,8 @@ public class BatteryDeviceService extends DeviceService {
     this.todayCharge = getDailyEnergySensor("Echarge", "Gespeicherte Energiemenge", null);
 
     this.todayDischarge = getDailyEnergySensor("EDischarge", "Entnommene Energiemenge", null);
+
+    getDevice().addEntity(getStartOfToday());
   }
 
   @Override
@@ -114,6 +118,7 @@ public class BatteryDeviceService extends DeviceService {
   public boolean mapValues(SummeryDto data) {
     boolean anyChange = this.todayCharge.setValue(data.getEcharge());
     anyChange |= this.todayDischarge.setValue(data.getEDisCharge());
+    anyChange |= getStartOfToday().setValue(LocalDate.now().atStartOfDay(ZoneId.of("UTC")));
 
     return anyChange;
   }
