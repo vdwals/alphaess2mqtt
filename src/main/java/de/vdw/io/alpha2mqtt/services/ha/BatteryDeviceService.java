@@ -101,7 +101,7 @@ public class BatteryDeviceService extends DeviceService {
     this.todayDischarge =
         getDailyEnergySensor("EDischarge", "Entnommene Energiemenge", nodeIdStats);
 
-    getDevice().addEntity(getStartOfToday());
+    getDevice().addEntity(getStartOfToday(), nodeIdStats);
   }
 
   @Override
