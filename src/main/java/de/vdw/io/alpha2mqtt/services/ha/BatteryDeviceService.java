@@ -49,6 +49,8 @@ public class BatteryDeviceService extends DeviceService {
     super("Alpha ESS", battery.getMbat(), "PV-Batterie",
         String.join("_", battery.getSys_sn(), battery.getMbat()), battery.getSys_name());
 
+    String nodeIdStats = IdUtils.getDeviceId("Alpha ESS", battery.getMbat(), "PV-Batterie", "2");
+
     this.capacity = battery.getSurpluscobat();
     this.frequency = battery.getTrans_frequency();
 
@@ -94,9 +96,10 @@ public class BatteryDeviceService extends DeviceService {
     this.usvMode.setValue(OFF);
     getDevice().addEntity(this.usvMode);
 
-    this.todayCharge = getDailyEnergySensor("Echarge", "Gespeicherte Energiemenge", null);
+    this.todayCharge = getDailyEnergySensor("Echarge", "Gespeicherte Energiemenge", nodeIdStats);
 
-    this.todayDischarge = getDailyEnergySensor("EDischarge", "Entnommene Energiemenge", null);
+    this.todayDischarge =
+        getDailyEnergySensor("EDischarge", "Entnommene Energiemenge", nodeIdStats);
 
     getDevice().addEntity(getStartOfToday());
   }
