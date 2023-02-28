@@ -86,9 +86,9 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
     this.wallboxDeviceService = chargingPileDeviceService;
     this.mqttService = mqttService;
 
-    chargingDto = JsonHelper.toJsonString(new ChargingDto(batterySn, wallboxSn))
+    this.chargingDto = JsonHelper.toJsonString(new ChargingDto(batterySn, wallboxSn))
         .getBytes(StandardCharsets.UTF_8);
-    chargingPileDto = JsonHelper.toJsonString(new ChargingPileDto(chargingPileId, batterySn))
+    this.chargingPileDto = JsonHelper.toJsonString(new ChargingPileDto(chargingPileId, batterySn))
         .getBytes(StandardCharsets.UTF_8);
   }
 
@@ -106,7 +106,7 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
     }
     log.debug("Charging command url: {}", url);
 
-    String token = tokenService.getToken();
+    String token = this.tokenService.getToken();
 
     if (token == null) {
       log.error("No token available");
@@ -116,7 +116,7 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
     // Post charging command.
     log.debug("Calling charging url {}", url);
     Post post = RequestUtils.addPostHeader(
-        Http.post(url, chargingDto, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
+        Http.post(url, this.chargingDto, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
 
     if (post.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error("Charging not started. Code: {}, Message: {}", post.responseCode(),
@@ -147,7 +147,7 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
 
   @Override
   public List<Device> getDevices() {
-    return List.of(wallboxDeviceService.getDevice());
+    return List.of(this.wallboxDeviceService.getDevice());
   }
 
   @Override
@@ -162,8 +162,8 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
     log.debug("Command received: {}", command);
     log.trace("On topic: {}", topic);
 
-    AbstractCommandEntity charger = wallboxDeviceService.getCharger();
-    AbstractCommandEntity chargerMode = wallboxDeviceService.getChargerMode();
+    AbstractCommandEntity charger = this.wallboxDeviceService.getCharger();
+    AbstractCommandEntity chargerMode = this.wallboxDeviceService.getChargerMode();
 
     boolean anyChange = false;
 
@@ -187,6 +187,8 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
             anyChange = charger.setValue(payload);
           }
           break;
+        default:
+          break;
       }
     } else if (topic.endsWith(TopicUtils.removeRelativeTopic(chargerMode.getCommandTopic()))) {
       ChargingMode chargingMode = EnumUtils.getEnumIgnoreCase(ChargingMode.class, command);
@@ -202,7 +204,7 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
 
     // Publish updated states
     if (anyChange) {
-      mqttService.publishValues();
+      this.mqttService.publishValues();
     }
   }
 
@@ -211,7 +213,8 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
     String url = String.format(Constants.chargingStateUpdateUrl);
 
     Post dataGet = RequestUtils.addPostHeader(
-        Http.post(url, chargingPileDto, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT), token);
+        Http.post(url, this.chargingPileDto, (int) Constants.TIMEOUT, (int) Constants.TIMEOUT),
+        token);
     if (dataGet.responseCode() != HttpURLConnection.HTTP_OK) {
       log.error("Unexpected response code while receiving vharging data {}: {}",
           dataGet.responseCode(), dataGet.responseMessage());
@@ -251,19 +254,19 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
     log.debug("Setting charging mode to {}", mode);
 
     log.debug("Retrieve settingsDto.");
-    SettingDto settingDto = settingService.getSettingDto();
+    SettingDto settingDto = this.settingService.getSettingDto();
 
     // Set mode
     settingDto.setChargingmode(mode.mode);
 
     log.debug("Set updated settings.");
-    SystemDto systemDto = settingService.updateSetting(settingDto);
+    SystemDto systemDto = this.settingService.updateSetting(settingDto);
 
     boolean modeSet = systemDto.getChargingmode() == mode.mode;
 
     if (modeSet) {
       // Update value of select entity
-      wallboxDeviceService.getChargerMode().setValue(mode);
+      this.wallboxDeviceService.getChargerMode().setValue(mode);
       log.debug("Charging mode updated successfully");
     } else {
       log.debug("Charging mode not changed. Expected: {}, Actual: {}", mode,

@@ -58,17 +58,15 @@ public class ServiceFactory {
   List<ICommandListener> commandServices = new ArrayList<>(2);
 
   public void init() {
-    List<BatteryDto> batteries = systemService.getData();
+    List<BatteryDto> batteries = this.systemService.getData();
 
-    if (batteries == null) {
+    if (batteries == null)
       return;
-    }
 
-    List<SystemIdDto> systemIds = systemService.getSystemIds();
+    List<SystemIdDto> systemIds = this.systemService.getSystemIds();
 
-    if (systemIds == null) {
+    if (systemIds == null)
       return;
-    }
 
     batteries.forEach(battery -> {
       log.info("Setup devices for {}", battery);
@@ -84,46 +82,51 @@ public class ServiceFactory {
       String system_id = systemId.get().getSystem_id();
 
       BatteryDeviceService batteryDeviceService = new BatteryDeviceService(battery);
-      deviceServices.add(batteryDeviceService);
+      this.deviceServices.add(batteryDeviceService);
 
       InverterDeviceService inverterDeviceService = new InverterDeviceService(battery);
-      deviceServices.add(inverterDeviceService);
+      this.deviceServices.add(inverterDeviceService);
 
-      SummeryService summeryService = new SummeryService(objectMapper, tokenService, battery);
-      SummeryDataUpdateService summeryDataUpdateService = new SummeryDataUpdateService(
-          inverterDeviceService, summeryService, mqttService, environmentService);
-      updateServices.add(summeryDataUpdateService);
+      SummeryService summeryService =
+          new SummeryService(this.objectMapper, this.tokenService, battery);
+      SummeryDataUpdateService summeryDataUpdateService =
+          new SummeryDataUpdateService(inverterDeviceService, summeryService, batteryDeviceService,
+              this.mqttService, this.environmentService);
+      this.updateServices.add(summeryDataUpdateService);
 
-      SettingService settingService = new SettingService(objectMapper, tokenService, system_id);
+      SettingService settingService =
+          new SettingService(this.objectMapper, this.tokenService, system_id);
       BatteryControlService batteryControlService =
-          new BatteryControlService(batteryDeviceService, settingService, mqttService);
-      commandServices.add(batteryControlService);
+          new BatteryControlService(batteryDeviceService, settingService, this.mqttService);
+      this.commandServices.add(batteryControlService);
 
       List<ChargingPileDeviceService> chargingPileDeviceServices =
-          systemService.requestChargingPiles(sys_sn, system_id).stream()
+          this.systemService.requestChargingPiles(sys_sn, system_id).stream()
               .map(ChargingPileDeviceService::new).collect(Collectors.toList());
-      deviceServices.addAll(chargingPileDeviceServices);
+      this.deviceServices.addAll(chargingPileDeviceServices);
 
       log.info("Setup device data mapping services for {}", battery);
-      PowerDataService rds = new PowerDataService(objectMapper, tokenService, battery.getSys_sn());
-      PowerDataUpdateService rdus = new PowerDataUpdateService(batteryDeviceService,
-          inverterDeviceService, chargingPileDeviceServices, rds, mqttService, environmentService);
-      updateServices.add(rdus);
+      PowerDataService rds =
+          new PowerDataService(this.objectMapper, this.tokenService, battery.getSys_sn());
+      PowerDataUpdateService rdus =
+          new PowerDataUpdateService(batteryDeviceService, inverterDeviceService,
+              chargingPileDeviceServices, rds, this.mqttService, this.environmentService);
+      this.updateServices.add(rdus);
 
       chargingPileDeviceServices.forEach(wallBoxDeviceService -> {
-        ChargingService chargingService =
-            new ChargingService(objectMapper, sys_sn, wallBoxDeviceService.getSn(), settingService,
-                tokenService, wallBoxDeviceService, mqttService, wallBoxDeviceService.getId());
-        commandServices.add(chargingService);
+        ChargingService chargingService = new ChargingService(this.objectMapper, sys_sn,
+            wallBoxDeviceService.getSn(), settingService, this.tokenService, wallBoxDeviceService,
+            this.mqttService, wallBoxDeviceService.getId());
+        this.commandServices.add(chargingService);
 
         SettingsUpdateService settingsUpdateService =
             new SettingsUpdateService(wallBoxDeviceService, batteryDeviceService, settingService,
-                mqttService, environmentService);
-        updateServices.add(settingsUpdateService);
+                this.mqttService, this.environmentService);
+        this.updateServices.add(settingsUpdateService);
 
         ChargingPileUpdateService chargingPileUpdateService = new ChargingPileUpdateService(
-            chargingPileDeviceServices, environmentService, mqttService, chargingService);
-        updateServices.add(chargingPileUpdateService);
+            chargingPileDeviceServices, this.environmentService, this.mqttService, chargingService);
+        this.updateServices.add(chargingPileUpdateService);
       });
 
     });

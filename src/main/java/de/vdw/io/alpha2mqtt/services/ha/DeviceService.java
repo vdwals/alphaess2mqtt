@@ -14,8 +14,10 @@ import de.vdw.io.alpha2mqtt.models.api.SystemDto;
 import de.vdw.io.alpha2mqtt.utils.IdUtils;
 import de.vdw.it.hamqtt.devices.Device;
 import de.vdw.it.hamqtt.devices.Device.DeviceBuilder;
+import de.vdw.it.hamqtt.devices.EntityClass;
 import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity.EntityCategory;
 import de.vdw.it.hamqtt.devices.entities.AbstractSensorEntity;
+import de.vdw.it.hamqtt.devices.entities.RawEntity;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import de.vdw.it.hamqtt.devices.entities.Sensor.SensorBuilder;
 import lombok.Getter;
@@ -33,6 +35,10 @@ public abstract class DeviceService {
   @Getter
   private final Device device;
 
+  @Getter
+  private final RawEntity startOfToday =
+      RawEntity.builder().objectId(Constants.START_OF_DAY).className(EntityClass.SENSOR).build();
+
   protected DeviceService(String manufacturer, String model, String name, String... identifier) {
     log.info("Create device");
 
@@ -47,6 +53,20 @@ public abstract class DeviceService {
     }
 
     this.device = deviceBuilder.build();
+  }
+
+  protected Sensor getDailyEnergySensor(String objectId, String name, String nodeId) {
+    Sensor sensor = getEnergySensor(objectId, name).stateClass(Sensor.StateClass.total)
+        .lastResetValueTemplate(String.format("{{ value_json.%s }}", Constants.START_OF_DAY))
+        .build();
+
+    if (nodeId != null) {
+      getDevice().addEntity(sensor, nodeId);
+    } else {
+      getDevice().addEntity(sensor);
+    }
+
+    return sensor;
   }
 
   protected Sensor.SensorBuilder getEnergySensor(String objectId, String name) {
@@ -90,11 +110,12 @@ public abstract class DeviceService {
 
   protected Sensor.SensorBuilder getSensor(Sensor.DeviceClass deviceClass, String id, String name) {
     return Sensor.builder().deviceClass(deviceClass).objectId(id)
-        .uniqueId(getUniqueId(device.getNodeId(), id)).name(name);
+        .uniqueId(getUniqueId(this.device.getNodeId(), id)).name(name);
   }
 
   protected Sensor.SensorBuilder getSensor(String id, String name) {
-    return Sensor.builder().objectId(id).uniqueId(getUniqueId(device.getNodeId(), id)).name(name);
+    return Sensor.builder().objectId(id).uniqueId(getUniqueId(this.device.getNodeId(), id))
+        .name(name);
   }
 
   /**
