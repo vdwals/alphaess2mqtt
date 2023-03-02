@@ -84,7 +84,7 @@
 	<properties>
 		<apache-commons.version>1.15</apache-commons.version>
 		<easy-di.version>0.6.0</easy-di.version>
-		<hamqtt.version>3.5.0</hamqtt.version>
+		<hamqtt.version>3.6.0</hamqtt.version>
 		<java.version>17</java.version>
 		<lombok.version>1.18.24</lombok.version>
 		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
