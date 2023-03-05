@@ -13,17 +13,9 @@ import lombok.extern.jackson.Jacksonized;
 public class PowerDataDto implements DataDto {
   String _id;
   String createtime;
-  double ev1_chgenergy_real;
-  int ev1_mode;
   double ev1_power;
-  double ev2_chgenergy_real;
-  int ev2_mode;
   double ev2_power;
-  double ev3_chgenergy_real;
-  int ev3_mode;
   double ev3_power;
-  double ev4_chgenergy_real;
-  int ev4_mode;
   double ev4_power;
   int factory_flag;
   double pbat;

@@ -142,11 +142,6 @@ public class ChargingPileDeviceService extends DeviceService {
     }
 
     boolean anyChange = this.chargePower.setValue(wallBoxPower);
-    anyChange |= this.chargeEnergy.setValue(switch (id) {
-      case EV1 -> dataDto.getEv1_chgenergy_real();
-      case EV2 -> dataDto.getEv2_chgenergy_real();
-      default -> throw new IllegalArgumentException("Unexpected value: " + id);
-    });
 
     if (wallBoxPower > 0) {
       anyChange |= this.charger.setValue(ON);
