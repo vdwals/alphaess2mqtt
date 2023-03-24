@@ -8,6 +8,7 @@ import de.vdw.io.alpha2mqtt.services.alpha.get.SettingService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -16,13 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 @RequiredArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 /**
  * Class for updating devices related to settings by calling the API at fixed rates.
  *
  * @author Dennis van der Wals
  *
  */
-public class SettingsUpdateService implements Updater {
+public class SettingsUpdateService extends Updater {
 
   ChargingPileDeviceService wallboxDeviceService;
 
@@ -41,17 +43,7 @@ public class SettingsUpdateService implements Updater {
   long interval;
 
   @Override
-  public void init() {
-    this.delay = RandomUtils.nextLong(1, 11);
-
-    this.interval =
-        Math.max(this.settingService.getRefreshRate(), this.environmentService.getIntervall());
-    log.info("Start scheduling settings update in {} seconds with interval {}", this.delay,
-        this.interval);
-  }
-
-  @Override
-  public void run() {
+  public void doUpdate() {
     try {
       Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
@@ -87,6 +79,16 @@ public class SettingsUpdateService implements Updater {
         e.printStackTrace();
       }
     }
+  }
+
+  @Override
+  public void init() {
+    this.delay = RandomUtils.nextLong(1, 11);
+
+    this.interval =
+        Math.max(this.settingService.getRefreshRate(), this.environmentService.getIntervall());
+    log.info("Start scheduling settings update in {} seconds with interval {}", this.delay,
+        this.interval);
   }
 }
 

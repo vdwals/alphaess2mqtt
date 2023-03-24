@@ -7,6 +7,7 @@ import de.vdw.io.alpha2mqtt.services.EnvironmentService;
 import de.vdw.io.alpha2mqtt.services.alpha.ChargingService;
 import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -15,13 +16,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 @RequiredArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 /**
  * Class for updating charging pile devices by calling the API at fixed rate.
  *
  * @author Dennis van der Wals
  *
  */
-public class ChargingPileUpdateService implements Updater {
+public class ChargingPileUpdateService extends Updater {
 
   List<ChargingPileDeviceService> wallboxDeviceServices;
 
@@ -38,17 +40,7 @@ public class ChargingPileUpdateService implements Updater {
   long interval;
 
   @Override
-  public void init() {
-    this.delay = RandomUtils.nextLong(1, 11);
-
-    this.interval =
-        Math.max(this.chargingService.getRefreshRate(), this.environmentService.getIntervall());
-    log.info("Start scheduling charging pile state in {} seconds with interval {}", this.delay,
-        this.interval);
-  }
-
-  @Override
-  public void run() {
+  public void doUpdate() {
     try {
       Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
@@ -79,6 +71,16 @@ public class ChargingPileUpdateService implements Updater {
         e.printStackTrace();
       }
     }
+  }
+
+  @Override
+  public void init() {
+    this.delay = RandomUtils.nextLong(1, 11);
+
+    this.interval =
+        Math.max(this.chargingService.getRefreshRate(), this.environmentService.getIntervall());
+    log.info("Start scheduling charging pile state in {} seconds with interval {}", this.delay,
+        this.interval);
   }
 
 }
