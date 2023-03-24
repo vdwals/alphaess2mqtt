@@ -10,6 +10,7 @@ import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.ChargingPileDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -18,13 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 @RequiredArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 /**
  * Class for updating power data by calling the related API at fixed rate.
  *
  * @author Dennis van der Wals
  *
  */
-public class PowerDataUpdateService implements Updater {
+public class PowerDataUpdateService extends Updater {
 
   BatteryDeviceService batteryDeviceService;
 
@@ -45,17 +47,7 @@ public class PowerDataUpdateService implements Updater {
   long interval;
 
   @Override
-  public void init() {
-    this.delay = RandomUtils.nextLong(1, 11);
-
-    this.interval = Math.max((long) this.batteryDeviceService.getFrequency(),
-        this.environmentService.getIntervall());
-    log.info("Start scheduling live data in {} seconds with interval {}", this.delay,
-        this.interval);
-  }
-
-  @Override
-  public void run() {
+  public void doUpdate() {
     try {
       Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
@@ -88,5 +80,15 @@ public class PowerDataUpdateService implements Updater {
         e.printStackTrace();
       }
     }
+  }
+
+  @Override
+  public void init() {
+    this.delay = RandomUtils.nextLong(1, 11);
+
+    this.interval = Math.max((long) this.batteryDeviceService.getFrequency(),
+        this.environmentService.getIntervall());
+    log.info("Start scheduling live data in {} seconds with interval {}", this.delay,
+        this.interval);
   }
 }

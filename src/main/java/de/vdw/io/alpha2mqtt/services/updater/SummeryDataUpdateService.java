@@ -8,6 +8,7 @@ import de.vdw.io.alpha2mqtt.services.alpha.get.SummeryService;
 import de.vdw.io.alpha2mqtt.services.ha.BatteryDeviceService;
 import de.vdw.io.alpha2mqtt.services.ha.InverterDeviceService;
 import de.vdw.it.hamqtt.HomeAssistantMQTTService;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -16,13 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 @RequiredArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 /**
  * Class for updating summary data and related devices by calling the API at fixes rates.
  *
  * @author Dennis van der Wals
  *
  */
-public class SummeryDataUpdateService implements Updater {
+public class SummeryDataUpdateService extends Updater {
 
   InverterDeviceService inverterDeviceService;
 
@@ -41,17 +43,7 @@ public class SummeryDataUpdateService implements Updater {
   long interval;
 
   @Override
-  public void init() {
-    this.delay = RandomUtils.nextLong(1, 11);
-
-    this.interval =
-        Math.max(this.summeryService.getRefreshRate(), this.environmentService.getIntervall());
-    log.info("Start scheduling summary data in {} seconds with interval {}", this.delay,
-        this.interval);
-  }
-
-  @Override
-  public void run() {
+  public void doUpdate() {
     try {
       Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
@@ -85,5 +77,15 @@ public class SummeryDataUpdateService implements Updater {
         e.printStackTrace();
       }
     }
+  }
+
+  @Override
+  public void init() {
+    this.delay = RandomUtils.nextLong(1, 11);
+
+    this.interval =
+        Math.max(this.summeryService.getRefreshRate(), this.environmentService.getIntervall());
+    log.info("Start scheduling summary data in {} seconds with interval {}", this.delay,
+        this.interval);
   }
 }
