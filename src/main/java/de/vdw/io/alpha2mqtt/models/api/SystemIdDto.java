@@ -1,6 +1,11 @@
 package de.vdw.io.alpha2mqtt.models.api;
 
 import lombok.Value;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+
+import lombok.Singular;
 
 @Value
 public class SystemIdDto {
