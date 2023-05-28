@@ -6,7 +6,7 @@ RUN git clone https://bitbucket.org/vdwals/hamqtt.git . \
     && git checkout 3.5.1
 
 # Build application
-FROM maven:3.8.7-eclipse-temurin-19-alpine as builder
+FROM maven:3.9.2-eclipse-temurin-17-alpine as builder
 WORKDIR /hamqtt
 COPY --from=clone /hamqtt .
 RUN mvn install
