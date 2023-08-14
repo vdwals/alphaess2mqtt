@@ -1,5 +1,8 @@
 package de.vdw.io.alpha2mqtt.models.api;
 
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import lombok.Singular;
 import lombok.Value;
 import lombok.With;
 
@@ -9,6 +12,7 @@ public class ChargingPileDto {
   String chargingpile_hard_ver;
   String chargingpile_id;
   int chargingpile_phase;
+  int chargingpile_strategy;
   String chargingpile_sn;
   String chargingpile_soft_ver;
   String chargingpile_startpower;
@@ -23,4 +27,8 @@ public class ChargingPileDto {
   String time_charge_e2;
   String time_charge_s1;
   String time_charge_s2;
+
+  @JsonAnySetter
+  @Singular("any")
+  Map<String, String> properties;
 }
