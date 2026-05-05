@@ -2,6 +2,7 @@ package de.vdw.io.alpha2mqtt.services;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +75,8 @@ public class ServiceFactory {
       inverterDeviceServices.put(battery, inverterDeviceService);
 
       List<WallBoxDeviceService> wallBoxDeviceServices =
-          cache.getWallboxes().get(battery.getSys_sn()).stream().map(WallBoxDeviceService::new)
-              .collect(Collectors.toList());
+          cache.getWallboxes().getOrDefault(battery.getSys_sn(), Collections.emptyList()).stream()
+              .map(WallBoxDeviceService::new).collect(Collectors.toList());
       this.wallBoxDeviceServices.put(battery, wallBoxDeviceServices);
 
       log.info("Setup device data mapping services for {}", battery);

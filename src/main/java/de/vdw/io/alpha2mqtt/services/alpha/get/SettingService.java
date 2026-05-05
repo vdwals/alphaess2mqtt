@@ -86,7 +86,11 @@ public class SettingService extends AlphaService<SystemDto> {
     }
 
     // Add wallbox values
-    settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
+    if (systemData.getCharging_pile_list() != null && !systemData.getCharging_pile_list().isEmpty()) {
+      settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
+    } else {
+      log.warn("No charging pile found in system settings – skipping wallbox setup.");
+    }
 
     // Set system id
     settingDto.setSystem_id(systemId);

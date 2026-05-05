@@ -25,6 +25,11 @@ public class BatteryControlService implements ICommandListener {
   private void changeBatteryReserveSetting(String batteryReserve) {
     SettingDto settingDto = settingService.getSettingDto();
 
+    if (settingDto == null) {
+      log.error("Could not retrieve settings for battery reserve update.");
+      return;
+    }
+
     // Replace decimal places
     batteryReserve = batteryReserve.split("\\.")[0];
 
@@ -32,9 +37,13 @@ public class BatteryControlService implements ICommandListener {
 
     SystemDto systemDto = settingService.updateSetting(settingDto);
 
-    // Check if settings have been set
-    // Publish update of value
-    if (systemDto.getBat_use_cap().equals(batteryReserve) && batteryDeviceService.getUseCapacity().setValue(Integer.parseInt(batteryReserve))) {
+    if (systemDto == null) {
+      log.error("No response after updating battery reserve.");
+      return;
+    }
+
+    if (systemDto.getBat_use_cap().equals(batteryReserve)
+        && batteryDeviceService.getUseCapacity().setValue(Integer.parseInt(batteryReserve))) {
       mqttService.publishValues();
     }
   }

@@ -50,9 +50,9 @@ public class SettingDto {
   String ups1;
   int switch_on1;
   int switch_off1;
-  int delay1;
-  int duration1;
-  int pause1;
+  String delay1;
+  String duration1;
+  String pause1;
   String channel2;
   String control_mode2;
   String start_time2a;
@@ -64,9 +64,9 @@ public class SettingDto {
   String ups2;
   int switch_on2;
   int switch_off2;
-  int delay2;
-  int duration2;
-  int pause2;
+  String delay2;
+  String duration2;
+  String pause2;
   int l1_priority;
   int l2_priority;
   int l3_priority;
@@ -91,7 +91,7 @@ public class SettingDto {
   int dg_frequency;
   int gc_rate_percent;
   int chargingpile;
-  String currentsetting;
+  int currentsetting;
   List<WallboxDto> charging_pile_list;
   int peak_fill_en;
   int peakvalue;

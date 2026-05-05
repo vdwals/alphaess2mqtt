@@ -189,11 +189,21 @@ public class ChargingService implements ICommandListener {
     log.debug("Retrieve settingsDto.");
     SettingDto settingDto = settingService.getSettingDto();
 
+    if (settingDto == null) {
+      log.error("Could not retrieve settings for charging mode update.");
+      return false;
+    }
+
     // Set mode
     settingDto.setChargingmode(mode.mode);
 
     log.debug("Set updated settings.");
     SystemDto systemDto = settingService.updateSetting(settingDto);
+
+    if (systemDto == null) {
+      log.error("No response after updating charging mode.");
+      return false;
+    }
 
     boolean modeSet = systemDto.getChargingmode() == mode.mode;
 
@@ -214,9 +224,19 @@ public class ChargingService implements ICommandListener {
 
     SettingDto settingDto = settingService.getSettingDto();
 
-    settingDto.setCurrentsetting(String.valueOf(amps));
+    if (settingDto == null) {
+      log.error("Could not retrieve settings for charging current update.");
+      return false;
+    }
+
+    settingDto.setCurrentsetting(amps);
 
     SystemDto systemDto = settingService.updateSetting(settingDto);
+
+    if (systemDto == null) {
+      log.error("No response after updating charging current.");
+      return false;
+    }
 
     boolean currentSet = systemDto.getCurrentsetting() == amps;
 
