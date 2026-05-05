@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.javalite.common.JsonHelper;
 import org.javalite.http.Http;
 import org.javalite.http.Post;
@@ -164,6 +165,7 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
 
     AbstractCommandEntity charger = this.wallboxDeviceService.getCharger();
     AbstractCommandEntity chargerMode = this.wallboxDeviceService.getChargerMode();
+    AbstractCommandEntity chargerCurrent = this.wallboxDeviceService.getChargerCurrent();
 
     boolean anyChange = false;
 
@@ -199,6 +201,20 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
       log.debug("Execute command for charge mode with chargingMode {}", chargingMode);
 
       setChargingMode(chargingMode);
+      anyChange = true;
+    } else if (topic.endsWith(TopicUtils.removeRelativeTopic(chargerCurrent.getCommandTopic()))) {
+      if (!NumberUtils.isParsable(command)) {
+        log.error("Command {} could not be interpreted as charging current.", command);
+        return;
+      }
+      int amps = Integer.parseInt(command.split("\\.")[0]);
+      if (amps < 6 || amps > 16) {
+        log.error("Charging current {} A is out of range (6-16 A).", amps);
+        return;
+      }
+      log.debug("Execute command for charger current with {} A", amps);
+
+      setChargingCurrent(amps);
       anyChange = true;
     }
 
@@ -276,11 +292,34 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
     return modeSet;
   }
 
+  private boolean setChargingCurrent(int amps) {
+    log.debug("Setting charging current to {} A", amps);
+
+    SettingDto settingDto = this.settingService.getSettingDto();
+
+    settingDto.setCurrentsetting(String.valueOf(amps));
+
+    SystemDto systemDto = this.settingService.updateSetting(settingDto);
+
+    boolean currentSet = systemDto.getCurrentsetting() == amps;
+
+    if (currentSet) {
+      this.wallboxDeviceService.getChargerCurrent().setValue(amps);
+      log.debug("Charging current updated successfully to {} A", amps);
+    } else {
+      log.debug("Charging current not changed. Expected: {} A, Actual: {} A", amps,
+          systemDto.getCurrentsetting());
+    }
+
+    return currentSet;
+  }
+
   /**
    * Call API to start charging.
    *
    * @return success of API call
    */
+
   private boolean startCharging() {
     return callChargingUrl(Constants.startCharginUrl);
   }
