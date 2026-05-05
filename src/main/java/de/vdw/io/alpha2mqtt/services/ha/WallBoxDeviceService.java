@@ -15,6 +15,7 @@ import de.vdw.it.hamqtt.devices.entities.AbstractAvailabilityEntity;
 import de.vdw.it.hamqtt.devices.entities.AbstractCommandEntity;
 import de.vdw.it.hamqtt.devices.entities.AbstractEntity;
 import de.vdw.it.hamqtt.devices.entities.BinarySensor;
+import de.vdw.it.hamqtt.devices.entities.Number;
 import de.vdw.it.hamqtt.devices.entities.Select;
 import de.vdw.it.hamqtt.devices.entities.Sensor;
 import de.vdw.it.hamqtt.devices.entities.Switch;
@@ -29,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WallBoxDeviceService extends DeviceService {
 
   AbstractEntity chargeEnergy, chargePower, chargeState, plugState, pluggedCarState;
-  AbstractCommandEntity charger, chargerMode;
+  AbstractCommandEntity charger, chargerMode, chargerCurrent;
 
   String id, sn;
 
@@ -70,6 +71,13 @@ public class WallBoxDeviceService extends DeviceService {
         .option(ChargingService.ChargingMode.MAX.name()).icon("mdi:car-select")
         .entityCategory(AbstractAvailabilityEntity.EntityCategory.config).build();
     getDevice().addEntity(this.chargerMode);
+
+    this.chargerCurrent = Number.builder().device(getDevice()).name("Ladestrom")
+        .objectId("charger_current").uniqueId(getUniqueId(getDevice().getNodeId(), "charger_current"))
+        .min(6).max(16).step(1).icon("mdi:current-ac")
+        .entityCategory(AbstractAvailabilityEntity.EntityCategory.config).build();
+    this.chargerCurrent.setValue(6);
+    getDevice().addEntity(this.chargerCurrent);
   }
 
   private AbstractEntity buildBinarySensor(String name, String id,
@@ -155,10 +163,17 @@ public class WallBoxDeviceService extends DeviceService {
     ChargingService.ChargingMode chargingMode =
         ChargingService.ChargingMode.chargingModeByValue(dataDto.getChargingmode());
 
+    boolean anyChange = false;
+
     if (chargingMode != null) {
-      return this.chargerMode.setValue(chargingMode);
+      anyChange = this.chargerMode.setValue(chargingMode);
     }
 
-    return false;
+    int current = dataDto.getCurrentsetting();
+    if (current >= 6 && current <= 16) {
+      anyChange |= this.chargerCurrent.setValue(current);
+    }
+
+    return anyChange;
   }
 }
