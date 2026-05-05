@@ -8,6 +8,7 @@ services:
       context: .
       dockerfile: Dockerfile_x86
     image: alpha_ess_2_mqtt
+    mem_limit: 512m
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro

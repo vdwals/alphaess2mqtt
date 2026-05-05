@@ -47,34 +47,34 @@ public class SummeryDataUpdateService extends Updater {
     try {
       Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      Thread.currentThread().interrupt();
+      return;
     }
 
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       log.info("Update summary data");
       SummeryDto data = this.summeryService.getData();
 
       if (data == null) {
-        log.error("No data available");
-        continue;
-      }
-
-      boolean anyChange = this.inverterDeviceService.mapValues(data);
-      anyChange |= this.batteryDeviceService.mapValues(data);
-
-      if (anyChange) {
-        log.debug("Summary data mapped. Publishing via service.");
-        this.mqttService.publishValues();
-
-        log.debug("Summary data updated successfully.");
+        log.error("No summary data available. Waiting before retry.");
       } else {
-        log.debug("No summary data updated.");
+        boolean anyChange = this.inverterDeviceService.mapValues(data);
+        anyChange |= this.batteryDeviceService.mapValues(data);
+
+        if (anyChange) {
+          log.debug("Summary data mapped. Publishing via service.");
+          this.mqttService.publishValues();
+          log.debug("Summary data updated successfully.");
+        } else {
+          log.debug("No summary data updated.");
+        }
       }
 
       try {
         Thread.sleep(TimeUnit.SECONDS.toMillis(this.interval));
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        Thread.currentThread().interrupt();
+        return;
       }
     }
   }

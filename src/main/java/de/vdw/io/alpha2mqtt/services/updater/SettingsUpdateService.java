@@ -47,36 +47,36 @@ public class SettingsUpdateService extends Updater {
     try {
       Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      Thread.currentThread().interrupt();
+      return;
     }
 
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       log.info("Update setting data.");
       SystemDto data = this.settingService.getData();
 
       if (data == null) {
-        log.error("No setting data available.");
-        continue;
-      }
-      log.debug("Setting data received.");
-
-      boolean anyChange = this.wallboxDeviceService.mapValues(data);
-
-      anyChange |= this.batteryDeviceService.mapValues(data);
-
-      if (anyChange) {
-        log.debug("Setting data mapped. Publishing via service.");
-        this.mqttService.publishValues();
-        log.debug("Setting data updated successfully");
-
+        log.error("No setting data available. Waiting before retry.");
       } else {
-        log.debug("No changes in settings to publish");
+        log.debug("Setting data received.");
+
+        boolean anyChange = this.wallboxDeviceService.mapValues(data);
+        anyChange |= this.batteryDeviceService.mapValues(data);
+
+        if (anyChange) {
+          log.debug("Setting data mapped. Publishing via service.");
+          this.mqttService.publishValues();
+          log.debug("Setting data updated successfully");
+        } else {
+          log.debug("No changes in settings to publish");
+        }
       }
 
       try {
         Thread.sleep(TimeUnit.SECONDS.toMillis(this.interval));
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        Thread.currentThread().interrupt();
+        return;
       }
     }
   }

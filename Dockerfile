@@ -29,4 +29,4 @@ WORKDIR /app
 COPY --from=builder /app/target/alpha_ess*.jar ./alpha_ess_2_mqtt.jar
 LABEL name="Alpha-ESS-2-MQTT"
 ENV TZ=UTC
-ENTRYPOINT ["java", "-Dlog4j2.formatMsgNoLookups=true",  "-jar", "alpha_ess_2_mqtt.jar"]
+ENTRYPOINT ["java", "-Dlog4j2.formatMsgNoLookups=true", "-Xmx192m", "-XX:+UseSerialGC", "-jar", "alpha_ess_2_mqtt.jar"]

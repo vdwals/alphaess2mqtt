@@ -44,31 +44,32 @@ public class ChargingPileUpdateService extends Updater {
     try {
       Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      Thread.currentThread().interrupt();
+      return;
     }
 
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       log.info("Update charging pile states.");
       Integer data = this.chargingService.getData();
 
       if (data == null) {
-        log.error("No charging data available.");
-        continue;
+        log.error("No charging data available. Waiting before retry.");
+      } else {
+        log.debug("Charging data received.");
+
+        this.wallboxDeviceServices
+            .forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
+
+        log.debug("Charging data mapped. Publishing via service.");
+        this.mqttService.publishValues();
+        log.debug("Charging data updated successfully.");
       }
-      log.debug("Charging data received.");
-
-      this.wallboxDeviceServices
-          .forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
-
-      log.debug("Charging data mapped. Publishing via service.");
-      this.mqttService.publishValues();
-
-      log.debug("Charging data updated successfully.");
 
       try {
         Thread.sleep(TimeUnit.SECONDS.toMillis(this.interval));
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        Thread.currentThread().interrupt();
+        return;
       }
     }
   }

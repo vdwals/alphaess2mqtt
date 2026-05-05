@@ -51,33 +51,34 @@ public class PowerDataUpdateService extends Updater {
     try {
       Thread.sleep(TimeUnit.SECONDS.toMillis(this.delay));
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      Thread.currentThread().interrupt();
+      return;
     }
 
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       log.info("Update live data.");
       PowerDataDto data = this.powerDataService.getData();
 
       if (data == null) {
-        log.error("No live data available.");
-        continue;
+        log.error("No live data available. Waiting before retry.");
+      } else {
+        log.debug("Live data received.");
+
+        this.batteryDeviceService.mapValues(data);
+        this.inverterDeviceService.mapValues(data);
+        this.wallboxDeviceServices
+            .forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
+
+        log.debug("Live data mapped. Publishing via service.");
+        this.mqttService.publishValues();
+        log.debug("Live data updated successfully.");
       }
-      log.debug("Live data received.");
-
-      this.batteryDeviceService.mapValues(data);
-      this.inverterDeviceService.mapValues(data);
-      this.wallboxDeviceServices
-          .forEach(wallboxDeviceService -> wallboxDeviceService.mapValues(data));
-
-      log.debug("Live data mapped. Publishing via service.");
-      this.mqttService.publishValues();
-
-      log.debug("Live data updated successfully.");
 
       try {
         Thread.sleep(TimeUnit.SECONDS.toMillis(this.interval));
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        Thread.currentThread().interrupt();
+        return;
       }
     }
   }

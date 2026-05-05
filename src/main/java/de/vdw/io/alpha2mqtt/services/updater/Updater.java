@@ -1,5 +1,6 @@
 package de.vdw.io.alpha2mqtt.services.updater;
 
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -16,16 +17,20 @@ public abstract class Updater implements Runnable {
 
   @Override
   public void run() {
-    boolean retry = false;
-    do {
+    while (!Thread.currentThread().isInterrupted()) {
       try {
         doUpdate();
-        retry = false;
-      } catch (Exception e) { // timeout, network failure exceptions
-        log.error("Exception in running thread: " + this.getClass().getCanonicalName()
-            + ", restarting job");
-        retry = true;
+        return;
+      } catch (Exception e) {
+        log.error("Exception in running thread: {}, restarting in 30s",
+            this.getClass().getCanonicalName(), e);
+        try {
+          TimeUnit.SECONDS.sleep(30);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          return;
+        }
       }
-    } while (retry);
+    }
   }
 }
