@@ -6,80 +6,9 @@ import lombok.Data;
 
 @Data
 public class SettingDto {
-<<<<<<< HEAD
   int ac_tied;
   int auto_soccalib_en;
   int auto_startdg_en = 0;
-=======
-  String sys_sn;
-  String ems_version;
-  String charge_workdays;
-  int grid_charge;
-  String time_chaf1a;
-  String time_chae1a;
-  String time_chaf2a;
-  String time_chae2a;
-  String bakbox_ver;
-  int ctr_dis;
-  String time_disf1a;
-  String time_dise1a;
-  String time_disf2a;
-  String time_dise2a;
-  String bat_high_cap;
-  String bat_use_cap;
-  String charge_weekend;
-  int grid_Charge_we;
-  String time_cha_fwe1a;
-  String time_cha_ewe1a;
-  String time_cha_fwe2a;
-  String time_cha_ewe2a;
-  int bat_highcap_we;
-  int ctr_dis_we;
-  String time_dis_fwe1a;
-  String time_dis_ewe1a;
-  String time_dis_fwe2a;
-  String time_dis_ewe2a;
-  int bat_usecap_we;
-  int basic_mode_jp;
-  int peace_mode_jp;
-  int vpp_mode_jp;
-  String channel1;
-  String control_mode1;
-  String start_time1a;
-  String end_time1a;
-  String start_time1b;
-  String end_time1b;
-  String date1;
-  String charge_soc1;
-  String ups1;
-  int switch_on1;
-  int switch_off1;
-  String delay1;
-  String duration1;
-  String pause1;
-  String channel2;
-  String control_mode2;
-  String start_time2a;
-  String end_time2a;
-  String start_time2b;
-  String end_time2b;
-  String date2;
-  String charge_soc2;
-  String ups2;
-  int switch_on2;
-  int switch_off2;
-  String delay2;
-  String duration2;
-  String pause2;
-  int l1_priority;
-  int l2_priority;
-  int l3_priority;
-  String l1_soc_limit;
-  String l2_soc_limit;
-  String l3_soc_limit;
-  int charge_mode2;
-  int charge_mode1;
->>>>>>> origin/claude/check-flow-functionality-cLyGf
   int backupbox;
   String bakbox_ver;
   int basic_mode_jp;
@@ -105,7 +34,7 @@ public class SettingDto {
   String control_mode2;
   int ctr_dis;
   int ctr_dis_we;
-  String currentsetting;
+  int currentsetting;
   String date1;
   String date2;
   int delay1;
@@ -113,7 +42,6 @@ public class SettingDto {
   int delta;
   int dg_cap;
   int dg_frequency;
-<<<<<<< HEAD
   int duration1;
   int duration2;
   String ems_version;
@@ -121,21 +49,6 @@ public class SettingDto {
   String end_time1b;
   String end_time2a;
   String end_time2b;
-=======
-  int gc_rate_percent;
-  int chargingpile;
-  int currentsetting;
-  List<WallboxDto> charging_pile_list;
-  int peak_fill_en;
-  int peakvalue;
-  int fillvalue;
-  int delta;
-  String peak_s1a;
-  String peak_e1a;
-  String peak_s2a;
-  String peak_e2a;
-  String fill_s1a;
->>>>>>> origin/claude/check-flow-functionality-cLyGf
   String fill_e1a;
   String fill_e2a;
   String fill_s1a;

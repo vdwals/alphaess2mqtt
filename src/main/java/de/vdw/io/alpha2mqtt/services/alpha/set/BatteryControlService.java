@@ -41,25 +41,24 @@ public class BatteryControlService implements ICommandListener {
   private void changeBatteryReserveSetting(String batteryReserve) {
     SettingDto settingDto = settingService.getSettingDto();
 
-<<<<<<< HEAD
-    Double reserve = NumberUtils.createDouble(batteryReserve);
-    reserve = Math.min(BatteryDeviceService.MAX_USV_CAPACITY,
-        Math.max(reserve, BatteryDeviceService.MIN_USV_CAPACITY));
-=======
     if (settingDto == null) {
       log.error("Could not retrieve settings for battery reserve update.");
       return;
     }
 
-    // Replace decimal places
-    batteryReserve = batteryReserve.split("\\.")[0];
->>>>>>> origin/claude/check-flow-functionality-cLyGf
+    Double reserve = NumberUtils.createDouble(batteryReserve);
+    reserve = Math.min(BatteryDeviceService.MAX_USV_CAPACITY,
+        Math.max(reserve, BatteryDeviceService.MIN_USV_CAPACITY));
 
     settingDto.setBat_use_cap(String.valueOf(reserve));
 
     SystemDto systemDto = settingService.updateSetting(settingDto);
 
-<<<<<<< HEAD
+    if (systemDto == null) {
+      log.error("No response after updating battery reserve.");
+      return;
+    }
+
     // Check if settings have been set
     // Publish update of value
     if (Double.valueOf(systemDto.getBat_use_cap()).equals(reserve)
@@ -77,23 +76,24 @@ public class BatteryControlService implements ICommandListener {
   private void changeBatteryUsvModeSetting(int usvMode, Payload payload) {
     SettingDto settingDto = settingService.getSettingDto();
 
+    if (settingDto == null) {
+      log.error("Could not retrieve settings for USV mode update.");
+      return;
+    }
+
     settingDto.setUpsReserve(usvMode);
 
     SystemDto systemDto = settingService.updateSetting(settingDto);
+
+    if (systemDto == null) {
+      log.error("No response after updating USV mode.");
+      return;
+    }
 
     // Check if settings have been set
     // Publish update of value
     if (systemDto.getUpsReserve() == usvMode
         && batteryDeviceService.getUsvMode().setValue(payload)) {
-=======
-    if (systemDto == null) {
-      log.error("No response after updating battery reserve.");
-      return;
-    }
-
-    if (systemDto.getBat_use_cap().equals(batteryReserve)
-        && batteryDeviceService.getUseCapacity().setValue(Integer.parseInt(batteryReserve))) {
->>>>>>> origin/claude/check-flow-functionality-cLyGf
       mqttService.publishValues();
     }
   }

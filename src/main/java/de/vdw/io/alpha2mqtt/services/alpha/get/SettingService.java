@@ -73,7 +73,11 @@ public class SettingService extends AlphaService<SystemDto> {
     }
 
     // Add wallbox values
-    settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
+    if (systemData.getCharging_pile_list() != null && !systemData.getCharging_pile_list().isEmpty()) {
+      settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
+    } else {
+      log.warn("No charging pile found in system settings – skipping wallbox setup.");
+    }
 
     // Set system id
     settingDto.setSystem_id(systemId);
@@ -116,85 +120,12 @@ public class SettingService extends AlphaService<SystemDto> {
     }
   }
 
-<<<<<<< HEAD
   /**
    * Call to API to adjust settings.
    *
    * @param settingDto Settings to set
    * @return Updated system dto
    */
-=======
-  public SettingDto getSettingDto() {
-    log.debug("Build settings DTO.");
-
-    SystemDto systemData = getSystemSettings();
-
-    if (systemData == null) {
-      log.error("Could not retrieve system settings.");
-      return null;
-    }
-
-    log.debug("Build system settings.");
-    SettingDto settingDto;
-    try {
-      // Copy system from response to setting for request.
-      String systemString = JsonUtils.jsonMapper.writeValueAsString(systemData);
-
-      settingDto = JsonUtils.jsonMapper.readValue(systemString, SettingDto.class);
-    } catch (JsonProcessingException e) {
-      log.error(e.getMessage(), e);
-      return null;
-    }
-
-    // Add wallbox values
-    if (systemData.getCharging_pile_list() != null && !systemData.getCharging_pile_list().isEmpty()) {
-      settingDto.setWallbox(systemData.getCharging_pile_list().get(0));
-    } else {
-      log.warn("No charging pile found in system settings – skipping wallbox setup.");
-    }
-
-    // Set system id
-    settingDto.setSystem_id(systemId);
-
-    return settingDto;
-  }
-
-  public SystemDto getSystemSettings() {
-    String token = this.tokenService.getToken();
-
-    if (token == null) {
-      log.error("No token available");
-      return null;
-    }
-
-    log.info("Load system settings information.");
-    String url = String.format(Constants.getSettingUrl, systemId);
-
-    return getResponse(token, url);
-  }
-
-  @Override
-  protected SystemDto requestNewData(String token, LocalDateTime now) {
-    log.info("Load settings.");
-
-    String url = String.format(Constants.getSettingUrl, systemId);
-
-    SystemDto systemResponseDto = getResponse(token, url);
-
-    if (systemResponseDto == null) {
-      log.error("No settings received.");
-      return null;
-    }
-
-    /*
-     * Base.withDb(() -> { for (WallboxDto wallboxDto : systemResponseDto.getCharging_pile_list()) {
-     * AlphaEssWallbox.create(battery, wallboxDto.getChargingpile_sn()); } return null; });
-     */
-
-    return systemResponseDto;
-  }
-
->>>>>>> origin/claude/check-flow-functionality-cLyGf
   public SystemDto updateSetting(SettingDto settingDto) {
     String token = this.tokenService.getToken();
 
