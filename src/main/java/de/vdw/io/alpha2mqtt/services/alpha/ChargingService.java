@@ -272,11 +272,21 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
     log.debug("Retrieve settingsDto.");
     SettingDto settingDto = this.settingService.getSettingDto();
 
+    if (settingDto == null) {
+      log.error("Could not retrieve settings for charging mode update.");
+      return false;
+    }
+
     // Set mode
     settingDto.setChargingmode(mode.mode);
 
     log.debug("Set updated settings.");
     SystemDto systemDto = this.settingService.updateSetting(settingDto);
+
+    if (systemDto == null) {
+      log.error("No response after updating charging mode.");
+      return false;
+    }
 
     boolean modeSet = systemDto.getChargingmode() == mode.mode;
 
@@ -297,9 +307,19 @@ public class ChargingService extends AlphaService<Integer> implements ICommandLi
 
     SettingDto settingDto = this.settingService.getSettingDto();
 
-    settingDto.setCurrentsetting(String.valueOf(amps));
+    if (settingDto == null) {
+      log.error("Could not retrieve settings for charging current update.");
+      return false;
+    }
+
+    settingDto.setCurrentsetting(amps);
 
     SystemDto systemDto = this.settingService.updateSetting(settingDto);
+
+    if (systemDto == null) {
+      log.error("No response after updating charging current.");
+      return false;
+    }
 
     boolean currentSet = systemDto.getCurrentsetting() == amps;
 
